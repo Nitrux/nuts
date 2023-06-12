@@ -337,7 +337,7 @@ case "$1" in
 		# -- Exit if checksum doesn't match.
 
 		BACKUP_SUM="$(md5sum "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)" | cut -c -32)"
-		GEN_BAK_SUM="$(tail "$NUTS_DIR_BAK"/nuts-backup-"$DATE_BACKUP_FILE".sha512sum | cut -c -32)"
+		GEN_BAK_SUM="$(tail "$NUTS_DIR_BAK"/nuts-backup-"$DATE_BACKUP_FILE".md5sum | cut -c -32)"
 
 		if [ "$BACKUP_SUM" == "$GEN_BAK_SUM" ]; then
 			puts "Backup checksum matches, continuing..."
