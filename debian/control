@@ -1,0 +1,14 @@
+Source: nuts
+Section: misc
+Priority: optional
+Maintainer: Uri Herrera <uri_herrera@nxos.org>
+Build-Depends: debhelper (>=9)
+Standards-Version: 3.9.6
+Homepage: https://nxos.org
+
+
+Package: nuts
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Update utility for Nitrux
+
