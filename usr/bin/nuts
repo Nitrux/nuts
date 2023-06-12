@@ -36,7 +36,7 @@ puts () { printf "\n\n --- %s\n" "$*"; }
 
 # -- Display an error when no flag is used.
 
-error () { printf "pnx: \e[31mError:\e[0m: %b\n" "$*" >&2; exit 1; }
+error () { printf "nuts: \e[31mError:\e[0m: %b\n" "$*" >&2; exit 1; }
 
 
 # -- Set program name and version.
@@ -57,7 +57,7 @@ if [[ ! -f $CONFIG_FILE ]]; then
     puts "Configuration file not found!, quitting." 2>&1
     exit 1
 else
-	puts "Configuration file found!, continuing..."
+	puts "Success! Configuration file found, continuing..."
 	# shellcheck source=/dev/null
 	. "$CONFIG_FILE"
 fi
@@ -68,22 +68,25 @@ fi
 
 exec 3>&1 4>&2
 trap 'exec 2>&4 1>&3' 0 1 2 3
-exec 1>/var/log/nuts.log 2>&1
+exec 1>"$NUTS_LOG" 2>&1
 
 
-# -- Run as root or ask user for sudo.
+# -- Check if this is running as root.
+# -- Exit if not running as root.
 
 if [ "$EUID" -ne 0 ]; then
-    ROOT="sudo"
+	puts "$TOOL_NAME is not running as root."
+	exit 1
 else
-    puts "Run $TOOL_NAME as root."
+	puts "$TOOL_NAME is running as root."
+	ROOT="sudo"
 fi
 
 
 # -- Functions.
 
 dl_file () { axel -a -o /tmp -n 10 "$@"; }
-overlay_ch () { overlayroot-chroot; }
+overlay_ch () { $ROOT overlayroot-chroot; }
 
 
 # -- Flag parsing.
@@ -110,7 +113,7 @@ case "$1" in
 		"" \
 		"Examples:" \
 		"    sudo nuts update" \
-		"    sudo nuts -v restore" \
+		"    sudo nuts -d restore" \
 
 		exit;;
 
@@ -130,7 +133,7 @@ esac
 #   ====== START ======
 
 case "$1" in
-    ( '' )  error "No operation specified (use help).";;
+    ( '' )  error "No operation specified (use help to see a list of operations).";;
 
 	( update )
 
@@ -201,16 +204,16 @@ case "$1" in
 		# -- Make the comparison.
 		# -- This way, we know that the user is running this tool on an installation that can be upgraded; thus, this tool works as intended.
 		# -- If the checksum matches, exit because the root is already current.
-		# -- If the checksum doesn't match, then continue because that means the root is out of date and differs from the latest version.
+        # -- If the checksum doesn't match, then continue because the root is out of date or the list differs from the value in the query file.
 
 		LOCAL_SUM="$(md5sum /installed_pkgs_end.txt | cut -c -32)"
 		REMOTE_SUM="$(tail /tmp/nuts-query.info | grep rootlistsum= | cut -c -44 | rev | cut -c -32 | rev)"
 
 		if [ "$LOCAL_SUM" == "$REMOTE_SUM" ]; then
-			puts ""
-		else
 			puts "The current installation of ${TARGET_DIST^n} is up to date."
 			exit 0
+		else
+			puts "Preparing to update ${TARGET_DIST^n}, continuing..."
 		fi
 
 
@@ -234,7 +237,7 @@ case "$1" in
 			-Xcompression-level 22 \
 			-no-progress \
 			-b 1048576
-		$ROOT md5sum "$NUTS_DIR_BAK"/nuts-backup-"$DATE_BACKUP_FILE".squashfs > "$NUTS_DIR_BAK"/nuts-backup-"$DATE_BACKUP_FILE".md5sum
+		$ROOT md5sum "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)" > "$NUTS_DIR_BAK"/nuts-backup.md5sum
 		sync
 
 
@@ -266,66 +269,83 @@ case "$1" in
 
 		# -- This process is the same as Calamares, except for user creation, mount creation, and bootloader configuration.
 		# -- After using overlay_ch, it's essential to remember that **EVERY COMMAND IS RUNNING AS ROOT AND ON THE LOWER DIRECTORY OF THE OVERLAY**.
-		# -- Mount the ISO and the SquashFS.
 
 		# -- Enter the Matri... I mean, the overlay.
 
-		$ROOT overlay_ch
+		tail "$0" | SYNC_NEW_ROOT=1 overlay_ch
 
 
-		# --  Mount the devices filesystem, then mount the ISO and the SquashFS.
+		# -- Inside the curly brackets, we enter a new shell because of the chroot. 
+		# -- Whatever is on the script that is executed using a user shell will not be executed here.
+		# -- So, we must add what we want to run in the chroot inside the curly brackets, including variables.
 
-		mount -t devtmpfs dev /dev
-		mount "$NUTS_DIR_DLS"/nitrux.iso "$NUTS_DIR_ISO"
-		mount "$NUTS_DIR_ISO"/casper/filesystem.squashfs "$NUTS_DIR_SQS"
+		[ "$SYNC_NEW_ROOT" ] && {
 
+			# -- Variables.
 
-		# -- Now comes the good part; proceed with running rsync and update the current installation.
-
-		rsync -avzh \
-			--exclude /dev/ \
-			--exclude /etc/shadow \
-			--exclude /home/ \
-			--exclude /proc/ \
-			--exclude /run/ \
-			--exclude /sys/ \
-			--exclude /var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp} \
-			--progress \
-			"$NUTS_DIR_SQS" /
-		sync
+			NUTS_DIR_DLS="/home/.nuts/downloads"
+			NUTS_DIR_ISO="/home/.nuts/iso"
+			NUTS_DIR_SQS="/home/.nuts/squashfs"
 
 
-		# -- Unmount the ISO and the SquashFS.
+			# --  Mount the devices filesystem, then mount the ISO and the SquashFS.
 
-		umount "$NUTS_DIR_SQS"
-		umount "$NUTS_DIR_ISO"
-
-
-		# -- Update GRUB.
-
-		update-grub
+			mount -t devtmpfs dev /dev
+			mount "$NUTS_DIR_DLS"/nitrux.iso "$NUTS_DIR_ISO"
+			mount "$NUTS_DIR_ISO"/casper/filesystem.squashfs "$NUTS_DIR_SQS"
 
 
-		# -- Unmount the devices filesystem.
+			# -- Now comes the good part; proceed with running rsync and update the current installation.
 
-		umount /dev
+			rsync -avzh \
+				--exclude /dev/ \
+				--exclude /etc/shadow \
+				--exclude /home/ \
+				--exclude /proc/ \
+				--exclude /run/ \
+				--exclude /sys/ \
+				--exclude /var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp} \
+				--progress \
+				"$NUTS_DIR_SQS" /
+			sync
 
 
-		# -- Do a cleanup of the synced root.
+			# -- Unmount the ISO and the SquashFS.
 
-		dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-cc
-		chmod +x /tmp//nuts-cc
-		bash /tmp//nuts-cc
+			umount "$NUTS_DIR_SQS"
+			umount "$NUTS_DIR_ISO"
 
 
-		# -- Finalizing.
-		# -- Leave the Matri... I mean, the overlay and reboot.
+			# -- Update GRUB.
 
-		rm -r \
-			/tmp//nuts-cc \
-			"$NUTS_DIR_DLS"/nitrux.iso
+			update-grub
 
-		(exit 30) && true
+
+			# -- Unmount the devices filesystem.
+
+			umount /dev
+
+
+			# -- Do a cleanup of the synced root.
+
+			dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-cc
+			chmod +x /tmp//nuts-cc
+			bash /tmp//nuts-cc
+
+
+			# -- Finalizing.
+			# -- Leave the Matri... I mean, the overlay.
+
+			rm -r \
+				/tmp//nuts-cc \
+				"$NUTS_DIR_DLS"/nitrux.iso
+
+			exit
+		}
+
+
+		# --  After running rsync reboot the device.
+
 		reboot;;
 
 	( restore )
@@ -337,7 +357,7 @@ case "$1" in
 		# -- Exit if checksum doesn't match.
 
 		BACKUP_SUM="$(md5sum "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)" | cut -c -32)"
-		GEN_BAK_SUM="$(tail "$NUTS_DIR_BAK"/nuts-backup-"$DATE_BACKUP_FILE".md5sum | cut -c -32)"
+		GEN_BAK_SUM="$(tail "$NUTS_DIR_BAK"/nuts-backup.md5sum | cut -c -32)"
 
 		if [ "$BACKUP_SUM" == "$GEN_BAK_SUM" ]; then
 			puts "Backup checksum matches, continuing..."
@@ -349,50 +369,66 @@ case "$1" in
 
 		# -- Enter the Matri... I mean, the overlay.
 
-		$ROOT overlay_ch
+		tail "$0" | SYNC_BACKUP=1 overlay_ch
 
 
-		# -- Mount the devices filesystem, then mount the SquashFS.
-		# -- Use the newest SquashFS in the directory.
+		# -- Inside the curly brackets, we enter a new shell because of the chroot. 
+		# -- Whatever is on the script that is executed using a user shell will not be executed here.
+		# -- So, we must add what we want to run in the chroot inside the curly brackets, including variables.
 
-		mount -t devtmpfs dev /dev
-		mount "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)" "$NUTS_DIR_SQS"
+		[ "$SYNC_BACKUP" ] && {
 
+			# -- Variables.
 
-		# -- Now comes the good part; proceed with running rsync and restore the backup.
-
-		rsync -avzh \
-			--exclude /dev/ \
-			--exclude /etc/shadow \
-			--exclude /home/ \
-			--exclude /proc/ \
-			--exclude /run/ \
-			--exclude /sys/ \
-			--exclude /var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp} \
-			--progress \
-			"$NUTS_DIR_SQS" /
-		sync
+			NUTS_DIR_SQS="/home/.nuts/squashfs"
+			NUTS_DIR_BAK="/home/.nuts/backup"
 
 
-		# -- Unmount the SquashFS.
+			# -- Mount the devices filesystem, then mount the SquashFS.
+			# -- Use the newest SquashFS in the directory.
 
-		umount "$NUTS_DIR_SQS"
-
-
-		# -- Update GRUB.
-
-		update-grub
+			mount -t devtmpfs dev /dev
+			mount "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)" "$NUTS_DIR_SQS"
 
 
-		# -- Unmount the devices filesystem.
+			# -- Now comes the good part; proceed with running rsync and restore the backup.
 
-		umount /dev
+			rsync -avzh \
+				--exclude /dev/ \
+				--exclude /etc/shadow \
+				--exclude /home/ \
+				--exclude /proc/ \
+				--exclude /run/ \
+				--exclude /sys/ \
+				--exclude /var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp} \
+				--progress \
+				"$NUTS_DIR_SQS" /
+			sync
 
 
-		# -- Finalizing.
-		# -- Leave the Matri... I mean, the overlay and reboot.
+			# -- Unmount the SquashFS.
 
-		(exit 30) && true
+			umount "$NUTS_DIR_SQS"
+
+
+			# -- Update GRUB.
+
+			update-grub
+
+
+			# -- Unmount the devices filesystem.
+
+			umount /dev
+
+
+			# -- Finalizing.
+			# -- Leave the Matri... I mean, the overlay.
+
+			exit
+		}
+
+		# --  After running rsync reboot the device.
+
 		reboot;;
 esac
 
