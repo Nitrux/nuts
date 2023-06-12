@@ -6,7 +6,7 @@ base_url=https://nxos.org/ftp_up
 
 
 # This gets executed INSIDE the chroot only.
-[ "SYNC_NEW_ROOT" ] && {
+[ $SYNC_NEW_ROOT ] && {
     mount -t devtmpfs dev /dev
     curl -o .iso $base_url/$iso_img
 
@@ -37,6 +37,36 @@ base_url=https://nxos.org/ftp_up
 }
 
 
+# This gets executed INSIDE the chroot only.
+[ $SYNC_BACKUP ] && {
+    mount -t devtmpfs dev /dev
+
+    mnt=`mktemp -d`
+
+    mount $(grep /home /proc/mounts | awk '{print $1}') $mnt
+    mount $mnt/home/.nuts/backup.squashfs $mnt
+
+    rsync -avzh \
+        --exclude $mnt/var \
+        --exclude $mnt/dev \
+        --exclude $mnt/run \
+        --exclude $mnt/sys \
+        --exclude $mnt/proc \
+        --exclude $mnt/home \
+        --exclude $mnt/etc/shadow \
+        --progress \
+        $mnt /
+
+    umount $mnt
+
+    rm $mnt/home/.nuts/backup.squashfs
+
+    # We don't want to execute the rest of this script.
+    exit
+}
+
+
+# This gets executed OUTSIDE the chroot only.
 for cmd; do
     case "$cmd" in
         ( update )
@@ -65,7 +95,7 @@ for cmd; do
                 -no-progress \
                 -b 1048576
 
-            # We're done on this side. Now, run overlayroot-chroot.
+            # We're done on this side. Now run overlayroot-chroot.
             cat "$0" | SYNC_NEW_ROOT=1 overlayroot-chroot bash
 
             update-grub
@@ -75,14 +105,10 @@ for cmd; do
             [ -f /home/.nuts/backup.squashfs ] \
                 || { echo "No backup found."; exit 1; }
 
-            # We're done on this side. Now, run overlayroot-chroot.
-            cat "$0" | SYNC_NEW_ROOT=1 overlayroot-chroot bash
-            mnt=`mktemp -d`
-            mount /home/.nuts/backup.squashfs $mnt
+            # We're done on this side. Now run overlayroot-chroot.
+            cat "$0" | SYNC_BACKUP=1 overlayroot-chroot bash;;
 
-            cp -r $mnt/ /
-
-            umount $mnt
-            rm -r /home/.nuts/backup.squashfs;;
+            update-grub
+            reboot;;
     esac
 done
