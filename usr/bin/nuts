@@ -374,7 +374,7 @@ case "$1" in
 		sync
 
 
-		# -- Unmount he ItSO and the SquashFS.
+		# -- Unmount the SquashFS.
 
 		umount "$NUTS_DIR_SQS"
 
