@@ -5,26 +5,26 @@ set -e
 #   Remove unwanted files and directories.
 
 REMOVE_UNWANTED_FILES='
-    /etc/alternatives/README
-    /etc/cron.daily/dpkg
-    /etc/dpkg/
-    /etc/apt/
-    /etc/logrotate.d/alternatives
-    /etc/logrotate.d/dpkg
-    /usr/bin/dpkg
-    /usr/bin/dpkg-*
-    /usr/bin/update-alternatives
-    /usr/libexec/dpkg
-    /usr/share/doc/dpkg/
-    /usr/share/dpkg/
-    /usr/share/lintian/overrides/dpkg
-    /usr/share/polkit-1/actions/org.dpkg.pkexec.update-alternatives.policy
-    /var/lib/apt/lists
-    /var/cache/apt
-    /var/lib/dpkg/
-    /opt/1
-    /opt/2
-    /opt/3
+	/etc/alternatives/README
+	/etc/cron.daily/dpkg
+	/etc/dpkg/
+	/etc/apt/
+	/etc/logrotate.d/alternatives
+	/etc/logrotate.d/dpkg
+	/usr/bin/dpkg
+	/usr/bin/dpkg-*
+	/usr/bin/update-alternatives
+	/usr/libexec/dpkg
+	/usr/share/doc/dpkg/
+	/usr/share/dpkg/
+	/usr/share/lintian/overrides/dpkg
+	/usr/share/polkit-1/actions/org.dpkg.pkexec.update-alternatives.policy
+	/var/lib/apt/lists
+	/var/cache/apt
+	/var/lib/dpkg/
+	/opt/1
+	/opt/2
+	/opt/3
 	/etc/calamares
 	/etc/skel/Desktop/org.nxos.installer.desktop
 	/etc/xdg/autostart/calamares-kwin-rules.desktop
