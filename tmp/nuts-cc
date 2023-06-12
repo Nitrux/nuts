@@ -122,7 +122,8 @@ REMOVE_UNWANTED_FILES='
 	/var/lib/dpkg/
 '
 
-rm -rf "${REMOVE_UNWANTED_FILES//\\n/ }" || true
+rm -rf \
+	"${REMOVE_UNWANTED_FILES//\\n/ }" || true
 
 
 #   Link kernel image to newer kernel
