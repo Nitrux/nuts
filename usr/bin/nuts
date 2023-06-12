@@ -347,7 +347,7 @@ case "$1" in
 		mount "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)" "$NUTS_DIR_SQS"
 
 
-		# -- Now comes the good part; proceed with running rsync and update the current installation.
+		# -- Now comes the good part; proceed with running rsync and restore the backup.
 
 		rsync -avzh \
 			--exclude /dev/ \
