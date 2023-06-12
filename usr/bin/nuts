@@ -240,7 +240,7 @@ case "$1" in
 
 		# -- Step 2: Actual Update sub-process
 
-		# -- Download the ISO using aria2c using the BitTorrent protocol.
+		# -- Download the ISO with aria2c using the BitTorrent protocol.
 		# -- Use the magnet link from the query file (provided by FOSS Torrents https://fosstorrents.com/distributions/nitrux/#downloads).
 
 		MAGNET_LINK="$(tail /tmp/nuts-query.info | grep magnetlink= | rev | cut -d '=' -f -42 | rev)"
