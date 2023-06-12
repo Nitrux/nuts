@@ -123,7 +123,7 @@ case "$1" in
 
 		exit;;
 
-    ( -d | --debug )         set -x; shift;;
+    ( -d | --debug )  set -x; shift;;
 esac
 
 
@@ -395,3 +395,5 @@ case "$1" in
 		(exit 30) && true
 		reboot;;
 esac
+
+#   ====== END ======
