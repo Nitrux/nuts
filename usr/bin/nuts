@@ -234,7 +234,7 @@ case "$1" in
 			-Xcompression-level 22 \
 			-no-progress \
 			-b 1048576
-		$ROOT sha512sum "$NUTS_DIR_BAK"/nuts-backup-"$DATE_BACKUP_FILE".squashfs > "$NUTS_DIR_BAK"/nuts-backup-"$DATE_BACKUP_FILE".sha512sum
+		$ROOT md5sum "$NUTS_DIR_BAK"/nuts-backup-"$DATE_BACKUP_FILE".squashfs > "$NUTS_DIR_BAK"/nuts-backup-"$DATE_BACKUP_FILE".md5sum
 		sync
 
 
