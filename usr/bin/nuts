@@ -81,7 +81,7 @@ overlay_ch () { overlayroot-chroot; }
 # -- Flag parsing.
 
 case "$1" in
-    ( -h | --help ) puts "$TOOL_NAME" \
+    ( help ) puts "$TOOL_NAME" \
 		"Description:" \
 		"    $TOOL_NAME or nuts is a utility to update the Nitrux Operating System and back up the root for rollbacks." \
 		"    ⚠️ Important: nuts is intended to work exclusively in Nitrux OS, and using this utility in other distributions will break them or not work at all." \
@@ -89,17 +89,20 @@ case "$1" in
 		"    Report bugs at: https://github.com/Nitrux/nuts/issues." \
 		"" \
 		"Flags:" \
-		"    --help         Show this help." \
-		"    --version      Show the version." \
-		"    --update       Update the currently installed root using the media specified in nuts-query and creates a backup of the current root directory." \
-		"    --restore      Restore the backup of the root directory generated during the update." \
+		"    help         Show this help." \
+		"    version      Show the version." \
+		"    update       Update the currently installed root using the media specified in nuts-query and creates a backup of the current root directory." \
+		"    restore      Restore the backup of the root directory generated during the update." \
 		"" \
 		"Usage:" \
-		"    nuts <flag>" \
+		"    sudo nuts <flag>" \
+		"" \
+		"Examples:" \
+		"    sudo nuts update" \
 
 		exit;;
 
-    ( -v | --version )  puts "nuts: version $TOOL_VERSION." \
+    ( version )  puts "nuts: version $TOOL_VERSION." \
 		"The license used for this file and its contents is: BSD-3-Clause." \
 		"Authors:" \
 		"    Copyright <2023> <Uri Herrera <uri_herrera@nxos.org>>" \
@@ -108,14 +111,14 @@ case "$1" in
 
 		exit;;
 
-    ( --debug )         set -x; shift;;
+    ( debug )         set -x; shift;;
 esac
 
 
 #   ====== START ======
 
 case "$1" in
-    ( '' )  err "No operation specified (use -h for help).";;
+    ( '' )  err "No operation specified (use --help for help).";;
 
 	( update )
 
