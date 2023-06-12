@@ -31,8 +31,8 @@ base_url=https://nxos.org/ftp_up
     umount /dev
 
     rm .iso
-    update-grub
 
+    # We don't want to execute the rest of this script.
     exit
 }
 
@@ -50,9 +50,6 @@ for cmd; do
             }
 
             # Create the backup.
-            mnt=`mktemp -d`
-            mount -B / $mnt
-
             mksquashfs / /home/.nuts/backup.squashfs \
                 -e /var \
                 -e /dev \
@@ -69,15 +66,23 @@ for cmd; do
                 -b 1048576
 
             # We're done on this side. Now, run overlayroot-chroot.
-            export SYNC_NEW_ROOT=1
-            cat "$0" | overlayroot-chroot bash
+            cat "$0" | SYNC_NEW_ROOT=1 overlayroot-chroot bash
 
+            update-grub
             reboot;;
 
         ( restore )
             [ -f /home/.nuts/backup.squashfs ] \
                 || { echo "No backup found."; exit 1; }
 
-            ;;
+            # We're done on this side. Now, run overlayroot-chroot.
+            cat "$0" | SYNC_NEW_ROOT=1 overlayroot-chroot bash
+            mnt=`mktemp -d`
+            mount /home/.nuts/backup.squashfs $mnt
+
+            cp -r $mnt/ /
+
+            umount $mnt
+            rm -r /home/.nuts/backup.squashfs;;
     esac
 done
