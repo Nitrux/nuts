@@ -6,36 +6,32 @@ set -e
 
 REMOVE_UNWANTED_FILES='
 	/etc/alternatives/README
+	/etc/apt/
+	/etc/calamares
 	/etc/cron.daily/dpkg
 	/etc/dpkg/
-	/etc/apt/
 	/etc/logrotate.d/alternatives
 	/etc/logrotate.d/dpkg
-	/usr/bin/dpkg
-	/usr/bin/dpkg-*
-	/usr/bin/update-alternatives
-	/usr/libexec/dpkg
-	/usr/share/doc/dpkg/
-	/usr/share/dpkg/
-	/usr/share/lintian/overrides/dpkg
-	/usr/share/polkit-1/actions/org.dpkg.pkexec.update-alternatives.policy
-	/var/lib/apt/lists
-	/var/cache/apt
-	/var/lib/dpkg/
+	/etc/skel/Desktop/org.nxos.installer.desktop
+	/etc/xdg/autostart/calamares-kwin-rules.desktop
 	/opt/1
 	/opt/2
 	/opt/3
-	/etc/calamares
-	/etc/skel/Desktop/org.nxos.installer.desktop
-	/etc/xdg/autostart/calamares-kwin-rules.desktop
 	/usr/bin/calamares
+	/usr/bin/dpkg
+	/usr/bin/dpkg-*
+	/usr/bin/update-alternatives
 	/usr/include/libcalamares/
 	/usr/lib/x86_64-linux-gnu/calamares/
+	/usr/libexec/dpkg
 	/usr/share/applications/calamares.desktop
 	/usr/share/calamares/
 	/usr/share/doc/calamares/
+	/usr/share/doc/dpkg/
+	/usr/share/dpkg/
 	/usr/share/icons/hicolor/scalable/apps/calamares.svg
 	/usr/share/lintian/overrides/calamares
+	/usr/share/lintian/overrides/dpkg
 	/usr/share/locale/ar/LC_MESSAGES/calamares-python.mo
 	/usr/share/locale/as/LC_MESSAGES/calamares-python.mo
 	/usr/share/locale/ast/LC_MESSAGES/calamares-python.mo
@@ -98,6 +94,10 @@ REMOVE_UNWANTED_FILES='
 	/usr/share/man/man1/calamares.1.gz
 	/usr/share/man/man8/calamares.8.gz
 	/usr/share/polkit-1/actions/com.github.calamares.calamares.policy
+	/usr/share/polkit-1/actions/org.dpkg.pkexec.update-alternatives.policy
+	/var/cache/apt
+	/var/lib/apt/lists
+	/var/lib/dpkg/
 '
 
 rm -rf "${REMOVE_UNWANTED_FILES//\\n/ }" || true

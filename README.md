@@ -18,14 +18,14 @@ Open a terminal and run one of the following commands.
 sudo nuts update
 ```
 
-* The command above will update the currently installed root using the media specified in `/usr/share/nuts-query` and create the back up of the root directory.
+* The command above will update the currently installed root using the media specified in `nuts-query` and backup the current root directory.
 
 ### Restore
 ```
 sudo nuts restore
 ```
 
-* The command above will restore the back up of the root directory.
+* The command above will restore the backup of the root directory generated during the update.
 
 ### Configuration
 
