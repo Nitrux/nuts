@@ -118,7 +118,7 @@ esac
 #   ====== START ======
 
 case "$1" in
-    ( '' )  error "No operation specified (use --help for help).";;
+    ( '' )  error "No operation specified (use help).";;
 
 	( update )
 
