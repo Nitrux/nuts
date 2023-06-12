@@ -1,0 +1,83 @@
+#! /bin/bash
+
+
+iso_img=nitrux-nx-desktop-latest.iso
+base_url=https://nxos.org/ftp_up
+
+
+# This gets executed INSIDE the chroot only.
+[ "SYNC_NEW_ROOT" ] && {
+    mount -t devtmpfs dev /dev
+    curl -o .iso $base_url/$iso_img
+
+    mnt=`mktemp -d`
+
+    mount .iso $mnt
+    mount $mnt/casper/filesystem.squashfs $mnt
+
+    rsync -avzh \
+        --exclude $mnt/var \
+        --exclude $mnt/dev \
+        --exclude $mnt/run \
+        --exclude $mnt/sys \
+        --exclude $mnt/proc \
+        --exclude $mnt/home \
+        --exclude $mnt/etc/shadow \
+        --progress \
+        $mnt /
+
+    # Unmount all the filesystems mounted there.
+    while mountpoint $mnt; do umount $mnt; done
+    umount /dev
+
+    rm .iso
+    update-grub
+
+    exit
+}
+
+
+for cmd; do
+    case "$cmd" in
+        ( update )
+            # Check if the remote checksum differs from the local.
+            curl $base_url/installed_pkgs_end.txt \
+                | diff -q - /installed_pkgs_end.txt \
+
+            [ $? = 0 ] && {
+                echo "The system is up to date."
+                exit
+            }
+
+            # Create the backup.
+            mnt=`mktemp -d`
+            mount -B / $mnt
+
+            mksquashfs / /home/.nuts/backup.squashfs \
+                -e /var \
+                -e /dev \
+                -e /run \
+                -e /sys \
+                -e /boot \
+                -e /proc \
+                -e /home \
+                -e /media \
+                -ef /etc/shadow \
+                -comp zstd \
+                -Xcompression-level 22 \
+                -no-progress \
+                -b 1048576
+
+            # We're done on this side. Now, run overlayroot-chroot.
+            export SYNC_NEW_ROOT=1
+            cat "$0" | overlayroot-chroot bash
+
+            reboot;;
+
+        ( restore )
+            [ -f /home/.nuts/backup.squashfs ] \
+                || { echo "No backup found."; exit 1; }
+
+            ;;
+    esac
+done
