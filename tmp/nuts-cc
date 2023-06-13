@@ -163,4 +163,5 @@ ln -svf "$(echo /boot/initrd* | tr ' ' '\n' | tail -n 1)" /initrd.img
 
 puts-success "Success! Ready to use newer kernel, continuing..."
 
+
 #   ====== END ======
