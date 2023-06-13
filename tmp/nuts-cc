@@ -24,9 +24,26 @@
 
 set -e
 
-#   Remove unwanted files and directories.
+# -- Print informative messages to stdin.
 
-REMOVE_UNWANTED_FILES='
+puts-info () { printf "$TOOL_SHRT_NAME: \e[34mInfo:\e[0m %b\n\n" "$*"; }
+
+
+# -- Print success messages to stdin.
+
+puts-success () { printf "$TOOL_SHRT_NAME: \e[32mSuccess:\e[0m %b\n\n" "$*"; }
+
+
+# -- Print error messages to stdin.
+
+puts-error () { printf "$TOOL_SHRT_NAME: \e[31mError:\e[0m %b\n\n" "$*"; }
+
+
+#   ====== START ======
+
+# -- Remove unwanted files and directories.
+
+NUTS_CLEANUP_CREW='
 	/etc/alternatives/README
 	/etc/apt/
 	/etc/calamares
@@ -122,9 +139,22 @@ REMOVE_UNWANTED_FILES='
 	/var/lib/dpkg/
 '
 
+puts-info "*cleanup noises*"
+
 rm -rf \
-	"${REMOVE_UNWANTED_FILES//\\n/ }" || true
+	"${NUTS_CLEANUP_CREW//\\n/ }" || true
 
 
-#   Link kernel image to newer kernel
+puts-success "Success! Cleanup complete, continuing..."
 
+
+# -- Link kernel image to newer kernel
+
+puts-info "Preparing to boot new kernel and initram, continuing..."
+
+ln -svf "$(echo /boot/vmlinuz* | tr ' ' '\n' | tail -n 1)" /vmlinuz
+ln -svf "$(echo /boot/initrd* | tr ' ' '\n' | tail -n 1)" /initrd.img
+
+puts-success "Success! Ready to use newer kernel, continuing..."
+
+#   ====== END ======
