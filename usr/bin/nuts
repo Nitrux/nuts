@@ -166,19 +166,6 @@ done
 
 #   ====== START ======
 
-# -- This process is the same as Calamares, except for user creation, mount creation, and bootloader configuration.
-# -- After using overlay_ch, it's essential to remember that **EVERY COMMAND IS RUNNING AS ROOT AND ON THE LOWER DIRECTORY OF THE OVERLAY**.
-
-# -- Enter the Matri... I mean, the overlay.
-
-cat < "$0" | SYNC_NEW_ROOT=1 overlay_ch
-
-
-# -- Enter the Matri... I mean, the overlay.
-
-cat < "$0" | SYNC_BACKUP=1 overlay_ch
-
-
 for cmd; do
 	case "$cmd" in
 		( '' )  error "No operation specified (use -h to see a list of operations).";;
@@ -353,6 +340,14 @@ for cmd; do
 			fi
 
 
+			# -- This process is the same as Calamares, except for user creation, mount creation, and bootloader configuration.
+			# -- After using overlay_ch, it's essential to remember that **EVERY COMMAND IS RUNNING AS ROOT AND ON THE LOWER DIRECTORY OF THE OVERLAY**.
+
+			# -- Enter the Matri... I mean, the overlay.
+
+			tail "$0" | SYNC_NEW_ROOT=1 overlay_ch
+
+
 			# -- Inside the curly brackets, we enter a new shell because of the chroot. 
 			# -- Whatever is on the script that is executed using a user shell will not be executed here.
 			# -- So, we must add what we want to run in the chroot inside the curly brackets, including variables.
@@ -448,6 +443,11 @@ for cmd; do
 				puts-error "Backup checksum does not match, quitting."
 				exit 1
 			fi
+
+
+			# -- Enter the Matri... I mean, the overlay.
+
+			tail "$0" | SYNC_BACKUP=1 overlay_ch
 
 
 			# -- Inside the curly brackets, we enter a new shell because of the chroot. 
