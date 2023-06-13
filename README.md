@@ -27,7 +27,7 @@ Afterward, when using `nuts` to restore a backup, `nuts` will do the exact proce
 
  - `nuts` is minimalistic.
    - `nuts` was designed to only do what it needs to do and nothing else.
-   - `nuts` is a CLI utility, but if it had a GUI, it'd be a window with two buttons, a progress bar, and nothing else.
+   - `nuts` is a CLI utility.
 - `nuts` is 100% Free (as in Freedom) Open Source Software; see [License](#licensing).
 - `nuts` is written entirely in [POSIX-compliant scripting language](https://en.wikipedia.org/wiki/Shell_script#Typical_POSIX_scripting_languages).
 
@@ -36,11 +36,12 @@ Afterward, when using `nuts` to restore a backup, `nuts` will do the exact proce
 - `nuts` is not a package manager.
   - `nuts` does not interact with any sort of packaging format.
   - `nuts` does not interact with any software "repository" either.
+  - `nuts` does not interact with any package manager to perform any operation.
 - `nuts` is not an installer.
   - `nuts` is inspired by the functional workflow of most Linux installers, that is, extracting a SquashFS file. However, `nuts` does not handle in any way locale configuration, user creation, partition mounts, or bootloader configuration, etc.
 - `nuts` is not "only" a backup utility.
   - `nuts` is not designed exclusively as a backup utility in the way that other utilities like _restic_, _bup_ or filesystem-level tools like _xfsdump_ and _xfsrestore_, _btrfs-snapshot_ or _lvmcreate_ were.
-- `nuts` is not a container or a virtual machine.
+- `nuts` is not a container or a virtual machine, or a utility to make Live USBs, a Linux distribution, a desktop environment, etc.; see [Overview](#overview).
   - _**Note**: We don't know why anyone would think that, but one can never know, so let's clarify that._
 
 ## Usage
