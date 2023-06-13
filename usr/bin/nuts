@@ -95,13 +95,19 @@ overlay_ch () { $ROOT overlayroot-chroot; }
 # -- Use a log file.
 # -- Everything below will go to the file nuts.log.
 
-exec 3>&1 4>&2
-trap 'exec 2>&4 1>&3' 0 1 2 3
-exec 1>"$NUTS_LOG" 2>&1
+$ROOT touch "$NUTS_LOG"
+
+if [[ ! -f $NUTS_LOG ]]; then
+	puts-info "Creating $TOOL_NAME log file, continuing..."
+	touch "$NUTS_LOG"
+else
+	puts-info "$TOOL_NAME log file found, skipping..."
+fi
 
 
 # -- Flag parsing.
 
+(
 case "$1" in
     ( -h | --help ) puts-info "$TOOL_NAME" \
 		"Description:" \
@@ -458,5 +464,6 @@ case "$1" in
 
 		reboot;;
 esac
+) 2>&1 | tee -a "$NUTS_LOG"
 
 #   ====== END ======
