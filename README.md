@@ -21,7 +21,7 @@ The point of this utility is twofold, first, to be able to update the Nitrux Ope
 
 #### What `nuts` is
 
- - `nuts` works by creating a backup of the current root directory using SquashFS; then, `nuts` downloads an ISO image using the BitTorrent protocol, mounts it and uses `rsync` to update the installation. Afterward, when using `nuts` to restore a backup, `nuts` will do the exact process but using the locally generated SquashFS instead, so no dowloads.
+ - `nuts` works by creating a backup of the current root directory using SquashFS; then, `nuts` downloads an ISO image using the BitTorrent protocol, mount it, and use `rsync` to update the installation. Afterward, when using `nuts` to restore a backup, `nuts` will do the exact process but use the locally generated SquashFS instead, so, no downloads.
  - `nuts` is minimalistic.
    - `nuts` was designed to only do what it needs to do and nothing else.
 - `nuts` is 100% Free (as in Freedom) Open Source Software; see [License](#licensing).
