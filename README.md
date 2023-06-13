@@ -8,9 +8,10 @@
 
 The point of this utility is twofold, first, to be able to update the Nitrux Operating System. And second, to back up the root for rollbacks.
 
+`nuts` targets Nitrux 2.6.0+.
+
 > _⚠️ Important: `nuts` is intended to work exclusively in Nitrux OS, and using this utility in other distributions will break them or not work at all. Please do not open issues regarding this use case; they will be closed._
 
-`nuts` targets Nitrux 2.6.0+.
 
 ### What is `nuts` (and what it isn't)
 
