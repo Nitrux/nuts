@@ -115,8 +115,7 @@ umount /dev
 
 echo "Calling the $TOOL_NAME Cleanup Crew, continuing..."
 dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-cc
-chmod +x /tmp//nuts-cc
-bash /tmp//nuts-cc
+chmod +x /tmp/nuts-cc && bash /tmp/nuts-cc
 
 
 # -- Finalizing.
