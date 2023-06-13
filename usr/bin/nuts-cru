@@ -32,6 +32,7 @@ set -e
 # -- Set program name and version.
 
 TOOL_NAME="Nitrux Update System Tool"
+TOOL_SHRT_NAME="nuts"
 
 
 # -- Print success messages to stdin.
