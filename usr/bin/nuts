@@ -348,10 +348,10 @@ for cmd; do
 			# -- Run nuts-cru to perform the update actions inside the chroot.
 			# -- If the component doesn't exist in the root, download it.
 
-			overlay_ch axel -o /usr/bin -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/main/usr/bin/nuts-cru;
-			overlay_ch chmod +x /usr/bin/nuts-cru;
-			overlay_ch axel -o /etc -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/main/etc/nuts.conf;
-			overlay_ch nuts-cru;
+			overlay_ch axel -o /usr/bin -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/main/usr/bin/nuts-cru
+			overlay_ch chmod +x /usr/bin/nuts-cru
+			overlay_ch axel -o /etc -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/main/etc/nuts.conf
+			overlay_ch nuts-cru
 
 
 			# -- After running rsync reboot the device.
@@ -385,6 +385,7 @@ for cmd; do
 
 			overlay_ch axel -o /usr/bin -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/main/usr/bin/nuts-crr
 			overlay_ch chmod +x /usr/bin/nuts-crr
+			overlay_ch axel -o /etc -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/main/etc/nuts.conf
 			overlay_ch nuts-crr
 
 
