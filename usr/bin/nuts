@@ -275,7 +275,7 @@ case "$1" in
 			-e /media/* \
 			-e /run/* \
 			-e /sys/* \
-			-e //tmp/* \
+			-e /tmp/* \
 			-e /var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp}/ \
 			-comp zstd \
 			-Xcompression-level 22 \
@@ -309,7 +309,8 @@ case "$1" in
 
 		puts-info "Dowloading ISO using aria2c, continuing..."
 		MAGNET_LINK="$(tail /tmp/nuts-query.info | grep magnetlink= | rev | cut -d '=' -f -42 | rev)"
-		$ROOT aria2c -d "$NUTS_DIR_DLS" -o nitrux.iso --seed-time=0 "$MAGNET_LINK" 
+		$ROOT aria2c -d "$NUTS_DIR_DLS" --seed-time=0 "$MAGNET_LINK"
+		$ROOT mv "$NUTS_DIR_DLS"/nitrux-nx-desktop-plasma-*-amd64.iso "$NUTS_DIR_DLS"/nitrux.iso
 
 
 		# -- Verify the checksum of the ISO. Use the checksum from the query file.
