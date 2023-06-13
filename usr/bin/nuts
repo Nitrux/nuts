@@ -145,7 +145,7 @@ case "$1" in
 		exit;;
 
     ( -v | --version )  puts-text \
-		"$TOOL_NAME—$TOOL_VERSION." \
+		"$TOOL_NAME — version: $TOOL_VERSION." \
 		"" \
 		"The license used for this file and its contents is: BSD-3-Clause." \
 		"" \
@@ -219,10 +219,10 @@ case "$1" in
 		# -- Exit if it doesn't.
 
 		if [ ! -f "/installed_pkgs_end.txt" ]; then
-			puts-info "Build list found, continuing..."
-		else
 			puts-error "Build list not found, quitting."
 			exit 1
+		else
+			puts-info "Build list found, continuing..."
 		fi
 
 
