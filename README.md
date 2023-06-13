@@ -44,10 +44,10 @@ However, `nuts` uses the file in `/etc/nuts/nuts.conf` to load some settings.
 This utility is not designed to be highly interactive.
 
 ```
-nuts version
+sudo nuts -h
 ```
 
-* This command will display the version of `nuts`.
+* This command will display the help of `nuts`.
 
 
 # Licensing
