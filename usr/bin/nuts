@@ -320,7 +320,7 @@ case "$1" in
 			puts-info "Dowloading ISO using aria2c, continuing..."
 			MAGNET_LINK="$(tail /tmp/nuts-query.info | grep magnetlink= | rev | cut -d '=' -f -42 | rev)"
 			$ROOT aria2c -d "$NUTS_DIR_DLS" --seed-time=0 "$MAGNET_LINK"
-			$ROOT mv "$NUTS_DIR_DLS"/nitrux-nx-desktop-plasma-*-amd64.iso "$NUTS_DIR_DLS"/nitrux.iso
+			$ROOT mv "$(echo "$NUTS_DIR_DLS"/nitrux-nx-desktop-plasma-*-amd64.iso | tr ' ' '\n' | tail -n 1)" "$NUTS_DIR_DLS"/nitrux.iso
 		fi
 
 
