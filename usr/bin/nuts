@@ -228,9 +228,15 @@ case "$1" in
 
 		# -- Download the nuts-query file from our repository and then use the checksum listed in the file to compare their values.
 		# -- This file is always downloaded to a temporary directory, as there's no reason to keep it.
+		# -- Overwrite the file if it already exists.
 
-		if [ ! -f "/tmp/nuts-query" ]; then
-			puts-info "Downloading nuts-query, continuing..."
+		if [ ! -f "/tmp/nuts-query.info" ]; then
+			puts-info "Can't find nuts-query.info, downloading..."
+			dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-query.info
+		else
+			puts-info "Found nuts-query.info, overwriting..."
+			rm -r \
+				/tmp/nuts-query.info
 			dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-query.info
 		fi
 
