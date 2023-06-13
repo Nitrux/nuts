@@ -51,6 +51,11 @@ puts-success () { printf "$TOOL_SHRT_NAME: \e[32mSuccess:\e[0m %b\n\n" "$*"; }
 puts-error () { printf "$TOOL_SHRT_NAME: \e[31mError:\e[0m %b\n\n" "$*"; }
 
 
+# -- Print messages or text using multiple lines.
+
+puts-text () { printf "%b\n" "$@" >&2; }
+
+
 # -- Display an error when no flag is used.
 
 error () { printf "$TOOL_SHRT_NAME: \e[31mError:\e[0m %b\n\n" "$*" >&2; exit 1; }
@@ -109,7 +114,7 @@ fi
 
 (
 case "$1" in
-    ( -h | --help ) puts-info "$TOOL_NAME" \
+    ( -h | --help ) puts-text "$TOOL_NAME" \
 		"Description:" \
 		"    $TOOL_NAME or nuts is a utility to update the Nitrux Operating System and back up the root for rollbacks." \
 		"    ⚠️ Important: nuts is intended to work exclusively in Nitrux OS, and using this utility in other distributions will break them or not work at all." \
@@ -134,7 +139,7 @@ case "$1" in
 
 		exit;;
 
-    ( -v | --version )  puts-info "nuts: version $TOOL_VERSION." \
+    ( -v | --version )  puts-text "nuts: version $TOOL_VERSION." \
 		"The license used for this file and its contents is: BSD-3-Clause." \
 		"Authors:" \
 		"    Copyright <2023> <Uri Herrera <uri_herrera@nxos.org>>" \
