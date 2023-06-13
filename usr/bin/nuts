@@ -357,7 +357,7 @@ for cmd; do
 			# -- After running rsync reboot the device.
 
 			puts-info "Time to reboot. Bye."
-			reboot;;
+			shift;;
 
 
 		( restore )
@@ -392,7 +392,7 @@ for cmd; do
 			# -- After running rsync reboot the device.
 
 			puts-info "Time to reboot. Bye."
-			reboot;;
+			shift;;
 	esac
 done
 ) 2>&1 | tee -a "$NUTS_LOG"
