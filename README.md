@@ -23,7 +23,7 @@ The point of this utility is twofold, first, to be able to update the Nitrux Ope
 
  - `nuts` works by creating a backup of the current root directory using SquashFS; then, `nuts` downloads an ISO image, mounts it and uses `rsync` to update the installation. Afterward, when using `nuts` to restore a backup, `nuts` will do the exact process but use the locally generated SquashFS instead.
 
-### What `nuts` is not
+#### What `nuts` is not
 
 - `nuts` is not a package manager.
   - `nuts` does not interact with any sort of packaging format.
