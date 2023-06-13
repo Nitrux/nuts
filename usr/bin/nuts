@@ -97,7 +97,7 @@ fi
 
 dl_file () { axel -o /tmp -n 10 "$@"; }
 overlay_ch () { $ROOT overlayroot-chroot; }
-bak_del () { find "$NUTS_DIR_BAK" -maxdepth 1 -type f | head -n "$BACKUPS_TO_KEEP" | xargs --no-run-if-empty rm; }
+bak_cc () { $ROOT find "$NUTS_DIR_BAK" -maxdepth 1 -type f | head -n "$BACKUPS_TO_KEEP" | xargs --no-run-if-empty rm; }
 
 
 # -- Use a log file.
@@ -261,7 +261,7 @@ case "$1" in
 		# -- Run the backup cleaner.
 		# -- Only keep the amount of backups defined in nuts.conf.
 
-		$ROOT bak_del
+		bak_cc
 
 
 		# -- Create the backup.
@@ -314,7 +314,7 @@ case "$1" in
 
 		if [ ! -f "$NUTS_DIR_DLS/nitrux.iso" ]; then
 			puts-info "ISO file not found! Checking for other ISO files, continuing..."
-				if [ -f "$NUTS_DIR_DLS/nitrux-nx-desktop-plasma-*-amd64.iso" ]; then
+				if [ -f "$NUTS_DIR_DLS/*.iso" ]; then
 						puts-success "An ISO file was found! Using the newest file, continuing..."
 					$ROOT mv "$(echo "$NUTS_DIR_DLS"/nitrux-nx-desktop-plasma-*-amd64.iso | tr ' ' '\n' | tail -n 1)" "$NUTS_DIR_DLS"/nitrux.iso
 				fi
