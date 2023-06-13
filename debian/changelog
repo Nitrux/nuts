@@ -4,7 +4,7 @@ nuts (0.0.7) nitrux; urgency=medium
   * Revise aria2c command.
   * Revise axel command.
 
- -- Uri Herrera <uri_herrera@nxos.org>  Mon, 12 Jun 2023 22:34:00 -0500
+ -- Uri Herrera <uri_herrera@nxos.org>  Thu, 13 Jun 2023 01:34:00 -0500
 
 nuts (0.0.6) nitrux; urgency=medium
 
