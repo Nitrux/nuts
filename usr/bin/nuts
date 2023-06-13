@@ -313,7 +313,7 @@ case "$1" in
 		# -- Use the magnet link from the query file.
 		# -- Magnet link is provided by FOSS Torrents https://fosstorrents.com/distributions/nitrux/#downloads.
 
-		if [ ! -f "$NUTS_DIR_DLS/nitrux.iso" ]; then
+		if [ -f "$NUTS_DIR_DLS/nitrux.iso" ]; then
 			puts-info "ISO file not found! Checking for other ISO files, continuing..."
 			$ROOT mv "$(echo "$NUTS_DIR_DLS"/nitrux-nx-desktop-plasma-*-amd64.iso | tr ' ' '\n' | tail -n 1)" "$NUTS_DIR_DLS"/nitrux.iso
 		else
