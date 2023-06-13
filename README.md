@@ -10,6 +10,8 @@ The point of this utility is twofold, first, to be able to update the Nitrux Ope
 
 > _⚠️ Important: `nuts` is intended to work exclusively in Nitrux OS, and using this utility in other distributions will break them or not work at all. Please do not open issues regarding this use case; they will be closed._
 
+`nuts` targets Nitrux 2.6.0+.
+
 ## Usage
 
 To use `nuts`, do the following.
