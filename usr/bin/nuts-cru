@@ -81,6 +81,17 @@ bak_cc () { $ROOT find "$NUTS_DIR_BAK" -maxdepth 1 -type f | head -n "$BACKUPS_T
 
 #   ====== START ======
 
+# -- Create the directories for nuts.
+# -- Create working directories in /home since this partition will likely have more space than the root partition, as set in our custom partition layout and the instructions on the website.
+
+if [ ! -d "$NUTS_DIR_DLS" ] && [ ! -d "$NUTS_DIR_ISO" ] && [ ! -d "$NUTS_DIR_SQS" ] && [ ! -d "$NUTS_DIR_BAK" ]; then
+	puts-info "Creating working directories, continuing..."
+	$ROOT mkdir -p /home/.nuts/{iso,squashfs,backup}
+else
+	puts-info "Working directories exist, skipping..."
+fi
+
+
 # -- Run the backup cleaner.
 # -- Only keep the amount of backups defined in nuts.conf.
 
@@ -156,16 +167,6 @@ else
 	puts-error "ISO checksum does not match, quitting."
 	rm "$NUTS_DIR_DLS"/nitrux.iso
 	exit 1
-fi
-
-# -- Create the directories for nuts.
-# -- Create working directories in /home since this partition will likely have more space than the root partition, as set in our custom partition layout and the instructions on the website.
-
-if [ ! -d "$NUTS_DIR_DLS" ] && [ ! -d "$NUTS_DIR_ISO" ] && [ ! -d "$NUTS_DIR_SQS" ] && [ ! -d "$NUTS_DIR_BAK" ]; then
-	puts-info "Creating working directories, continuing..."
-	$ROOT mkdir -p /home/.nuts/{iso,squashfs,backup}
-else
-	puts-info "Working directories exist, skipping..."
 fi
 
 
