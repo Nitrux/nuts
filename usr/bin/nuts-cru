@@ -79,6 +79,11 @@ dl_file () { axel -o /tmp -n 10 "$@"; }
 bak_cc () { $ROOT find "$NUTS_DIR_BAK" -maxdepth 1 -type f | head -n "$BACKUPS_TO_KEEP" | xargs --no-run-if-empty rm; }
 
 
+# -- Mount the devices filesystem.
+
+mount -t devtmpfs dev /dev
+
+
 #   ====== START ======
 
 # -- Flag parsing.
@@ -179,9 +184,8 @@ else
 fi
 
 
-# --  Mount the devices filesystem, then mount the ISO and the SquashFS.
+# -- Mount the ISO and the SquashFS.
 
-mount -t devtmpfs dev /dev
 mount "$NUTS_DIR_DLS"/nitrux.iso "$NUTS_DIR_ISO"
 mount "$NUTS_DIR_ISO"/casper/filesystem.squashfs "$NUTS_DIR_SQS"
 

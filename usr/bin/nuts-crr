@@ -73,6 +73,11 @@ fi
 CURRENT_DIST=$(tail /etc/os-release | grep "VERSION_CODENAME=*" | rev | cut -d '=' -f 1 | rev)
 
 
+# -- Mount the devices filesystem.
+
+mount -t devtmpfs dev /dev
+
+
 #   ====== START ======
 
 # -- Flag parsing.
@@ -109,10 +114,9 @@ else
 fi
 
 
-# -- Mount the devices filesystem, then mount the SquashFS.
+# -- Mount the SquashFS.
 # -- **ALWAYS** use the newest SquashFS in the directory. The user can't select which backup to restore.
 
-mount -t devtmpfs dev /dev
 mount "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)" "$NUTS_DIR_SQS"
 
 
