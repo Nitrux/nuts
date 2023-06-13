@@ -315,10 +315,7 @@ case "$1" in
 
 		if [ ! -f "$NUTS_DIR_DLS/nitrux.iso" ]; then
 			puts-info "ISO file not found! Checking for other ISO files, continuing..."
-				if [ -f "$NUTS_DIR_DLS/*.iso" ]; then
-						puts-success "An ISO file was found! Using the newest file, continuing..."
-					$ROOT mv "$(echo "$NUTS_DIR_DLS"/nitrux-nx-desktop-plasma-*-amd64.iso | tr ' ' '\n' | tail -n 1)" "$NUTS_DIR_DLS"/nitrux.iso
-				fi
+			$ROOT mv "$(echo "$NUTS_DIR_DLS"/nitrux-nx-desktop-plasma-*-amd64.iso | tr ' ' '\n' | tail -n 1)" "$NUTS_DIR_DLS"/nitrux.iso
 		else
 			puts-info "Dowloading ISO using aria2c, continuing..."
 			MAGNET_LINK="$(tail /tmp/nuts-query.info | grep magnetlink= | rev | cut -d '=' -f -42 | rev)"
