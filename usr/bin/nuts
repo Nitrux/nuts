@@ -346,8 +346,22 @@ for cmd; do
 
 			# -- Enter the Matri... I mean, the overlay.
 			# -- Run nuts-cru to perform the update actions inside the chroot.
+			# -- If the component doesn't exist in the root, download it.
 
-			overlay_ch nuts-cru
+			overlay_ch \
+				echo ""
+				TOOL_SHRT_NAME="nuts"
+				dl_file () { axel -o /tmp -n 10 "$@"; }
+				puts-info () { printf "$TOOL_SHRT_NAME: \e[34mInfo:\e[0m %b\n\n" "$*"; }
+				if [ -f "/usr/bin/nuts-cru" ]; then
+					puts-info "Update component found, continuing..."
+					nuts-cru
+				else
+					puts-info "Update component not found, downloading..."
+					dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/usr/bin/nuts-cru
+					mv /tmp//nuts-cru /usr/bin/
+					nuts-cru
+				fi
 
 
 			# -- After running rsync reboot the device.
@@ -376,9 +390,23 @@ for cmd; do
 
 
 			# -- Enter the Matri... I mean, the overlay.
-			# -- Run nuts-cru to perform the restore actions inside the chroot.
+			# -- Run nuts-crr to perform the restore actions inside the chroot.
+			# -- If the component doesn't exist in the root, download it.
 
-			overlay_ch nuts-crb
+			overlay_ch \
+				echo ""
+				TOOL_SHRT_NAME="nuts"
+				dl_file () { axel -o /tmp -n 10 "$@"; }
+				puts-info () { printf "$TOOL_SHRT_NAME: \e[34mInfo:\e[0m %b\n\n" "$*"; }
+				if [ -f "/usr/bin/nuts-crb" ]; then
+					puts-info "Restore component found, continuing..."
+					nuts-crr
+				else
+					puts-info "Restore component not found, downloading..."
+					dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/usr/bin/nuts-crr
+					mv /tmp//nuts-crr /usr/bin/
+					nuts-crr
+				fi
 
 
 			# -- After running rsync reboot the device.

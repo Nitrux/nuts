@@ -85,15 +85,15 @@ sync
 echo "Success! Update has been applied."
 
 
+# -- Update GRUB.
+
+update-grub
+
+
 # -- Unmount the ISO and the SquashFS.
 
 umount "$NUTS_DIR_SQS"
 umount "$NUTS_DIR_ISO"
-
-
-# -- Update GRUB.
-
-update-grub
 
 
 # -- Unmount the devices filesystem.

@@ -92,14 +92,14 @@ sync
 echo "Success! Backup has been restored."
 
 
-# -- Unmount the SquashFS.
-
-umount "$NUTS_DIR_SQS"
-
-
 # -- Update GRUB.
 
 update-grub
+
+
+# -- Unmount the SquashFS.
+
+umount "$NUTS_DIR_SQS"
 
 
 # -- Unmount the devices filesystem.
