@@ -37,7 +37,7 @@ The point of this utility is twofold, first, to be able to update the Nitrux Ope
 - `nuts` is not a "only" a backup utility.
   - `nuts` is not designed exclusively as a backup utility in the way that other utilities like _restic_, _bup_ or filesystem-level tools like _xfsdump_ and _xfsrestore_, _btrfs-snapshot_ or _lvmcreate_ were.
 - `nuts` is not a container or a virtual machine.
-  - _**Note**: We don't know why anyone would think that, but one can never know._
+  - _**Note**: We don't know why anyone would think that, but one can never know, so let's clarify that._
 
 ## Usage
 
