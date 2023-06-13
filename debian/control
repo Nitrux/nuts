@@ -12,7 +12,7 @@ Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description:  A simple utility to update Nitrux.
  The point of this utility is twofold:
-  - update the Nitrux Operating System
-  - back up the root for rollbacks
+  - Update the Nitrux Operating System
+  - Create backups of the root for rollbacks
  nuts targets Nitrux 2.6.0+.
 
