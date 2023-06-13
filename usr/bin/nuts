@@ -421,7 +421,7 @@ case "$1" in
 		}
 
 
-		# --  After running rsync reboot the device.
+		# -- After running rsync reboot the device.
 
 		reboot;;
 
@@ -508,7 +508,7 @@ case "$1" in
 			exit
 		}
 
-		# --  After running rsync reboot the device.
+		# -- After running rsync reboot the device.
 
 		reboot;;
 esac
