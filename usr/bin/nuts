@@ -265,6 +265,7 @@ done
 			overlay_ch axel -o /usr/bin -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/main/usr/bin/nuts-cru
 			overlay_ch chmod +x /usr/bin/nuts-cru
 			overlay_ch axel -o /etc -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/main/etc/nuts.conf
+			overlay_ch axel -o /tmp -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-query.info
 			overlay_ch nuts-cru
 
 
