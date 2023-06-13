@@ -116,401 +116,404 @@ fi
 # -- Flag parsing.
 
 (
-case "$1" in
-    ( -h | --help ) puts-text \
-		"$TOOL_NAME" \
-		"" \
-		"Description:" \
-		"" \
-		"    $TOOL_NAME or nuts is a utility to update the Nitrux Operating System and back up the root for rollbacks." \
-		"    ⚠️ Important: nuts is intended to work exclusively in Nitrux OS, and using this utility in other distributions will break them or not work at all." \
-		"" \
-		"    Report bugs at: https://github.com/Nitrux/nuts/issues." \
-		"" \
-		"Flags:" \
-		"    -h or --help         Show this help." \
-		"    -v or --version      Show the version." \
-		"    -d or --debug        Enable verbose output." \
-		"" \
-		"Operations:" \
-		"    update       Update the currently installed root using the media specified in nuts-query and creates a backup of the current root directory." \
-		"    restore      Restore the backup of the root directory generated during the update." \
-		"" \
-		"Usage:" \
-		"    sudo nuts <flag> (operation)" \
-		"" \
-		"Examples:" \
-		"    sudo nuts update" \
-		"    sudo nuts -d restore" \
+for cmd; do
+	case "$cmd" in
+		( -h | --help ) puts-text \
+			"$TOOL_NAME" \
+			"" \
+			"Description:" \
+			"" \
+			"    $TOOL_NAME or nuts is a utility to update the Nitrux Operating System and back up the root for rollbacks." \
+			"    ⚠️ Important: nuts is intended to work exclusively in Nitrux OS, and using this utility in other distributions will break them or not work at all." \
+			"" \
+			"    Report bugs at: https://github.com/Nitrux/nuts/issues." \
+			"" \
+			"Flags:" \
+			"    -h or --help         Show this help." \
+			"    -v or --version      Show the version." \
+			"    -d or --debug        Enable verbose output." \
+			"" \
+			"Operations:" \
+			"    update       Update the currently installed root using the media specified in nuts-query and creates a backup of the current root directory." \
+			"    restore      Restore the backup of the root directory generated during the update." \
+			"" \
+			"Usage:" \
+			"    sudo nuts <flag> (operation)" \
+			"" \
+			"Examples:" \
+			"    sudo nuts update" \
+			"    sudo nuts -d restore" \
 
-		exit;;
+			exit;;
 
-    ( -v | --version )  puts-text \
-		"$TOOL_NAME — version: $TOOL_VERSION." \
-		"" \
-		"The license used for this file and its contents is: BSD-3-Clause." \
-		"" \
-		"Authors:" \
-		"" \
-		"    Copyright <2023> <Uri Herrera <uri_herrera@nxos.org>>" \
-		"    Copyright <2023> <Luis Lavaire <luis_lavaire@nxos.org>>" \
-		"" \
-		"(c) $FECHA Some Rights Reserved. Made by $VENDOR"
+		( -v | --version )  puts-text \
+			"$TOOL_NAME — version: $TOOL_VERSION." \
+			"" \
+			"The license used for this file and its contents is: BSD-3-Clause." \
+			"" \
+			"Authors:" \
+			"" \
+			"    Copyright <2023> <Uri Herrera <uri_herrera@nxos.org>>" \
+			"    Copyright <2023> <Luis Lavaire <luis_lavaire@nxos.org>>" \
+			"" \
+			"(c) $FECHA Some Rights Reserved. Made by $VENDOR"
 
-		exit;;
+			exit;;
 
-    ( -d | --debug )  set -x; shift;;
-esac
-
+		( -d | --debug )  set -x; shift;;
+	esac
+done
 
 #   ====== START ======
 
-case "$1" in
-    ( '' )  error "No operation specified (use -h to see a list of operations).";;
+# -- This process is the same as Calamares, except for user creation, mount creation, and bootloader configuration.
+# -- After using overlay_ch, it's essential to remember that **EVERY COMMAND IS RUNNING AS ROOT AND ON THE LOWER DIRECTORY OF THE OVERLAY**.
 
-	( update )
+# -- Enter the Matri... I mean, the overlay.
 
-		# -- Step 0: Run checks before actually doing anything.
-
-		# -- Ensure that this utility runs in Nitrux and has an Internet connection.
-		# -- Exit if value is not 'nitrux'.
-
-		CURRENT_DIST=$(tail /etc/os-release | grep "VERSION_CODENAME=*" | rev | cut -d '=' -f 1 | rev)
-		TARGET_DIST="nitrux"
-
-		if [ "$CURRENT_DIST" == "$TARGET_DIST" ]; then
-			puts-success "Success! This utility is running in ${TARGET_DIST^n}, continuing..."
-		else
-			puts-error "$TOOL_NAME is intended to work exclusively in ${TARGET_DIST^n}, and using this utility in ${CURRENT_DIST^} will break it and not work at all. Quitting."
-			exit 1
-		fi
+cat < "$0" | SYNC_NEW_ROOT=1 overlay_ch
 
 
-		# -- Check internet connection but do nothing yet.
-		# -- Exit if connection test fails.
+# -- Enter the Matri... I mean, the overlay.
 
-		if ping -q -c 1 -W 1 nxos.org >/dev/null; then
-			puts-success "Success! This computer can reach the internet, continuing..."
-		else
-			puts-error "This computer can't reach the internet, quitting."
-			exit 1
-		fi
+cat < "$0" | SYNC_BACKUP=1 overlay_ch
 
 
-		# -- Update process begins.
-		# -- The update process is divided into two sub-processes, the first is backup, and the second is the actual update.
+for cmd; do
+	case "$cmd" in
+		( '' )  error "No operation specified (use -h to see a list of operations).";;
 
-		# -- First create the directories for nuts.
-		# -- Create working directories in /home since this partition will likely have more space than the root partition, as set in our custom partition layout and the instructions on the website.
+		( update )
 
-		if [ ! -d "$NUTS_DIR_DLS" ] && [ ! -d "$NUTS_DIR_ISO" ] && [ ! -d "$NUTS_DIR_SQS" ] && [ ! -d "$NUTS_DIR_BAK" ]; then
-			puts-info "Creating working directories, continuing..."
-			$ROOT mkdir -p /home/.nuts/{iso,squashfs,backup}
-		else
-			puts-info "Working directories exist, skipping..."
-		fi
+			# -- Step 0: Run checks before actually doing anything.
 
+			# -- Ensure that this utility runs in Nitrux and has an Internet connection.
+			# -- Exit if value is not 'nitrux'.
 
-		# -- Verify that the build list exists.
-		# -- Exit if it doesn't.
+			CURRENT_DIST=$(tail /etc/os-release | grep "VERSION_CODENAME=*" | rev | cut -d '=' -f 1 | rev)
+			TARGET_DIST="nitrux"
 
-		if [ ! -f "/installed_pkgs_end.txt" ]; then
-			puts-error "Build list not found, quitting."
-			exit 1
-		else
-			puts-info "Build list found, continuing..."
-		fi
+			if [ "$CURRENT_DIST" == "$TARGET_DIST" ]; then
+				puts-success "Success! This utility is running in ${TARGET_DIST^n}, continuing..."
+			else
+				puts-error "$TOOL_NAME is intended to work exclusively in ${TARGET_DIST^n}, and using this utility in ${CURRENT_DIST^} will break it and not work at all. Quitting."
+				exit 1
+			fi
 
 
-		# -- Download the nuts-query file from our repository and then use the checksum listed in the file to compare their values.
-		# -- This file is always downloaded to a temporary directory, as there's no reason to keep it.
-		# -- Overwrite the file if it already exists.
+			# -- Check internet connection but do nothing yet.
+			# -- Exit if connection test fails.
 
-		if [ ! -f "/tmp/nuts-query.info" ]; then
-			puts-info "Can't find nuts-query.info, downloading..."
-			dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-query.info
-		else
-			puts-info "Found nuts-query.info, overwriting..."
-			rm -r \
-				/tmp/nuts-query.info
-			dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-query.info
-		fi
+			if ping -q -c 1 -W 1 nxos.org >/dev/null; then
+				puts-success "Success! This computer can reach the internet, continuing..."
+			else
+				puts-error "This computer can't reach the internet, quitting."
+				exit 1
+			fi
 
 
-		# -- Make the comparison.
-		# -- This way, we know that the user is running this tool on an installation that can be upgraded; thus, this tool works as intended.
-		# -- If the checksum matches, exit because the root is already current.
-        # -- If the checksum doesn't match, then continue because the root is out of date or the list differs from the value in the query file.
+			# -- Update process begins.
+			# -- The update process is divided into two sub-processes, the first is backup, and the second is the actual update.
 
-		LOCAL_SUM="$(md5sum /installed_pkgs_end.txt | cut -c -32)"
-		REMOTE_SUM="$(tail /tmp/nuts-query.info | grep rootlistsum= | cut -c -44 | rev | cut -c -32 | rev)"
+			# -- First create the directories for nuts.
+			# -- Create working directories in /home since this partition will likely have more space than the root partition, as set in our custom partition layout and the instructions on the website.
 
-		if [ "$LOCAL_SUM" == "$REMOTE_SUM" ]; then
-			puts-info "The current installation of ${TARGET_DIST^n} is up to date."
-			exit 0
-		else
-			puts-info "Preparing to update ${TARGET_DIST^n}, continuing..."
-		fi
+			if [ ! -d "$NUTS_DIR_DLS" ] && [ ! -d "$NUTS_DIR_ISO" ] && [ ! -d "$NUTS_DIR_SQS" ] && [ ! -d "$NUTS_DIR_BAK" ]; then
+				puts-info "Creating working directories, continuing..."
+				$ROOT mkdir -p /home/.nuts/{iso,squashfs,backup}
+			else
+				puts-info "Working directories exist, skipping..."
+			fi
 
 
-		# -- Step 1: Backup sub-process
+			# -- Verify that the build list exists.
+			# -- Exit if it doesn't.
 
-		# -- This process begins as a step before doing an update.
-		# -- Backup files are only generated when updating; the user can't ask the utility to create them on demand.
-
-		# -- Run the backup cleaner.
-		# -- Only keep the amount of backups defined in nuts.conf.
-
-		puts-info "Cleaning older backups, continuing..."
-		bak_cc
-
-
-		# -- Create the backup.
-		# -- We assume that the /home partition is on an internal storage device (SATA or NVME), but one can never know, so run sync to flush the write cache.
-
-		puts-info "Creating backup of ${CURRENT_DIST^n}, continuing..."
-
-		$ROOT mksquashfs / "$NUTS_DIR_BAK"/nuts-backup-"$DATE_BACKUP_FILE".squashfs \
-			-e /boot/* \
-			-e /dev/* \
-			-ef /etc/shadow \
-			-e /home/ \
-			-e /proc/ \
-			-e /media/* \
-			-e /run/* \
-			-e /sys/* \
-			-e /tmp/* \
-			-e /var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp}/ \
-			-comp zstd \
-			-Xcompression-level 22 \
-			-no-progress \
-			-b 1048576
-		$ROOT md5sum "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)" > "$NUTS_DIR_BAK"/nuts-backup.md5sum
-		sync
-
-		puts-success "Success! Backup has been created."
+			if [ ! -f "/installed_pkgs_end.txt" ]; then
+				puts-error "Build list not found, quitting."
+				exit 1
+			else
+				puts-info "Build list found, continuing..."
+			fi
 
 
-		# -- Step 2: Actual Update sub-process
+			# -- Download the nuts-query file from our repository and then use the checksum listed in the file to compare their values.
+			# -- This file is always downloaded to a temporary directory, as there's no reason to keep it.
+			# -- Overwrite the file if it already exists.
 
-		# -- This utility targets Nitrux version 2.6.0 and newer. However, aria2c is only included by default with version 2.9.0.
-		# -- To use this utility in previous versions of Nitrux, we need to download a static binary.
-		# -- So, first check if aria2c is available and download it if not.
-
-		if [ -f "/usr/bin/aria2c" ]; then
-			puts-success "Success! aria2c binary is found, skipping..."
-		else
-			puts-info "Can't find aria2c binary, downloading..."
-			dl_file https://github.com/abcfy2/aria2-static-build/releases/download/1.36.0/aria2-x86_64-linux-musl_static.zip
-			puts-info "Adding aria2c static binary, continuing..."
-			$ROOT unzip /tmp/aria2-x86_64-linux-musl_static.zip -d /usr/bin
-		fi
-
-
-		# -- Download the ISO with aria2c using the BitTorrent protocol.
-        # -- Check if the ISO already exists so it's not downloaded again. If an ISO file was downloaded then rename it.
-        # -- However, If the ISO file found doesn't match the checksum, it will still cause the utility to exit at a later stage.
-		# -- Use the magnet link from the query file.
-		# -- Magnet link is provided by FOSS Torrents https://fosstorrents.com/distributions/nitrux/#downloads.
-
-		if [ -f "$NUTS_DIR_DLS/nitrux.iso" ]; then
-			puts-info "ISO file found, skipping..."
-		else
-			puts-info "ISO file not found! Dowloading ISO using aria2c, continuing..."
-			MAGNET_LINK="$(tail /tmp/nuts-query.info | grep magnetlink= | rev | cut -d '=' -f -42 | rev)"
-			$ROOT aria2c -d "$NUTS_DIR_DLS" --seed-time=0 "$MAGNET_LINK"
-			$ROOT mv "$(echo "$NUTS_DIR_DLS"/nitrux-nx-desktop-plasma-*-amd64.iso | tr ' ' '\n' | tail -n 1)" "$NUTS_DIR_DLS"/nitrux.iso
-		fi
+			if [ ! -f "/tmp/nuts-query.info" ]; then
+				puts-info "Can't find nuts-query.info, downloading..."
+				dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-query.info
+			else
+				puts-info "Found nuts-query.info, overwriting..."
+				rm -r \
+					/tmp/nuts-query.info
+				dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-query.info
+			fi
 
 
-		# -- Verify the checksum of the ISO. Use the checksum from the query file.
-		# -- Exit if checksum doesn't match.
+			# -- Make the comparison.
+			# -- This way, we know that the user is running this tool on an installation that can be upgraded; thus, this tool works as intended.
+			# -- If the checksum matches, exit because the root is already current.
+			# -- If the checksum doesn't match, then continue because the root is out of date or the list differs from the value in the query file.
 
-		LOCAL_ISO_SUM="$(md5sum "$NUTS_DIR_DLS"/nitrux.iso | cut -c -32)"
-		DL_ISO_SUM="$(tail /tmp/nuts-query.info | grep isosum= | cut -c -44 | rev | cut -c -32 | rev)"
+			LOCAL_SUM="$(md5sum /installed_pkgs_end.txt | cut -c -32)"
+			REMOTE_SUM="$(tail /tmp/nuts-query.info | grep rootlistsum= | cut -c -44 | rev | cut -c -32 | rev)"
 
-		if [ "$LOCAL_ISO_SUM" == "$DL_ISO_SUM" ]; then
-			puts-info "ISO checksum matches, continuing..."
-		else
-			puts-error "ISO checksum does not match, quitting."
-			rm "$NUTS_DIR_DLS"/nitrux.iso
-			exit 1
-		fi
-
-
-		# -- This process is the same as Calamares, except for user creation, mount creation, and bootloader configuration.
-		# -- After using overlay_ch, it's essential to remember that **EVERY COMMAND IS RUNNING AS ROOT AND ON THE LOWER DIRECTORY OF THE OVERLAY**.
-
-		# -- Enter the Matri... I mean, the overlay.
-
-		tail "$0" | SYNC_NEW_ROOT=1 overlay_ch
+			if [ "$LOCAL_SUM" == "$REMOTE_SUM" ]; then
+				puts-info "The current installation of ${TARGET_DIST^n} is up to date."
+				exit 0
+			else
+				puts-info "Preparing to update ${TARGET_DIST^n}, continuing..."
+			fi
 
 
-		# -- Inside the curly brackets, we enter a new shell because of the chroot. 
-		# -- Whatever is on the script that is executed using a user shell will not be executed here.
-		# -- So, we must add what we want to run in the chroot inside the curly brackets, including variables.
+			# -- Step 1: Backup sub-process
 
-		[ "$SYNC_NEW_ROOT" ] && {
+			# -- This process begins as a step before doing an update.
+			# -- Backup files are only generated when updating; the user can't ask the utility to create them on demand.
 
-			# -- Variables.
+			# -- Run the backup cleaner.
+			# -- Only keep the amount of backups defined in nuts.conf.
 
-			NUTS_DIR_DLS="/home/.nuts/downloads"
-			NUTS_DIR_ISO="/home/.nuts/iso"
-			NUTS_DIR_SQS="/home/.nuts/squashfs"
-
-
-			# --  Mount the devices filesystem, then mount the ISO and the SquashFS.
-
-			mount -t devtmpfs dev /dev
-			mount "$NUTS_DIR_DLS"/nitrux.iso "$NUTS_DIR_ISO"
-			mount "$NUTS_DIR_ISO"/casper/filesystem.squashfs "$NUTS_DIR_SQS"
+			puts-info "Cleaning older backups, continuing..."
+			bak_cc
 
 
-			# -- Now comes the good part; proceed with running rsync and update the current installation.
+			# -- Create the backup.
+			# -- We assume that the /home partition is on an internal storage device (SATA or NVME), but one can never know, so run sync to flush the write cache.
 
-			echo "Updating ${CURRENT_DIST^n}, continuing..."
-			
-			rsync -avzh \
-				--exclude /dev/ \
-				--exclude /etc/shadow \
-				--exclude /home/ \
-				--exclude /proc/ \
-				--exclude /run/ \
-				--exclude /sys/ \
-				--exclude /var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp} \
-				--progress \
-				"$NUTS_DIR_SQS" /
+			puts-info "Creating backup of ${CURRENT_DIST^n}, continuing..."
+
+			$ROOT mksquashfs / "$NUTS_DIR_BAK"/nuts-backup-"$DATE_BACKUP_FILE".squashfs \
+				-e /boot/* \
+				-e /dev/* \
+				-ef /etc/shadow \
+				-e /home/ \
+				-e /proc/ \
+				-e /media/* \
+				-e /run/* \
+				-e /sys/* \
+				-e /tmp/* \
+				-e /var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp}/ \
+				-comp zstd \
+				-Xcompression-level 22 \
+				-no-progress \
+				-b 1048576
+			$ROOT md5sum "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)" > "$NUTS_DIR_BAK"/nuts-backup.md5sum
 			sync
 
-			echo "Success! Update has been applied."
+			puts-success "Success! Backup has been created."
 
 
-			# -- Unmount the ISO and the SquashFS.
+			# -- Step 2: Actual Update sub-process
 
-			umount "$NUTS_DIR_SQS"
-			umount "$NUTS_DIR_ISO"
+			# -- This utility targets Nitrux version 2.6.0 and newer. However, aria2c is only included by default with version 2.9.0.
+			# -- To use this utility in previous versions of Nitrux, we need to download a static binary.
+			# -- So, first check if aria2c is available and download it if not.
 
-
-			# -- Update GRUB.
-
-			update-grub
-
-
-			# -- Unmount the devices filesystem.
-
-			umount /dev
-
-
-			# -- Do a cleanup of the synced root.
-
-			echo "Calling the $TOOL_NAME Cleanup Crew, continuing..."
-			dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-cc
-			chmod +x /tmp//nuts-cc
-			bash /tmp//nuts-cc
+			if [ -f "/usr/bin/aria2c" ]; then
+				puts-success "Success! aria2c binary is found, skipping..."
+			else
+				puts-info "Can't find aria2c binary, downloading..."
+				dl_file https://github.com/abcfy2/aria2-static-build/releases/download/1.36.0/aria2-x86_64-linux-musl_static.zip
+				puts-info "Adding aria2c static binary, continuing..."
+				$ROOT unzip /tmp/aria2-x86_64-linux-musl_static.zip -d /usr/bin
+			fi
 
 
-			# -- Finalizing.
-			# -- Leave the Matri... I mean, the overlay.
+			# -- Download the ISO with aria2c using the BitTorrent protocol.
+			# -- Check if the ISO already exists so it's not downloaded again. If an ISO file was downloaded then rename it.
+			# -- However, If the ISO file found doesn't match the checksum, it will still cause the utility to exit at a later stage.
+			# -- Use the magnet link from the query file.
+			# -- Magnet link is provided by FOSS Torrents https://fosstorrents.com/distributions/nitrux/#downloads.
 
-			rm -r \
-				/tmp//nuts-cc \
-				"$NUTS_DIR_DLS"/nitrux.iso
-
-			exit
-		}
-
-
-		# -- After running rsync reboot the device.
-
-		reboot;;
-
-	( restore )
-
-		# -- Restore Process
-		# -- The restore process is the same as the Actual Update sub-process but using the backup SquashFS.
-
-		# -- Verify the checksum of the backup file with the generated checksum file.
-		# -- Exit if checksum doesn't match.
-
-		BACKUP_SUM="$(md5sum "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)" | cut -c -32)"
-		GEN_BAK_SUM="$(tail "$NUTS_DIR_BAK"/nuts-backup.md5sum | cut -c -32)"
-
-		if [ "$BACKUP_SUM" == "$GEN_BAK_SUM" ]; then
-			puts-info "Backup checksum matches, continuing..."
-		else
-			puts-error "Backup checksum does not match, quitting."
-			exit 1
-		fi
+			if [ -f "$NUTS_DIR_DLS/nitrux.iso" ]; then
+				puts-info "ISO file found, skipping..."
+			else
+				puts-info "ISO file not found! Dowloading ISO using aria2c, continuing..."
+				MAGNET_LINK="$(tail /tmp/nuts-query.info | grep magnetlink= | rev | cut -d '=' -f -42 | rev)"
+				$ROOT aria2c -d "$NUTS_DIR_DLS" --seed-time=0 "$MAGNET_LINK"
+				$ROOT mv "$(echo "$NUTS_DIR_DLS"/nitrux-nx-desktop-plasma-*-amd64.iso | tr ' ' '\n' | tail -n 1)" "$NUTS_DIR_DLS"/nitrux.iso
+			fi
 
 
-		# -- Enter the Matri... I mean, the overlay.
+			# -- Verify the checksum of the ISO. Use the checksum from the query file.
+			# -- Exit if checksum doesn't match.
 
-		tail "$0" | SYNC_BACKUP=1 overlay_ch
+			LOCAL_ISO_SUM="$(md5sum "$NUTS_DIR_DLS"/nitrux.iso | cut -c -32)"
+			DL_ISO_SUM="$(tail /tmp/nuts-query.info | grep isosum= | cut -c -44 | rev | cut -c -32 | rev)"
 
-
-		# -- Inside the curly brackets, we enter a new shell because of the chroot. 
-		# -- Whatever is on the script that is executed using a user shell will not be executed here.
-		# -- So, we must add what we want to run in the chroot inside the curly brackets, including variables.
-
-		[ "$SYNC_BACKUP" ] && {
-
-			# -- Variables.
-
-			NUTS_DIR_SQS="/home/.nuts/squashfs"
-			NUTS_DIR_BAK="/home/.nuts/backup"
+			if [ "$LOCAL_ISO_SUM" == "$DL_ISO_SUM" ]; then
+				puts-info "ISO checksum matches, continuing..."
+			else
+				puts-error "ISO checksum does not match, quitting."
+				rm "$NUTS_DIR_DLS"/nitrux.iso
+				exit 1
+			fi
 
 
-			# -- Mount the devices filesystem, then mount the SquashFS.
-			# -- **ALWAYS** use the newest SquashFS in the directory. The user can't select which backup to restore.
+			# -- Inside the curly brackets, we enter a new shell because of the chroot. 
+			# -- Whatever is on the script that is executed using a user shell will not be executed here.
+			# -- So, we must add what we want to run in the chroot inside the curly brackets, including variables.
 
-			mount -t devtmpfs dev /dev
-			mount "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)" "$NUTS_DIR_SQS"
+			[ "$SYNC_NEW_ROOT" ] && {
 
+				# -- Variables.
 
-			# -- Now comes the good part; proceed with running rsync and restore the backup.
-
-			echo "Restoring backup of ${CURRENT_DIST^n}, continuing..."
-
-			rsync -avzh \
-				--exclude /dev/ \
-				--exclude /etc/shadow \
-				--exclude /home/ \
-				--exclude /proc/ \
-				--exclude /run/ \
-				--exclude /sys/ \
-				--exclude /var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp} \
-				--progress \
-				"$NUTS_DIR_SQS" /
-			sync
-
-			echo "Success! Backup has been restored."
+				NUTS_DIR_DLS="/home/.nuts/downloads"
+				NUTS_DIR_ISO="/home/.nuts/iso"
+				NUTS_DIR_SQS="/home/.nuts/squashfs"
 
 
-			# -- Unmount the SquashFS.
+				# --  Mount the devices filesystem, then mount the ISO and the SquashFS.
 
-			umount "$NUTS_DIR_SQS"
-
-
-			# -- Update GRUB.
-
-			update-grub
+				mount -t devtmpfs dev /dev
+				mount "$NUTS_DIR_DLS"/nitrux.iso "$NUTS_DIR_ISO"
+				mount "$NUTS_DIR_ISO"/casper/filesystem.squashfs "$NUTS_DIR_SQS"
 
 
-			# -- Unmount the devices filesystem.
+				# -- Now comes the good part; proceed with running rsync and update the current installation.
 
-			umount /dev
+				echo "Updating ${CURRENT_DIST^n}, continuing..."
+				
+				rsync -avzh \
+					--exclude /dev/ \
+					--exclude /etc/shadow \
+					--exclude /home/ \
+					--exclude /proc/ \
+					--exclude /run/ \
+					--exclude /sys/ \
+					--exclude /var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp} \
+					--progress \
+					"$NUTS_DIR_SQS" /
+				sync
+
+				echo "Success! Update has been applied."
 
 
-			# -- Finalizing.
-			# -- Leave the Matri... I mean, the overlay.
+				# -- Unmount the ISO and the SquashFS.
 
-			exit
-		}
+				umount "$NUTS_DIR_SQS"
+				umount "$NUTS_DIR_ISO"
 
-		# -- After running rsync reboot the device.
 
-		reboot;;
-esac
+				# -- Update GRUB.
+
+				update-grub
+
+
+				# -- Unmount the devices filesystem.
+
+				umount /dev
+
+
+				# -- Do a cleanup of the synced root.
+
+				echo "Calling the $TOOL_NAME Cleanup Crew, continuing..."
+				dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-cc
+				chmod +x /tmp//nuts-cc
+				bash /tmp//nuts-cc
+
+
+				# -- Finalizing.
+				# -- Leave the Matri... I mean, the overlay.
+
+				rm -r \
+					/tmp//nuts-cc \
+					"$NUTS_DIR_DLS"/nitrux.iso
+
+				exit
+			}
+
+
+			# -- After running rsync reboot the device.
+
+			reboot;;
+
+		( restore )
+
+			# -- Restore Process
+			# -- The restore process is the same as the Actual Update sub-process but using the backup SquashFS.
+
+			# -- Verify the checksum of the backup file with the generated checksum file.
+			# -- Exit if checksum doesn't match.
+
+			BACKUP_SUM="$(md5sum "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)" | cut -c -32)"
+			GEN_BAK_SUM="$(tail "$NUTS_DIR_BAK"/nuts-backup.md5sum | cut -c -32)"
+
+			if [ "$BACKUP_SUM" == "$GEN_BAK_SUM" ]; then
+				puts-info "Backup checksum matches, continuing..."
+			else
+				puts-error "Backup checksum does not match, quitting."
+				exit 1
+			fi
+
+
+			# -- Inside the curly brackets, we enter a new shell because of the chroot. 
+			# -- Whatever is on the script that is executed using a user shell will not be executed here.
+			# -- So, we must add what we want to run in the chroot inside the curly brackets, including variables.
+
+			[ "$SYNC_BACKUP" ] && {
+
+				# -- Variables.
+
+				NUTS_DIR_SQS="/home/.nuts/squashfs"
+				NUTS_DIR_BAK="/home/.nuts/backup"
+
+
+				# -- Mount the devices filesystem, then mount the SquashFS.
+				# -- **ALWAYS** use the newest SquashFS in the directory. The user can't select which backup to restore.
+
+				mount -t devtmpfs dev /dev
+				mount "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)" "$NUTS_DIR_SQS"
+
+
+				# -- Now comes the good part; proceed with running rsync and restore the backup.
+
+				echo "Restoring backup of ${CURRENT_DIST^n}, continuing..."
+
+				rsync -avzh \
+					--exclude /dev/ \
+					--exclude /etc/shadow \
+					--exclude /home/ \
+					--exclude /proc/ \
+					--exclude /run/ \
+					--exclude /sys/ \
+					--exclude /var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp} \
+					--progress \
+					"$NUTS_DIR_SQS" /
+				sync
+
+				echo "Success! Backup has been restored."
+
+
+				# -- Unmount the SquashFS.
+
+				umount "$NUTS_DIR_SQS"
+
+
+				# -- Update GRUB.
+
+				update-grub
+
+
+				# -- Unmount the devices filesystem.
+
+				umount /dev
+
+
+				# -- Finalizing.
+				# -- Leave the Matri... I mean, the overlay.
+
+				exit
+			}
+
+			# -- After running rsync reboot the device.
+
+			reboot;;
+	esac
+done
 ) 2>&1 | tee -a "$NUTS_LOG"
 
 #   ====== END ======
