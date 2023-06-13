@@ -349,7 +349,7 @@ for cmd; do
 			# -- If the component doesn't exist in the root, download it.
 
 			overlay_ch axel -o /tmp -n 10 https://raw.githubusercontent.com/Nitrux/nuts/main/usr/bin/nuts-cru
-			overlay_ch chmod +x /tmp//nuts-cru && mv /tmp//nuts-cru /usr/bin/
+			overlay_ch chmod +x /tmp/nuts-cru && mv /tmp//nuts-cru /usr/bin/
 			overlay_ch nuts-cru
 
 
@@ -383,7 +383,7 @@ for cmd; do
 			# -- If the component doesn't exist in the root, download it.
 
 			overlay_ch axel -o /tmp -n 10 https://raw.githubusercontent.com/Nitrux/nuts/main/usr/bin/nuts-crr
-			overlay_ch chmod +x /tmp//nuts-crr && mv /tmp//nuts-crr /usr/bin/
+			overlay_ch chmod +x /tmp/nuts-crr && mv /tmp//nuts-crr /usr/bin/
 			overlay_ch nuts-crr
 
 
