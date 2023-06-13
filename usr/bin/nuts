@@ -261,7 +261,7 @@ case "$1" in
 		# -- Run the backup cleaner.
 		# -- Only keep the amount of backups defined in nuts.conf.
 
-		puts-info "Running backup cleaner crew, continuing..."
+		puts-info "Cleaning older backups, continuing..."
 		bak_cc
 
 
