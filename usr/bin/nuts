@@ -359,7 +359,7 @@ for cmd; do
 				else
 					puts-info "Update component not found, downloading..."
 					dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/usr/bin/nuts-cru
-					mv /tmp//nuts-cru /usr/bin/
+					chmod +x /tmp//nuts-cru && mv /tmp//nuts-cru /usr/bin/
 					nuts-cru
 				fi
 
@@ -404,7 +404,7 @@ for cmd; do
 				else
 					puts-info "Restore component not found, downloading..."
 					dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/usr/bin/nuts-crr
-					mv /tmp//nuts-crr /usr/bin/
+					chmod +x /tmp//nuts-crr && mv /tmp//nuts-crr /usr/bin/
 					nuts-crr
 				fi
 
