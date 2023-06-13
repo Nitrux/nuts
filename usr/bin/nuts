@@ -304,18 +304,22 @@ case "$1" in
 
 
 		# -- Download the ISO with aria2c using the BitTorrent protocol.
-        # -- Check if the ISO already exists so it's not downloaded again. 
+        # -- Check if the ISO already exists so it's not downloaded again. If an ISO file was downloaded then rename it.
         # -- However, If the ISO file found doesn't match the checksum, it will still cause the utility to exit at a later stage.
 		# -- Use the magnet link from the query file.
 		# -- Magnet link is provided by FOSS Torrents https://fosstorrents.com/distributions/nitrux/#downloads.
 
-		if [ -f "$NUTS_DIR_DLS/nitrux.iso" ]; then
-			puts-info "An ISO file was found, skipping..."
+		if [ ! -f "$NUTS_DIR_DLS/nitrux.iso" ]; then
+			puts-info "ISO file not found! Checking for other ISO files, continuing..."
+				if [ -f "$NUTS_DIR_DLS/nitrux-nx-desktop-plasma-*-amd64.iso" ]; then
+					$ROOT mv "$NUTS_DIR_DLS"/nitrux-nx-desktop-plasma-*-amd64.iso "$NUTS_DIR_DLS"/nitrux.iso
+				fi
 		else
 			puts-info "Dowloading ISO using aria2c, continuing..."
 			MAGNET_LINK="$(tail /tmp/nuts-query.info | grep magnetlink= | rev | cut -d '=' -f -42 | rev)"
 			$ROOT aria2c -d "$NUTS_DIR_DLS" --seed-time=0 "$MAGNET_LINK"
 			$ROOT mv "$NUTS_DIR_DLS"/nitrux-nx-desktop-plasma-*-amd64.iso "$NUTS_DIR_DLS"/nitrux.iso
+
 		fi
 
 
