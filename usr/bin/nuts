@@ -144,7 +144,7 @@ esac
 #   ====== START ======
 
 case "$1" in
-    ( '' )  error "No operation specified (use help to see a list of operations).";;
+    ( '' )  error "No operation specified (use -h to see a list of operations).";;
 
 	( update )
 
@@ -234,6 +234,7 @@ case "$1" in
 
 		# -- This process begins as a step before doing an update.
 		# -- Backup files are only generated when updating; the user can't ask the utility to create them on demand.
+		# -- Older backups are kept just in case; however, the user can choose how many to keep by editing nuts.conf, This functionality is not implemented yet, though.
 		# -- We assume that the /home partition is on an internal storage device (SATA or NVME), but one can never know, so run sync to flush the write cache.
 
 		puts-info "Creating backup of ${CURRENT_DIST^n}, continuing..."
@@ -407,7 +408,7 @@ case "$1" in
 
 
 			# -- Mount the devices filesystem, then mount the SquashFS.
-			# -- Use the newest SquashFS in the directory.
+			# -- **ALWAYS** use the newest SquashFS in the directory. The user can't select which backup to restore.
 
 			mount -t devtmpfs dev /dev
 			mount "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)" "$NUTS_DIR_SQS"
