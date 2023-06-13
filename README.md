@@ -21,7 +21,11 @@ The point of this utility is twofold, first, to be able to update the Nitrux Ope
 
 #### What `nuts` is
 
- - `nuts` works by creating a backup of the current root directory using SquashFS; then, `nuts` downloads an ISO image, mounts it and uses `rsync` to update the installation. Afterward, when using `nuts` to restore a backup, `nuts` will do the exact process but use the locally generated SquashFS instead.
+ - `nuts` works by creating a backup of the current root directory using SquashFS; then, `nuts` downloads an ISO image using the BitTorrent protocol, mounts it and uses `rsync` to update the installation. Afterward, when using `nuts` to restore a backup, `nuts` will do the exact process but using the locally generated SquashFS instead.
+ - `nuts` is minimalistic.
+   - `nuts` was designed to only do what it needs to do and nothing else.
+- `nuts` is 100% Free (as in Freedom) Open Source Software; see [License](#licensing).
+- `nuts` is written entirely in [POSIX-compliant scripting language](https://en.wikipedia.org/wiki/Shell_script#Typical_POSIX_scripting_languages).
 
 #### What `nuts` is not
 
@@ -30,6 +34,10 @@ The point of this utility is twofold, first, to be able to update the Nitrux Ope
   - `nuts` does not interact with any software "repository" either.
 - `nuts` is not an installer.
   - `nuts` is inspired by the functional workflow of most Linux installers, that is, extracting a SquashFS file. However, `nuts` does not handle in any way locale configuration, user creation, partition mounts, or bootloader configuration, etc.
+- `nuts` is not a "only" a backup utility.
+  - `nuts` is not designed exclusively as a backup utility in the way that other utilities like _restic_, _bup_ or filesystem-level tools like _xfsdump_ and _xfsrestore_, _btrfs-snapshot_ or _lvmcreate_ were.
+- `nuts` is not a container or a virtual machine.
+  - _**Note**: We don't know why anyone would think that, but one can never know._
 
 ## Usage
 
