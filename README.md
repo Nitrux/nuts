@@ -14,6 +14,8 @@ The point of this utility is twofold, first, to be able to update the Nitrux Ope
 
 ## Usage
 
+This utility is designed to be highly autonomous.
+
 To use `nuts`, do the following.
 
 Open a terminal and run one of the following commands.
