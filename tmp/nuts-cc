@@ -27,7 +27,7 @@ set -e
 
 # -- Set program name and version.
 
-TOOL_SHRT_NAME="nuts"
+TOOL_SHRT_NAME="nuts-cc"
 
 
 # -- Print informative messages to stdin.
