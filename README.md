@@ -27,6 +27,7 @@ Afterward, when using `nuts` to restore a backup, `nuts` will do the exact proce
 
  - `nuts` is minimalistic.
    - `nuts` was designed to only do what it needs to do and nothing else.
+   - `nuts` is a CLI utility, but if it had a GUI, it'd be a window with two buttons and a progress bar.
 - `nuts` is 100% Free (as in Freedom) Open Source Software; see [License](#licensing).
 - `nuts` is written entirely in [POSIX-compliant scripting language](https://en.wikipedia.org/wiki/Shell_script#Typical_POSIX_scripting_languages).
 
