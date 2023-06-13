@@ -1,3 +1,10 @@
+nuts (0.1.1) nitrux; urgency=medium
+
+  * Move working directories variables to conf file.
+  * Add backup delete functionality.
+
+ -- Uri Herrera <uri_herrera@nxos.org>  Tue, 13 Jun 2023 02:20:00 -0500
+
 nuts (0.1.0) nitrux; urgency=medium
 
   * Revise ISO check.

@@ -97,6 +97,7 @@ fi
 
 dl_file () { axel -o /tmp -n 10 "$@"; }
 overlay_ch () { $ROOT overlayroot-chroot; }
+bak_del () { find "$NUTS_DIR_BAK" -maxdepth 1 -type f | head -n "$BACKUPS_TO_KEEP" | xargs --no-run-if-empty rm; }
 
 
 # -- Use a log file.
@@ -202,11 +203,6 @@ case "$1" in
 		# -- First create the directories for nuts.
 		# -- Create working directories in /home since this partition will likely have more space than the root partition, as set in our custom partition layout and the instructions on the website.
 
-		NUTS_DIR_DLS="/home/.nuts/downloads"
-		NUTS_DIR_ISO="/home/.nuts/iso"
-		NUTS_DIR_SQS="/home/.nuts/squashfs"
-		NUTS_DIR_BAK="/home/.nuts/backup"
-
 		if [ ! -d "$NUTS_DIR_DLS" ] && [ ! -d "$NUTS_DIR_ISO" ] && [ ! -d "$NUTS_DIR_SQS" ] && [ ! -d "$NUTS_DIR_BAK" ]; then
 			puts-info "Creating working directories, continuing..."
 			$ROOT mkdir -p /home/.nuts/{iso,squashfs,backup}
@@ -261,7 +257,14 @@ case "$1" in
 
 		# -- This process begins as a step before doing an update.
 		# -- Backup files are only generated when updating; the user can't ask the utility to create them on demand.
-		# -- Older backups are kept just in case; however, the user can choose how many to keep by editing nuts.conf, This functionality is not implemented yet, though.
+
+		# -- Run the backup cleaner.
+		# -- Only keep the amount of backups defined in nuts.conf.
+
+		$ROOT bak_del
+
+
+		# -- Create the backup.
 		# -- We assume that the /home partition is on an internal storage device (SATA or NVME), but one can never know, so run sync to flush the write cache.
 
 		puts-info "Creating backup of ${CURRENT_DIST^n}, continuing..."
