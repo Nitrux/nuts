@@ -19,7 +19,9 @@ The point of this utility is twofold, first, to be able to update the Nitrux Ope
 
 `nuts` is a simple (read. [KISS](https://people.apache.org/~fhanik/kiss.html)) system update and rollback utility.
 
-`nuts` works by creating a backup of the current root directory using SquashFS; then, `nuts` downloads an ISO image using the BitTorrent protocol, mount it, and use `rsync` to update the installation. Afterward, when using `nuts` to restore a backup, `nuts` will do the exact process but use the locally generated SquashFS instead, so, no downloads.
+`nuts` works in three steps. First by creating a backup of the current root directory using SquashFS; then, `nuts` downloads an ISO image using the BitTorrent protocol, and uses `rsync` to update the system. 
+
+Afterward, when using `nuts` to restore a backup, `nuts` will do the exact process but use the locally generated SquashFS instead, so, no downloads.
 
 #### What `nuts` is ✅
 
