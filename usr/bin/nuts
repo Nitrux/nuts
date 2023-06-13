@@ -321,7 +321,6 @@ case "$1" in
 			MAGNET_LINK="$(tail /tmp/nuts-query.info | grep magnetlink= | rev | cut -d '=' -f -42 | rev)"
 			$ROOT aria2c -d "$NUTS_DIR_DLS" --seed-time=0 "$MAGNET_LINK"
 			$ROOT mv "$NUTS_DIR_DLS"/nitrux-nx-desktop-plasma-*-amd64.iso "$NUTS_DIR_DLS"/nitrux.iso
-
 		fi
 
 
