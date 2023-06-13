@@ -75,10 +75,19 @@ CURRENT_DIST=$(tail /etc/os-release | grep "VERSION_CODENAME=*" | rev | cut -d '
 
 #   ====== START ======
 
+# -- Flag parsing.
+
+for cmd; do
+	case "$cmd" in
+		( -d | --debug )  set -x; shift;;
+	esac
+done
+
+
 # -- Create the directories for nuts.
 # -- Create working directories in /home since this partition will likely have more space than the root partition, as set in our custom partition layout and the instructions on the website.
 
-if [ ! -d "$NUTS_DIR_DLS" ] && [ ! -d "$NUTS_DIR_ISO" ] && [ ! -d "$NUTS_DIR_SQS" ] && [ ! -d "$NUTS_DIR_BAK" ]; then
+if [[ ! -d "$NUTS_DIR_DLS" ]] && [[ ! -d "$NUTS_DIR_ISO" ]] && [[ ! -d "$NUTS_DIR_SQS" ]] && [[ ! -d "$NUTS_DIR_BAK" ]]; then
 	puts-info "Creating working directories, continuing..."
 	$ROOT mkdir -p /home/.nuts/{iso,squashfs,backup}
 else
@@ -92,7 +101,7 @@ fi
 BACKUP_SUM="$(md5sum "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)" | cut -c -32)"
 GEN_BAK_SUM="$(tail "$NUTS_DIR_BAK"/nuts-backup.md5sum | cut -c -32)"
 
-if [ "$BACKUP_SUM" == "$GEN_BAK_SUM" ]; then
+if [[ "$BACKUP_SUM" == "$GEN_BAK_SUM" ]]; then
 	puts-info "Backup checksum matches, continuing..."
 else
 	puts-error "Backup checksum does not match, quitting."

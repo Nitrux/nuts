@@ -122,7 +122,6 @@ TARGET_DIST="nitrux"
 
 # -- Flag parsing.
 
-(
 for cmd; do
 	case "$cmd" in
 		( -h | --help ) puts-text \
@@ -172,7 +171,7 @@ for cmd; do
 done
 
 
-for cmd; do
+( for cmd; do
 	case "$cmd" in
 		( '' )  error "No operation specified (use -h to see a list of operations).";;
 
@@ -299,7 +298,6 @@ for cmd; do
 			puts-info "Time to reboot. Bye."
 			shift;;
 	esac
-done
-) 2>&1 | tee -a "$NUTS_LOG"
+done ) 2>&1 | tee -a "$NUTS_LOG"
 
 #   ====== END ======
