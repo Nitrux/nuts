@@ -95,7 +95,7 @@ fi
 
 # -- Functions.
 
-dl_file () { axel -a -o /tmp -n 10 "$@"; }
+dl_file () { axel -o /tmp -n 10 "$@"; }
 overlay_ch () { $ROOT overlayroot-chroot; }
 
 
@@ -275,7 +275,7 @@ case "$1" in
 			-e /media/* \
 			-e /run/* \
 			-e /sys/* \
-			-e /tmp/* \
+			-e //tmp/* \
 			-e /var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp}/ \
 			-comp zstd \
 			-Xcompression-level 22 \
@@ -307,17 +307,16 @@ case "$1" in
 		# -- Use the magnet link from the query file.
 		# -- Magnet link is provided by FOSS Torrents https://fosstorrents.com/distributions/nitrux/#downloads.
 
+		puts-info "Dowloading ISO using aria2c, continuing..."
 		MAGNET_LINK="$(tail /tmp/nuts-query.info | grep magnetlink= | rev | cut -d '=' -f -42 | rev)"
-
-		$ROOT aria2c -d "$NUTS_DIR_DLS" --seed-time=0 "$MAGNET_LINK"
-		$ROOT mv "$NUTS_DIR_DLS"/nitrux-nx-desktop-plasma-*-amd64.iso "$NUTS_DIR_DLS"/nitrux.iso
+		$ROOT aria2c -d "$NUTS_DIR_DLS" -o nitrux.iso --seed-time=0 "$MAGNET_LINK" 
 
 
 		# -- Verify the checksum of the ISO. Use the checksum from the query file.
 		# -- Exit if checksum doesn't match.
 
 		LOCAL_ISO_SUM="$(md5sum "$NUTS_DIR_DLS"/nitrux.iso | cut -c -32)"
-		DL_ISO_SUM="$(tail /tmp/nuts-query.info | grep rootlistsum= | cut -c -44 | rev | cut -c -32 | rev)"
+		DL_ISO_SUM="$(tail /tmp/nuts-query.info | grep isosum= | cut -c -44 | rev | cut -c -32 | rev)"
 
 		if [ "$LOCAL_ISO_SUM" == "$DL_ISO_SUM" ]; then
 			puts-info "ISO checksum matches, continuing..."
