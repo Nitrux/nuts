@@ -34,6 +34,11 @@ set -e
 TOOL_NAME="Nitrux Update System Tool"
 
 
+# -- Print success messages to stdin.
+
+puts-success () { printf "$TOOL_SHRT_NAME: \e[32mSuccess:\e[0m %b\n\n" "$*"; }
+
+
 # -- Define the path of the nuts configuration file.
 
 CONFIG_FILE="/etc/nuts.conf"
