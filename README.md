@@ -34,7 +34,7 @@ The point of this utility is twofold, first, to be able to update the Nitrux Ope
   - `nuts` does not interact with any software "repository" either.
 - `nuts` is not an installer.
   - `nuts` is inspired by the functional workflow of most Linux installers, that is, extracting a SquashFS file. However, `nuts` does not handle in any way locale configuration, user creation, partition mounts, or bootloader configuration, etc.
-- `nuts` is not a "only" a backup utility.
+- `nuts` is not "only" a backup utility.
   - `nuts` is not designed exclusively as a backup utility in the way that other utilities like _restic_, _bup_ or filesystem-level tools like _xfsdump_ and _xfsrestore_, _btrfs-snapshot_ or _lvmcreate_ were.
 - `nuts` is not a container or a virtual machine.
   - _**Note**: We don't know why anyone would think that, but one can never know, so let's clarify that._
