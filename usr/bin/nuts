@@ -352,6 +352,7 @@ for cmd; do
 
 			# -- After running rsync reboot the device.
 
+			puts-info "Time to reboot. Bye."
 			reboot;;
 
 
@@ -382,6 +383,7 @@ for cmd; do
 
 			# -- After running rsync reboot the device.
 
+			puts-info "Time to reboot. Bye."
 			reboot;;
 	esac
 done
