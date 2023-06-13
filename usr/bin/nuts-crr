@@ -68,18 +68,36 @@ else
 fi
 
 
-#   ====== START ======
-
 # -- Variables.
 
 CURRENT_DIST=$(tail /etc/os-release | grep "VERSION_CODENAME=*" | rev | cut -d '=' -f 1 | rev)
 
 
-# --  Mount the devices filesystem, then mount the ISO and the SquashFS.
+#   ====== START ======
 
-mount -t devtmpfs dev /dev
-mount "$NUTS_DIR_DLS"/nitrux.iso "$NUTS_DIR_ISO"
-mount "$NUTS_DIR_ISO"/casper/filesystem.squashfs "$NUTS_DIR_SQS"
+# -- Create the directories for nuts.
+# -- Create working directories in /home since this partition will likely have more space than the root partition, as set in our custom partition layout and the instructions on the website.
+
+if [ ! -d "$NUTS_DIR_DLS" ] && [ ! -d "$NUTS_DIR_ISO" ] && [ ! -d "$NUTS_DIR_SQS" ] && [ ! -d "$NUTS_DIR_BAK" ]; then
+	puts-info "Creating working directories, continuing..."
+	$ROOT mkdir -p /home/.nuts/{iso,squashfs,backup}
+else
+	puts-info "Working directories exist, skipping..."
+fi
+
+
+# -- Verify the checksum of the backup file with the generated checksum file.
+# -- Exit if checksum doesn't match.
+
+BACKUP_SUM="$(md5sum "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)" | cut -c -32)"
+GEN_BAK_SUM="$(tail "$NUTS_DIR_BAK"/nuts-backup.md5sum | cut -c -32)"
+
+if [ "$BACKUP_SUM" == "$GEN_BAK_SUM" ]; then
+	puts-info "Backup checksum matches, continuing..."
+else
+	puts-error "Backup checksum does not match, quitting."
+	exit 1
+fi
 
 
 # -- Mount the devices filesystem, then mount the SquashFS.

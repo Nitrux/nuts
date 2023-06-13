@@ -68,11 +68,105 @@ else
 fi
 
 
-#   ====== START ======
-
 # -- Variables.
 
 CURRENT_DIST=$(tail /etc/os-release | grep "VERSION_CODENAME=*" | rev | cut -d '=' -f 1 | rev)
+
+
+# -- Functions.
+
+dl_file () { axel -o /tmp -n 10 "$@"; }
+bak_cc () { $ROOT find "$NUTS_DIR_BAK" -maxdepth 1 -type f | head -n "$BACKUPS_TO_KEEP" | xargs --no-run-if-empty rm; }
+
+
+#   ====== START ======
+
+# -- Run the backup cleaner.
+# -- Only keep the amount of backups defined in nuts.conf.
+
+puts-info "Cleaning older backups, continuing..."
+bak_cc
+
+
+# -- Create the backup.
+# -- We assume that the /home partition is on an internal storage device (SATA or NVME), but one can never know, so run sync to flush the write cache.
+
+puts-info "Creating backup of ${CURRENT_DIST^n}, continuing..."
+
+$ROOT mksquashfs / "$NUTS_DIR_BAK"/nuts-backup-"$DATE_BACKUP_FILE".squashfs \
+	-e /boot/* \
+	-e /dev/* \
+	-ef /etc/shadow \
+	-e /home/ \
+	-e /proc/ \
+	-e /media/* \
+	-e /run/* \
+	-e /sys/* \
+	-e /tmp/* \
+	-e /var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp}/ \
+	-comp zstd \
+	-Xcompression-level 22 \
+	-no-progress \
+	-b 1048576
+$ROOT md5sum "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)" > "$NUTS_DIR_BAK"/nuts-backup.md5sum
+sync
+
+puts-success "Success! Backup has been created."
+
+
+# -- This utility targets Nitrux version 2.6.0 and newer. However, aria2c is only included by default with version 2.9.0.
+# -- To use this utility in previous versions of Nitrux, we need to download a static binary.
+# -- So, first check if aria2c is available and download it if not.
+
+if [ -f "/usr/bin/aria2c" ]; then
+	puts-success "Success! aria2c binary is found, skipping..."
+else
+	puts-info "Can't find aria2c binary, downloading..."
+	dl_file https://github.com/abcfy2/aria2-static-build/releases/download/1.36.0/aria2-x86_64-linux-musl_static.zip
+	puts-info "Adding aria2c static binary, continuing..."
+	$ROOT unzip /tmp/aria2-x86_64-linux-musl_static.zip -d /usr/bin
+fi
+
+
+# -- Download the ISO with aria2c using the BitTorrent protocol.
+# -- Check if the ISO already exists so it's not downloaded again. If an ISO file was downloaded then rename it.
+# -- However, If the ISO file found doesn't match the checksum, it will still cause the utility to exit at a later stage.
+# -- Use the magnet link from the query file.
+# -- Magnet link is provided by FOSS Torrents https://fosstorrents.com/distributions/nitrux/#downloads.
+
+if [ -f "$NUTS_DIR_DLS/nitrux.iso" ]; then
+	puts-info "ISO file found, skipping..."
+else
+	puts-info "ISO file not found! Dowloading ISO using aria2c, continuing..."
+	MAGNET_LINK="$(tail /tmp/nuts-query.info | grep magnetlink= | rev | cut -d '=' -f -42 | rev)"
+	$ROOT aria2c -d "$NUTS_DIR_DLS" --seed-time=0 "$MAGNET_LINK"
+	$ROOT mv "$(echo "$NUTS_DIR_DLS"/nitrux-nx-desktop-plasma-*-amd64.iso | tr ' ' '\n' | tail -n 1)" "$NUTS_DIR_DLS"/nitrux.iso
+fi
+
+
+# -- Verify the checksum of the ISO. Use the checksum from the query file.
+# -- Exit if checksum doesn't match.
+
+LOCAL_ISO_SUM="$(md5sum "$NUTS_DIR_DLS"/nitrux.iso | cut -c -32)"
+DL_ISO_SUM="$(tail /tmp/nuts-query.info | grep isosum= | cut -c -44 | rev | cut -c -32 | rev)"
+
+if [ "$LOCAL_ISO_SUM" == "$DL_ISO_SUM" ]; then
+	puts-info "ISO checksum matches, continuing..."
+else
+	puts-error "ISO checksum does not match, quitting."
+	rm "$NUTS_DIR_DLS"/nitrux.iso
+	exit 1
+fi
+
+# -- Create the directories for nuts.
+# -- Create working directories in /home since this partition will likely have more space than the root partition, as set in our custom partition layout and the instructions on the website.
+
+if [ ! -d "$NUTS_DIR_DLS" ] && [ ! -d "$NUTS_DIR_ISO" ] && [ ! -d "$NUTS_DIR_SQS" ] && [ ! -d "$NUTS_DIR_BAK" ]; then
+	puts-info "Creating working directories, continuing..."
+	$ROOT mkdir -p /home/.nuts/{iso,squashfs,backup}
+else
+	puts-info "Working directories exist, skipping..."
+fi
 
 
 # --  Mount the devices filesystem, then mount the ISO and the SquashFS.
