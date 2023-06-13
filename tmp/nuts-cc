@@ -45,6 +45,11 @@ puts-success () { printf "$TOOL_SHRT_NAME: \e[32mSuccess:\e[0m %b\n\n" "$*"; }
 puts-error () { printf "$TOOL_SHRT_NAME: \e[31mError:\e[0m %b\n\n" "$*"; }
 
 
+# -- Print messages or text using multiple lines.
+
+puts-text () { printf "%b\n" "$@" >&2; }
+
+
 #   ====== START ======
 
 # -- Remove unwanted files and directories.

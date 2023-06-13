@@ -1,3 +1,9 @@
+nuts (0.0.6) nitrux; urgency=medium
+
+  * Fix chroot messages, download aria2 when using versions of the distribution without it.
+
+ -- Uri Herrera <uri_herrera@nxos.org>  Mon, 12 Jun 2023 22:34:00 -0500
+
 nuts (0.0.5) nitrux; urgency=medium
 
   * Fix help parsing.

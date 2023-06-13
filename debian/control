@@ -10,5 +10,9 @@ Homepage: https://nxos.org
 Package: nuts
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: Update utility for Nitrux
+Description:  A simple utility to update Nitrux.
+ The point of this utility is twofold:
+  - update the Nitrux Operating System
+  - back up the root for rollbacks
+ nuts targets Nitrux 2.6.0+.
 

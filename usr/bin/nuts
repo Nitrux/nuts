@@ -275,6 +275,7 @@ case "$1" in
 			-e /media/* \
 			-e /run/* \
 			-e /sys/* \
+			-e /tmp/* \
 			-e /var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp}/ \
 			-comp zstd \
 			-Xcompression-level 22 \
@@ -288,8 +289,23 @@ case "$1" in
 
 		# -- Step 2: Actual Update sub-process
 
+		# -- This utility targets Nitrux version 2.6.0 and newer. However, aria2c is only included by default with version 2.9.0.
+		# -- To use this utility in previous versions of Nitrux, we need to download a static binary.
+		# -- So, first check if aria2c is available and download it if not.
+
+		if [ -f "/usr/bin/aria2c" ]; then
+			puts-success "Success! aria2c binary is found, skipping..."
+		else
+			puts-info "Can't find aria2c binary, downloading..."
+			dl_file https://github.com/abcfy2/aria2-static-build/releases/download/1.36.0/aria2-x86_64-linux-musl_static.zip
+			puts-info "Adding aria2c static binary, continuing..."
+			$ROOT unzip /tmp/aria2-x86_64-linux-musl_static.zip -d /usr/bin
+		fi
+
+
 		# -- Download the ISO with aria2c using the BitTorrent protocol.
-		# -- Use the magnet link from the query file (provided by FOSS Torrents https://fosstorrents.com/distributions/nitrux/#downloads).
+		# -- Use the magnet link from the query file.
+		# -- Magnet link is provided by FOSS Torrents https://fosstorrents.com/distributions/nitrux/#downloads.
 
 		MAGNET_LINK="$(tail /tmp/nuts-query.info | grep magnetlink= | rev | cut -d '=' -f -42 | rev)"
 
@@ -342,7 +358,7 @@ case "$1" in
 
 			# -- Now comes the good part; proceed with running rsync and update the current installation.
 
-			puts-info "Updating ${CURRENT_DIST^n}, continuing..."
+			echo "Updating ${CURRENT_DIST^n}, continuing..."
 			
 			rsync -avzh \
 				--exclude /dev/ \
@@ -356,7 +372,7 @@ case "$1" in
 				"$NUTS_DIR_SQS" /
 			sync
 
-			puts-success "Success! Update has been applied."
+			echo "Success! Update has been applied."
 
 
 			# -- Unmount the ISO and the SquashFS.
@@ -377,7 +393,7 @@ case "$1" in
 
 			# -- Do a cleanup of the synced root.
 
-			puts-info "Calling the $TOOL_NAME Cleanup Crew, continuing..."
+			echo "Calling the $TOOL_NAME Cleanup Crew, continuing..."
 			dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-cc
 			chmod +x /tmp//nuts-cc
 			bash /tmp//nuts-cc
@@ -443,7 +459,7 @@ case "$1" in
 
 			# -- Now comes the good part; proceed with running rsync and restore the backup.
 
-			puts-info "Restoring backup of ${CURRENT_DIST^n}, continuing..."
+			echo "Restoring backup of ${CURRENT_DIST^n}, continuing..."
 
 			rsync -avzh \
 				--exclude /dev/ \
@@ -457,7 +473,7 @@ case "$1" in
 				"$NUTS_DIR_SQS" /
 			sync
 
-			puts-success "Success! Backup has been restored."
+			echo "Success! Backup has been restored."
 
 
 			# -- Unmount the SquashFS.
