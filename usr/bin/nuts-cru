@@ -35,6 +35,11 @@ TOOL_NAME="Nitrux Update System Tool"
 TOOL_SHRT_NAME="nuts"
 
 
+# -- Print informative messages to stdin.
+
+puts-info () { printf "$TOOL_SHRT_NAME: \e[34mInfo:\e[0m %b\n\n" "$*"; }
+
+
 # -- Print success messages to stdin.
 
 puts-success () { printf "$TOOL_SHRT_NAME: \e[32mSuccess:\e[0m %b\n\n" "$*"; }
@@ -79,7 +84,7 @@ mount "$NUTS_DIR_ISO"/casper/filesystem.squashfs "$NUTS_DIR_SQS"
 
 # -- Now comes the good part; proceed with running rsync and update the current installation.
 
-echo "Updating ${CURRENT_DIST^n}, continuing..."
+puts-info "Updating ${CURRENT_DIST^n}, continuing..."
 
 rsync -avzh \
 	--exclude /dev/ \
@@ -93,7 +98,7 @@ rsync -avzh \
 	"$NUTS_DIR_SQS" /
 sync
 
-echo "Success! Update has been applied."
+puts-success "Success! Update has been applied."
 
 
 # -- Update GRUB.
@@ -114,7 +119,7 @@ umount /dev
 
 # -- Do a cleanup of the synced root.
 
-echo "Calling the $TOOL_NAME Cleanup Crew, continuing..."
+puts-info "Calling the $TOOL_NAME Cleanup Crew, continuing..."
 dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-cc
 chmod +x /tmp/nuts-cc && bash /tmp/nuts-cc
 

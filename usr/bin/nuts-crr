@@ -35,6 +35,11 @@ TOOL_NAME="Nitrux Update System Tool"
 TOOL_SHRT_NAME="nuts"
 
 
+# -- Print informative messages to stdin.
+
+puts-info () { printf "$TOOL_SHRT_NAME: \e[34mInfo:\e[0m %b\n\n" "$*"; }
+
+
 # -- Print success messages to stdin.
 
 puts-success () { printf "$TOOL_SHRT_NAME: \e[32mSuccess:\e[0m %b\n\n" "$*"; }
@@ -86,7 +91,7 @@ mount "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)"
 
 # -- Now comes the good part; proceed with running rsync and restore the backup.
 
-echo "Restoring backup of ${CURRENT_DIST^n}, continuing..."
+puts-info "Restoring backup of ${CURRENT_DIST^n}, continuing..."
 
 rsync -avzh \
 	--exclude /dev/ \
@@ -100,7 +105,7 @@ rsync -avzh \
 	"$NUTS_DIR_SQS" /
 sync
 
-echo "Success! Backup has been restored."
+puts-success "Success! Backup has been restored."
 
 
 # -- Update GRUB.
