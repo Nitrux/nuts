@@ -1,3 +1,9 @@
+nuts (0.1.2) nitrux; urgency=medium
+
+  * Move update and restore functionality to seprate scripts.
+
+ -- Uri Herrera <uri_herrera@nxos.org>  Tue, 13 Jun 2023 05:05:00 -0500
+
 nuts (0.1.1) nitrux; urgency=medium
 
   * Move working directories variables to conf file.

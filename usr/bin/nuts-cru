@@ -1,0 +1,121 @@
+#! /bin/bash
+
+#############################################################################################################################################################################
+#   The license used for this file and its contents is: BSD-3-Clause                                                                                                        #
+#                                                                                                                                                                           #
+#   Copyright <2023> <Uri Herrera <uri_herrera@nxos.org>>                                                                                                                   #
+#   Copyright <2023> <Luis Lavaire <luis_lavaire@nxos.org>>                                                                                                                 #
+#                                                                                                                                                                           #
+#   Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:                          #
+#                                                                                                                                                                           #
+#    1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.                                        #
+#                                                                                                                                                                           #
+#    2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer                                      #
+#       in the documentation and/or other materials provided with the distribution.                                                                                         #
+#                                                                                                                                                                           #
+#    3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software                    #
+#       without specific prior written permission.                                                                                                                          #
+#                                                                                                                                                                           #
+#    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,                      #
+#    THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS                  #
+#    BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE                 #
+#    GOODS OR SERVICES; LOSS OF USE, DATA,   OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,                      #
+#    STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   #
+#############################################################################################################################################################################
+
+
+# -- Exit on errors.
+
+set -e
+
+
+# -- Set program name and version.
+
+TOOL_NAME="Nitrux Update System Tool"
+
+
+# -- Define the path of the nuts configuration file.
+
+CONFIG_FILE="/etc/nuts.conf"
+
+
+# -- Load values from configuration file.
+# -- Include fix for SC1090 – ShellCheck.
+
+if [[ ! -f $CONFIG_FILE ]]; then
+    puts-error "$TOOL_NAME configuration file not found!, quitting." 2>&1
+    exit 1
+else
+	puts-success "Success! $TOOL_NAME configuration file found, continuing..."
+	# shellcheck source=/dev/null
+	. "$CONFIG_FILE"
+fi
+
+
+#   ====== START ======
+
+# -- Variables.
+
+CURRENT_DIST=$(tail /etc/os-release | grep "VERSION_CODENAME=*" | rev | cut -d '=' -f 1 | rev)
+
+
+# --  Mount the devices filesystem, then mount the ISO and the SquashFS.
+
+mount -t devtmpfs dev /dev
+mount "$NUTS_DIR_DLS"/nitrux.iso "$NUTS_DIR_ISO"
+mount "$NUTS_DIR_ISO"/casper/filesystem.squashfs "$NUTS_DIR_SQS"
+
+
+# -- Now comes the good part; proceed with running rsync and update the current installation.
+
+echo "Updating ${CURRENT_DIST^n}, continuing..."
+
+rsync -avzh \
+	--exclude /dev/ \
+	--exclude /etc/shadow \
+	--exclude /home/ \
+	--exclude /proc/ \
+	--exclude /run/ \
+	--exclude /sys/ \
+	--exclude /var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp} \
+	--progress \
+	"$NUTS_DIR_SQS" /
+sync
+
+echo "Success! Update has been applied."
+
+
+# -- Unmount the ISO and the SquashFS.
+
+umount "$NUTS_DIR_SQS"
+umount "$NUTS_DIR_ISO"
+
+
+# -- Update GRUB.
+
+update-grub
+
+
+# -- Unmount the devices filesystem.
+
+umount /dev
+
+
+# -- Do a cleanup of the synced root.
+
+echo "Calling the $TOOL_NAME Cleanup Crew, continuing..."
+dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-cc
+chmod +x /tmp//nuts-cc
+bash /tmp//nuts-cc
+
+
+# -- Finalizing.
+# -- Leave the Matri... I mean, the overlay.
+
+rm -r \
+	/tmp//nuts-cc \
+	"$NUTS_DIR_DLS"/nitrux.iso
+
+exit
+
+#   ====== END ======

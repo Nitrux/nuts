@@ -96,7 +96,7 @@ fi
 # -- Functions.
 
 dl_file () { axel -o /tmp -n 10 "$@"; }
-overlay_ch () { $ROOT overlayroot-chroot; }
+overlay_ch () { $ROOT overlayroot-chroot "$@"; }
 bak_cc () { $ROOT find "$NUTS_DIR_BAK" -maxdepth 1 -type f | head -n "$BACKUPS_TO_KEEP" | xargs --no-run-if-empty rm; }
 
 
@@ -112,6 +112,8 @@ else
 	puts-info "$TOOL_NAME log file found, skipping..."
 fi
 
+
+#   ====== START ======
 
 # -- Flag parsing.
 
@@ -164,7 +166,6 @@ for cmd; do
 	esac
 done
 
-#   ====== START ======
 
 for cmd; do
 	case "$cmd" in
@@ -344,82 +345,9 @@ for cmd; do
 			# -- After using overlay_ch, it's essential to remember that **EVERY COMMAND IS RUNNING AS ROOT AND ON THE LOWER DIRECTORY OF THE OVERLAY**.
 
 			# -- Enter the Matri... I mean, the overlay.
+			# -- Run nuts-cru to perform the update actions inside the chroot.
 
-			tail "$0" | SYNC_NEW_ROOT=1 overlay_ch
-
-
-			# -- Inside the curly brackets, we enter a new shell because of the chroot. 
-			# -- Whatever is on the script that is executed using a user shell will not be executed here.
-			# -- So, we must add what we want to run in the chroot inside the curly brackets, including variables.
-
-			[ "$SYNC_NEW_ROOT" ] && {
-
-				# -- Variables.
-
-				NUTS_DIR_DLS="/home/.nuts/downloads"
-				NUTS_DIR_ISO="/home/.nuts/iso"
-				NUTS_DIR_SQS="/home/.nuts/squashfs"
-
-
-				# --  Mount the devices filesystem, then mount the ISO and the SquashFS.
-
-				mount -t devtmpfs dev /dev
-				mount "$NUTS_DIR_DLS"/nitrux.iso "$NUTS_DIR_ISO"
-				mount "$NUTS_DIR_ISO"/casper/filesystem.squashfs "$NUTS_DIR_SQS"
-
-
-				# -- Now comes the good part; proceed with running rsync and update the current installation.
-
-				echo "Updating ${CURRENT_DIST^n}, continuing..."
-				
-				rsync -avzh \
-					--exclude /dev/ \
-					--exclude /etc/shadow \
-					--exclude /home/ \
-					--exclude /proc/ \
-					--exclude /run/ \
-					--exclude /sys/ \
-					--exclude /var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp} \
-					--progress \
-					"$NUTS_DIR_SQS" /
-				sync
-
-				echo "Success! Update has been applied."
-
-
-				# -- Unmount the ISO and the SquashFS.
-
-				umount "$NUTS_DIR_SQS"
-				umount "$NUTS_DIR_ISO"
-
-
-				# -- Update GRUB.
-
-				update-grub
-
-
-				# -- Unmount the devices filesystem.
-
-				umount /dev
-
-
-				# -- Do a cleanup of the synced root.
-
-				echo "Calling the $TOOL_NAME Cleanup Crew, continuing..."
-				dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-cc
-				chmod +x /tmp//nuts-cc
-				bash /tmp//nuts-cc
-
-
-				# -- Finalizing.
-				# -- Leave the Matri... I mean, the overlay.
-
-				rm -r \
-					/tmp//nuts-cc \
-					"$NUTS_DIR_DLS"/nitrux.iso
-
-				exit
-			}
+			overlay_ch nuts-cru
 
 
 			# -- After running rsync reboot the device.
@@ -446,68 +374,10 @@ for cmd; do
 
 
 			# -- Enter the Matri... I mean, the overlay.
+			# -- Run nuts-cru to perform the restore actions inside the chroot.
 
-			tail "$0" | SYNC_BACKUP=1 overlay_ch
+			overlay_ch nuts-crb
 
-
-			# -- Inside the curly brackets, we enter a new shell because of the chroot. 
-			# -- Whatever is on the script that is executed using a user shell will not be executed here.
-			# -- So, we must add what we want to run in the chroot inside the curly brackets, including variables.
-
-			[ "$SYNC_BACKUP" ] && {
-
-				# -- Variables.
-
-				NUTS_DIR_SQS="/home/.nuts/squashfs"
-				NUTS_DIR_BAK="/home/.nuts/backup"
-
-
-				# -- Mount the devices filesystem, then mount the SquashFS.
-				# -- **ALWAYS** use the newest SquashFS in the directory. The user can't select which backup to restore.
-
-				mount -t devtmpfs dev /dev
-				mount "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)" "$NUTS_DIR_SQS"
-
-
-				# -- Now comes the good part; proceed with running rsync and restore the backup.
-
-				echo "Restoring backup of ${CURRENT_DIST^n}, continuing..."
-
-				rsync -avzh \
-					--exclude /dev/ \
-					--exclude /etc/shadow \
-					--exclude /home/ \
-					--exclude /proc/ \
-					--exclude /run/ \
-					--exclude /sys/ \
-					--exclude /var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp} \
-					--progress \
-					"$NUTS_DIR_SQS" /
-				sync
-
-				echo "Success! Backup has been restored."
-
-
-				# -- Unmount the SquashFS.
-
-				umount "$NUTS_DIR_SQS"
-
-
-				# -- Update GRUB.
-
-				update-grub
-
-
-				# -- Unmount the devices filesystem.
-
-				umount /dev
-
-
-				# -- Finalizing.
-				# -- Leave the Matri... I mean, the overlay.
-
-				exit
-			}
 
 			# -- After running rsync reboot the device.
 
