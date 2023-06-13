@@ -149,6 +149,7 @@ case "$1" in
 	( update )
 
 		# -- Step 0: Run checks before actually doing anything.
+
 		# -- Ensure that this utility runs in Nitrux and has an Internet connection.
 		# -- Exit if value is not 'nitrux'.
 
