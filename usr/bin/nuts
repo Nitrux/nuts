@@ -348,9 +348,8 @@ for cmd; do
 			# -- Run nuts-cru to perform the update actions inside the chroot.
 			# -- If the component doesn't exist in the root, download it.
 
-			overlay_ch axel -o /tmp -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/main/usr/bin/nuts-cru;
-			overlay_ch chmod +x /tmp/nuts-cru;
-			overlay_ch mv /tmp/nuts-cru /usr/bin/;
+			overlay_ch axel -o /usr/bin -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/main/usr/bin/nuts-cru;
+			overlay_ch chmod +x /usr/bin/nuts-cru;
 			overlay_ch nuts-cru;
 
 
@@ -383,9 +382,8 @@ for cmd; do
 			# -- Run nuts-crr to perform the restore actions inside the chroot.
 			# -- If the component doesn't exist in the root, download it.
 
-			overlay_ch axel -o /tmp -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/main/usr/bin/nuts-crr
-			overlay_ch chmod +x /tmp/nuts-crr
-			overlay_ch mv /tmp/nuts-crr /usr/bin/
+			overlay_ch axel -o /usr/bin -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/main/usr/bin/nuts-crr
+			overlay_ch chmod +x /usr/bin/nuts-crr
 			overlay_ch nuts-crr
 
 
