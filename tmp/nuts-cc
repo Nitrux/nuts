@@ -58,7 +58,7 @@ error () {
 
 # -- Remove unwanted files and directories.
 
-FILE_LIST="nuts-cc-file.list"
+FILE_LIST="/tmp/nuts-cc-file.list"
 
 # Read the file list and iterate over each line
 while IFS= read -r ITEM; do
