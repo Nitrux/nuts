@@ -135,12 +135,12 @@ puts-info "Restoring backup of ${CURRENT_DIST^n}, continuing..."
 
 dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/rsync-exclude.list
 
-rsync \
-	-avh \
-	--no-compress \
-	--exclude-from='{/tmp/rsync-exclude.list}' \
-	--progress --info=progress2 \
-	"$NUTS_DIR_SQS"/ /
+SOURCE_DIR="$NUTS_DIR_SQS"
+DESTINATION_DIR="/"
+EXCLUDES_FILE="rsync-exclude.list"
+
+RSYNC_COMMAND="rsync -av --progres --exclude-from=$EXCLUDES_FILE $SOURCE_DIR/ $DESTINATION_DIR"
+eval "$RSYNC_COMMAND"
 
 sync
 
@@ -148,18 +148,24 @@ puts-success "Success! Backup has been restored."
 
 
 # -- Unmount the SquashFS.
-
-umount "$NUTS_DIR_SQS"
-
-
 # -- Unmount the devices filesystem.
-
-umount /dev
-
-
 # -- Unmount the /home partition.
 
-umount /home
+unmount_directory() {
+  local DIRECTORY="$1"
+
+  # Check if the directory is already mounted
+  if mountpoint -q "$DIRECTORY"; then
+    echo "Unmounting: $DIRECTORY"
+    umount "$DIRECTORY"
+  else
+    echo "Directory is not mounted: $DIRECTORY"
+  fi
+}
+
+unmount_directory "$NUTS_DIR_SQS"
+unmount_directory "/dev" 
+unmount_directory "/home"
 
 
 # -- Update GRUB.

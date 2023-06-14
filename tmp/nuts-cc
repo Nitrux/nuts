@@ -44,7 +44,22 @@ puts-success () { printf "$TOOL_SHRT_NAME: \e[32mSuccess:\e[0m %b\n\n" "$*"; }
 
 # -- Remove unwanted files and directories.
 
-sed 's/.*/rm -r "\0"/' /tmp/nuts-cc-file.list || true
+FILE_LIST="nuts-cc-file.list"
+
+# Read the file list and iterate over each line
+while IFS= read -r ITEM; do
+  # Remove leading/trailing whitespace
+  ITEM="$(echo "$ITEM" | awk '{$1=$1};1')"
+
+  # Remove the item
+  if [[ -e "$ITEM" ]]; then
+    echo "Deleting: $ITEM"
+    rm -rf "$ITEM"
+  else
+    echo "Item not found: $ITEM"
+  fi
+done < "$FILE_LIST"
+
 
 puts-success "Success! Cleanup complete, continuing..."
 
