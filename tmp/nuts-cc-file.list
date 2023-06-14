@@ -1,11 +1,16 @@
 /etc/alternatives/README
 /etc/apt/
-/etc/calamares
+/etc/calamares/
 /etc/cron.daily/dpkg
 /etc/dpkg/
+/etc/group-
+/etc/gshadow-
 /etc/logrotate.d/alternatives
 /etc/logrotate.d/dpkg
+/etc/shadow-
 /etc/skel/Desktop/org.nxos.installer.desktop
+/etc/subgid-
+/etc/subuid-
 /etc/xdg/autostart/calamares-kwin-rules.desktop
 /opt/1
 /opt/2
