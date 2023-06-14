@@ -75,7 +75,7 @@ CURRENT_DIST=$(tail /etc/os-release | grep "VERSION_CODENAME=*" | rev | cut -d '
 
 # -- Functions.
 
-dl_file () { axel -q -o /tmp -n 10 "$@"; }
+dl_file () { axel -o /tmp -n 10 "$@"; }
 bak_cc () { find "$NUTS_DIR_BAK" -maxdepth 1 -type f | head -n "$BACKUPS_TO_KEEP" | xargs --no-run-if-empty rm; }
 
 
@@ -203,7 +203,7 @@ mount "$NUTS_DIR_ISO"/casper/filesystem.squashfs "$NUTS_DIR_SQS"
 
 puts-info "Updating ${CURRENT_DIST^n}, continuing..."
 
-rsync --inplace --no-whole-file --no-compress -ahR \
+rsync --no-compress -ahR \
 	--exclude /dev/ \
 	--exclude /etc/{fstab,shadow,sddm.conf} \
 	--exclude /etc/sddm.conf.d/ \
