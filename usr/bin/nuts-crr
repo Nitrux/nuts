@@ -80,9 +80,9 @@ mount -t devtmpfs dev /dev
 
 # -- Mount NX_HOME partition.
 # -- When entering the chroot, only the root partition is mounted, but that's likely to not have enough storage.
-# -- So, let's use the /home partition. We're discovering by the LABEL of the partition.
+# -- So, let's use the /home partition. We're discovering NX_HOME by the LABEL of the partition.
 
-HOME_PARTITION=$(blkid | grep NX_HOME | cut -d '=' -f 1)
+HOME_PARTITION=$(findfs LABEL=NX_HOME)
 mount -t auto "$HOME_PARTITION" /home
 
 
@@ -135,6 +135,8 @@ puts-info "Restoring backup of ${CURRENT_DIST^n}, continuing..."
 rsync -avzh \
 	--exclude /dev/ \
 	--exclude /etc/shadow \
+	--exclude /etc/sddm.conf \
+	--exclude /etc/sddm.conf.d/ \
 	--exclude /home/ \
 	--exclude /proc/ \
 	--exclude /run/ \
