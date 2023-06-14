@@ -205,14 +205,15 @@ puts-info "Updating ${CURRENT_DIST^n}, continuing..."
 
 rsync --inplace --no-whole-file --no-compress -ah \
 	--exclude /dev/ \
-	--exclude /etc/shadow \
-	--exclude /etc/sddm.conf \
+	--exclude /etc/{fstab,shadow,sddm.conf} \
 	--exclude /etc/sddm.conf.d/ \
 	--exclude /home/ \
 	--exclude /media/ \
 	--exclude /proc/ \
 	--exclude /run/ \
 	--exclude /sys/ \
+	--exclude /usr/bin/bash \
+	--exclude /usr/bin/mount \
 	--exclude /var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp} \
 	--progress --info=progress2 \
 	"$NUTS_DIR_SQS" /
