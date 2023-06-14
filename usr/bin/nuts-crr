@@ -143,7 +143,7 @@ rsync -avzh \
 	--exclude /sys/ \
 	--exclude /var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp} \
 	--progress \
-	"$NUTS_DIR_SQS" /
+	"$NUTS_DIR_SQS" "$PWD"
 sync
 
 puts-success "Success! Backup has been restored."
