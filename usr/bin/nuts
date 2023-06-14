@@ -169,49 +169,54 @@ TARGET_DIST="nitrux"
 
 for cmd; do
 	case "$cmd" in
-		( -h | --help ) print_message \
-			"$TOOL_NAME" \
-			"" \
-			"Description:" \
-			"" \
-			"    $TOOL_NAME or nuts is a utility to update the Nitrux Operating System and back up the root for rollbacks." \
-			"    ⚠️ Important: nuts is intended to work exclusively in Nitrux OS, and using this utility in other distributions will break them or not work at all." \
-			"" \
-			"    Report bugs at: https://github.com/Nitrux/nuts/issues." \
-			"" \
-			"Flags:" \
-			"    -h or --help         Show this help." \
-			"    -v or --version      Show the version." \
-			"    -d or --debug        Enable verbose output." \
-			"" \
-			"Operations:" \
-			"    update       Update the currently installed root using the media specified in nuts-query and creates a backup of the current root directory." \
-			"    restore      Restore the backup of the root directory generated during the update." \
-			"" \
-			"Usage:" \
-			"    sudo nuts <flag> (operation)" \
-			"" \
-			"Examples:" \
-			"    sudo nuts update" \
-			"    sudo nuts -d restore" \
+		(-h | --help)
+			print_message "$TOOL_NAME" \
+				"" \
+				"Description:" \
+				"" \
+				"    $TOOL_NAME or nuts is a utility to update the Nitrux Operating System and back up the root for rollbacks." \
+				"    ⚠️ Important: nuts is intended to work exclusively in Nitrux OS, and using this utility in other distributions will break them or not work at all." \
+				"" \
+				"    Report bugs at: https://github.com/Nitrux/nuts/issues." \
+				"" \
+				"Flags:" \
+				"    -h or --help         Show this help." \
+				"    -v or --version      Show the version." \
+				"    -d or --debug        Enable verbose output." \
+				"" \
+				"Operations:" \
+				"    update       Update the currently installed root using the media specified in nuts-query and creates a backup of the current root directory." \
+				"    restore      Restore the backup of the root directory generated during the update." \
+				"" \
+				"Usage:" \
+				"    sudo nuts <flag> (operation)" \
+				"" \
+				"Examples:" \
+				"    sudo nuts update" \
+				"    sudo nuts -d restore"
+				
+			exit
+			;;
 
-			exit;;
+		(-v | --version)
+			print_message "$TOOL_NAME — version: $TOOL_VERSION." \
+				"" \
+				"The license used for this file and its contents is: BSD-3-Clause." \
+				"" \
+				"Authors:" \
+				"" \
+				"    Copyright <2023> <Uri Herrera <uri_herrera@nxos.org>>" \
+				"    Copyright <2023> <Luis Lavaire <luis_lavaire@nxos.org>>" \
+				"" \
+				"(c) $FECHA Some Rights Reserved. Made by $VENDOR"
 
-		( -v | --version )  print_message \
-			"$TOOL_NAME — version: $TOOL_VERSION." \
-			"" \
-			"The license used for this file and its contents is: BSD-3-Clause." \
-			"" \
-			"Authors:" \
-			"" \
-			"    Copyright <2023> <Uri Herrera <uri_herrera@nxos.org>>" \
-			"    Copyright <2023> <Luis Lavaire <luis_lavaire@nxos.org>>" \
-			"" \
-			"(c) $FECHA Some Rights Reserved. Made by $VENDOR"
+			exit
+			;;
 
-			exit;;
-
-		( -d | --debug )  set -x; shift;;
+		(-d | --debug)
+			set -x
+			shift
+			;;
 	esac
 done
 

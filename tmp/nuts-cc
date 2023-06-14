@@ -49,7 +49,7 @@ puts_success() {
 
 # -- Display an error when no flag is used.
 
-error () {
+error() {
   puts_error "$TOOL_SHRT_NAME: \e[31mError:\e[0m: $*" >&2
   exit 1
 }
