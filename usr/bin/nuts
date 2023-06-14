@@ -258,8 +258,17 @@ done
 			# -- This process is also done inside the chroot and it is the same as Calamares, except for user creation, mounts and bootloader configuration.
 			# -- After using overlay_ch, it's essential to remember that **EVERY COMMAND IS RUNNING AS ROOT AND ON THE LOWER DIRECTORY OF THE OVERLAY**.
 
+
+			if [ ! -f "/usr/sbin/overlayroot-chroot" ]; then
+				puts-error "Can't find overlayroot, quitting."
+				exit 1
+			else
+				puts-info "Found overlayroot, continuing..."
+			fi
+
+
 			# -- Enter the Matri... I mean, the overlay.
-			# -- Run nuts-cru to perform the update actions inside the chroot.
+			# -- Run nuts-cru to perform the backup and update.
 			# -- If the component and the configuration file don't exist in the chroot, download them.
 
 			overlay_ch rm -r /usr/bin/nuts-cru || true
@@ -273,6 +282,7 @@ done
 			# -- After running rsync reboot the device.
 
 			puts-info "Time to reboot. Bye."
+
 			shift;;
 
 
@@ -282,6 +292,7 @@ done
 		( restore )
 
 			# -- Step 1: Restore Process
+
 			# -- The restore process is the same as the Actual Update sub-process but using the backup SquashFS.
 			# -- As before, this is done inside the chroot.
 
@@ -299,6 +310,7 @@ done
 			# -- After running rsync reboot the device.
 
 			puts-info "Time to reboot. Bye."
+
 			shift;;
 	esac
 done ) 2>&1 | tee -a "$NUTS_LOG"

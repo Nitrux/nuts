@@ -109,7 +109,7 @@ done
 
 if [[ ! -d "$NUTS_DIR_DLS" ]] && [[ ! -d "$NUTS_DIR_ISO" ]] && [[ ! -d "$NUTS_DIR_SQS" ]] && [[ ! -d "$NUTS_DIR_BAK" ]]; then
 	puts-info "Creating working directories, continuing..."
-	mkdir -p /home/.nuts/{backup,iso,squashfs}
+	mkdir -p /home/.nuts/{backup,downloads,iso,root}
 else
 	puts-info "Working directories exist, skipping..."
 fi
@@ -210,7 +210,7 @@ rsync \
 	--no-compress \
 	--exclude-from='/tmp/rsync-exclude.list' \
 	--progress --info=progress2 \
-	"$NUTS_DIR_SQS" /
+	"$NUTS_DIR_SQS"/ /
 
 sync
 
@@ -241,6 +241,7 @@ umount /home
 # -- Do a cleanup of the synced root.
 
 puts-info "Calling the $TOOL_NAME Cleanup Crew, continuing..."
+
 dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-cc
 dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-cc-file.list
 chmod +x /tmp/nuts-cc && bash /tmp/nuts-cc
