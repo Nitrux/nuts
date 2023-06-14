@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 #############################################################################################################################################################################
 #   The license used for this file and its contents is: BSD-3-Clause                                                                                                        #
@@ -40,27 +40,41 @@ FECHA=$(date +%Y)
 
 # -- Print informative messages to stdin.
 
-puts-info () { printf "$TOOL_SHRT_NAME: \e[34mInfo:\e[0m %b\n\n" "$*"; }
+puts_info() {
+  printf "%s: \e[34mInfo:\e[0m %s\n\n" "$TOOL_NAME" "$*"
+}
 
 
 # -- Print success messages to stdin.
 
-puts-success () { printf "$TOOL_SHRT_NAME: \e[32mSuccess:\e[0m %b\n\n" "$*"; }
+puts_success() {
+  printf "%s: \e[32mSuccess:\e[0m %s\n\n" "$TOOL_NAME" "$*"
+}
 
 
 # -- Print error messages to stdin.
 
-puts-error () { printf "$TOOL_SHRT_NAME: \e[31mError:\e[0m %b\n\n" "$*"; }
+puts_error() {
+  printf "%s: \e[31mError:\e[0m %b\n\n" "$TOOL_NAME" "$*"
+}
 
 
 # -- Print messages or text using multiple lines.
 
-puts-text () { printf "%b\n" "$@" >&2; }
+print_message() {
+    local message="${1:-}"
+    local output_stream="${2:-2}"
+
+    printf "%b\n" "$message" >&"$output_stream"
+}
 
 
 # -- Display an error when no flag is used.
 
-error () { printf "$TOOL_SHRT_NAME: \e[31mError:\e[0m %b\n\n" "$*" >&2; exit 1; }
+error () {
+  puts_error "$TOOL_SHRT_NAME: \e[31mError:\e[0m: $*" >&2
+  exit 1
+}
 
 
 # -- Define the path of the nuts configuration file.
@@ -72,10 +86,10 @@ CONFIG_FILE="/etc/nuts.conf"
 # -- Include fix for SC1090 – ShellCheck.
 
 if [[ ! -f $CONFIG_FILE ]]; then
-    puts-error "$TOOL_NAME configuration file not found!, quitting." 2>&1
+    puts_error "$TOOL_NAME configuration file not found!, quitting." 2>&1
     exit 1
 else
-	puts-success "Success! $TOOL_NAME configuration file found, continuing..."
+	puts_success "Success! $TOOL_NAME configuration file found, continuing..."
 	# shellcheck source=/dev/null
 	. "$CONFIG_FILE"
 fi
@@ -85,36 +99,67 @@ fi
 # -- Exit if not running as root.
 
 if [ "$EUID" -ne 0 ]; then
-	puts-error "$TOOL_NAME is not running as root, quitting."
-	exit 1
+    puts_error "%s is not running as root, quitting.\n" "$TOOL_NAME"
+    exit 1
 else
-	puts-info "$TOOL_NAME is running as root, continuing..."
-	ROOT="sudo"
+    puts_info "%s is running as root, continuing...\n" "$TOOL_NAME"
+    ROOT=("sudo")
 fi
+
 
 
 # -- Functions.
 
-dl_file () { axel -q -o /tmp -n 10 "$@"; }
-overlay_ch () { $ROOT overlayroot-chroot "$@"; }
+dl_file() {
+    local FILE_URL="$1"
+    local FILE_NAME
+	FILE_NAME="$(basename "$FILE_URL")"
+    local FILE_PATH="/tmp/$FILE_NAME"
+
+    if [ -f "$FILE_PATH" ]; then
+        rm "$FILE_PATH"
+    fi
+
+    if ! command -v axel >/dev/null 2>&1; then
+        return 1
+    fi
+
+    if ! curl --output /dev/null --silent --head --fail "$FILE_URL"; then
+        return 1
+    fi
+
+    axel -o "/tmp" -n 10 "$FILE_URL"
+
+    if [ $? -ne 0 ]; then
+        return 1
+    fi
+}
+
+overlay_ch() {
+    local ROOT=("sudo" "overlayroot-chroot" "$@")
+
+    if ! command -v "${ROOT[0]}" >/dev/null 2>&1; then
+        printf "Error: '%s' command not found. Please make sure it's installed and try again.\n" "${ROOT[0]}"
+        return 1
+    fi
+
+    "${ROOT[@]}"
+}
 
 
 # -- Use a log file.
 # -- Everything below will go to the file nuts.log.
 
-$ROOT touch "$NUTS_LOG"
-
-if [[ ! -f $NUTS_LOG ]]; then
-	puts-info "Creating $TOOL_NAME log file, continuing..."
-	touch "$NUTS_LOG"
+if [ -f "$NUTS_LOG" ]; then
+	puts_info "$TOOL_NAME log file found, skipping..."
 else
-	puts-info "$TOOL_NAME log file found, skipping..."
+	puts_info "Unable to locate $TOOL_NAME log file."
 fi
 
 
 # -- Variables.
 
-CURRENT_DIST=$(tail /etc/os-release | grep "VERSION_CODENAME=*" | rev | cut -d '=' -f 1 | rev)
+CURRENT_DIST=$(awk -F'=' '/VERSION_CODENAME/{print $NF}' /etc/os-release)
 TARGET_DIST="nitrux"
 
 
@@ -124,7 +169,7 @@ TARGET_DIST="nitrux"
 
 for cmd; do
 	case "$cmd" in
-		( -h | --help ) puts-text \
+		( -h | --help ) print_message \
 			"$TOOL_NAME" \
 			"" \
 			"Description:" \
@@ -152,7 +197,7 @@ for cmd; do
 
 			exit;;
 
-		( -v | --version )  puts-text \
+		( -v | --version )  print_message \
 			"$TOOL_NAME — version: $TOOL_VERSION." \
 			"" \
 			"The license used for this file and its contents is: BSD-3-Clause." \
@@ -183,9 +228,9 @@ done
 			# -- Exit if value is not 'nitrux'.
 
 			if [ "$CURRENT_DIST" == "$TARGET_DIST" ]; then
-				puts-success "Success! This utility is running in ${TARGET_DIST^n}, continuing..."
+				puts_success "This utility is running in ${TARGET_DIST^}. Continuing..."
 			else
-				puts-error "$TOOL_NAME is intended to work exclusively in ${TARGET_DIST^n}, and using this utility in ${CURRENT_DIST^} will break it and not work at all. Quitting."
+				puts_error "$TOOL_NAME is intended to work exclusively in ${TARGET_DIST^}. Using this utility in ${CURRENT_DIST^} will break it and not work at all. Quitting."
 				exit 1
 			fi
 
@@ -194,9 +239,9 @@ done
 			# -- Exit if connection test fails.
 
 			if ping -q -c 1 -W 1 nxos.org >/dev/null; then
-				puts-success "Success! This computer can reach the Internet, continuing..."
+				puts_success "This computer can reach the Internet. Continuing..."
 			else
-				puts-error "This computer can't reach the Internet, quitting."
+				puts_error "This computer cannot reach the Internet. Quitting."
 				exit 1
 			fi
 
@@ -208,10 +253,10 @@ done
 			# -- Exit if it doesn't.
 
 			if [ ! -f "/installed_pkgs_end.txt" ]; then
-				puts-error "Build list not found, quitting."
+				puts_error "Build list not found. Quitting."
 				exit 1
 			else
-				puts-info "Build list found, continuing..."
+				puts_info "Build list found. Continuing..."
 			fi
 
 
@@ -219,15 +264,17 @@ done
 			# -- This file is always downloaded to a temporary directory, as there's no reason to keep it.
 			# -- Overwrite the file if it already exists.
 
-			if [ ! -f "/tmp/nuts-query.info" ]; then
-				puts-info "Can't find nuts-query.info, downloading..."
-				dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-query.info
+			INFO_FILE="/tmp/nuts-query.info"
+			REMOTE_URL="https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-query.info"
+
+			if [ ! -f "$INFO_FILE" ]; then
+				puts_info "Can't find nuts-query.info, downloading..."
 			else
-				puts-info "Found nuts-query.info, overwriting..."
-				rm -r \
-					/tmp/nuts-query.info
-				dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-query.info
+				puts_info "Found nuts-query.info, overwriting..."
+				rm -f "$INFO_FILE"
 			fi
+
+			dl_file "$REMOTE_URL" "$INFO_FILE"
 
 
 			# -- Make the comparison.
@@ -235,14 +282,14 @@ done
 			# -- If the checksum matches, exit because the root is already current.
 			# -- If the checksum doesn't match, then continue because the root is out of date or the list differs from the value in the query file.
 
-			LOCAL_SUM="$(md5sum /installed_pkgs_end.txt | cut -c -32)"
-			REMOTE_SUM="$(tail /tmp/nuts-query.info | grep rootlistsum= | cut -c -44 | rev | cut -c -32 | rev)"
+			LOCAL_SUM=$(md5sum /installed_pkgs_end.txt | cut -c -32)
+			REMOTE_SUM=$(tail /tmp/nuts-query.info | grep rootlistsum= | cut -c -44 | rev | cut -c -32 | rev)
 
 			if [ "$LOCAL_SUM" == "$REMOTE_SUM" ]; then
-				puts-info "The current installation of ${TARGET_DIST^n} is up to date."
+				puts_info "The current installation of ${TARGET_DIST^} is up to date."
 				exit 0
 			else
-				puts-info "Preparing to update ${TARGET_DIST^n}, continuing..."
+				puts_info "Preparing to update ${TARGET_DIST^}, continuing..."
 			fi
 
 
@@ -259,11 +306,13 @@ done
 			# -- After using overlay_ch, it's essential to remember that **EVERY COMMAND IS RUNNING AS ROOT AND ON THE LOWER DIRECTORY OF THE OVERLAY**.
 
 
-			if [ ! -f "/usr/sbin/overlayroot-chroot" ]; then
-				puts-error "Can't find overlayroot, quitting."
+			OVERLAYROOT="/usr/sbin/overlayroot-chroot"
+
+			if [ ! -f "$OVERLAYROOT" ]; then
+				puts_error "Can't find overlayroot, quitting."
 				exit 1
 			else
-				puts-info "Found overlayroot, continuing..."
+				puts_info "Found overlayroot, continuing..."
 			fi
 
 
@@ -281,7 +330,7 @@ done
 
 			# -- After running rsync reboot the device.
 
-			puts-info "Time to reboot. Bye."
+			puts_info "Time to reboot. Bye."
 
 			shift;;
 
@@ -309,7 +358,7 @@ done
 
 			# -- After running rsync reboot the device.
 
-			puts-info "Time to reboot. Bye."
+			puts_info "Time to reboot. Bye."
 
 			shift;;
 	esac

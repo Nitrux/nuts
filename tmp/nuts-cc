@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 #############################################################################################################################################################################
 #   The license used for this file and its contents is: BSD-3-Clause                                                                                                        #
@@ -22,6 +22,9 @@
 #    STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   #
 #############################################################################################################################################################################
 
+
+# -- Exit on errors.
+
 set -xe
 
 
@@ -32,13 +35,24 @@ TOOL_SHRT_NAME="nuts-cc"
 
 # -- Print informative messages to stdin.
 
-puts-info () { printf "$TOOL_SHRT_NAME: \e[34mInfo:\e[0m %b\n\n" "$*"; }
+puts_info() {
+  printf "%s: \e[34mInfo:\e[0m %s\n\n" "$TOOL_NAME" "$*"
+}
 
 
 # -- Print success messages to stdin.
 
-puts-success () { printf "$TOOL_SHRT_NAME: \e[32mSuccess:\e[0m %b\n\n" "$*"; }
+puts_success() {
+  printf "%s: \e[32mSuccess:\e[0m %s\n\n" "$TOOL_NAME" "$*"
+}
 
+
+# -- Display an error when no flag is used.
+
+error () {
+  puts_error "$TOOL_SHRT_NAME: \e[31mError:\e[0m: $*" >&2
+  exit 1
+}
 
 #   ====== START ======
 
@@ -61,16 +75,16 @@ while IFS= read -r ITEM; do
 done < "$FILE_LIST"
 
 
-puts-success "Success! Cleanup complete, continuing..."
+puts_success "Success! Cleanup complete, continuing..."
 
 
 # -- Link kernel image to newer kernel
 
-puts-info "Preparing to boot new kernel and initram, continuing..."
+puts_info "Preparing to boot new kernel and initram, continuing..."
 
 ln -svf "$(echo /boot/vmlinuz* | tr ' ' '\n' | tail -n 1)" /vmlinuz
 ln -svf "$(echo /boot/initrd* | tr ' ' '\n' | tail -n 1)" /initrd.img
 
-puts-success "Success! Ready to use newer kernel, continuing..."
+puts_success "Success! Ready to use newer kernel, continuing..."
 
 #   ====== END ======

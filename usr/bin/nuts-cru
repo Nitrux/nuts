@@ -1,10 +1,9 @@
-#! /bin/bash
+#!/bin/bash
 
 #############################################################################################################################################################################
 #   The license used for this file and its contents is: BSD-3-Clause                                                                                                        #
 #                                                                                                                                                                           #
 #   Copyright <2023> <Uri Herrera <uri_herrera@nxos.org>>                                                                                                                   #
-#   Copyright <2023> <Luis Lavaire <luis_lavaire@nxos.org>>                                                                                                                 #
 #                                                                                                                                                                           #
 #   Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:                          #
 #                                                                                                                                                                           #
@@ -37,17 +36,41 @@ TOOL_SHRT_NAME="nuts"
 
 # -- Print informative messages to stdin.
 
-puts-info () { printf "$TOOL_SHRT_NAME: \e[34mInfo:\e[0m %b\n\n" "$*"; }
+puts_info() {
+  printf "%s: \e[34mInfo:\e[0m %s\n\n" "$TOOL_NAME" "$*"
+}
 
 
 # -- Print success messages to stdin.
 
-puts-success () { printf "$TOOL_SHRT_NAME: \e[32mSuccess:\e[0m %b\n\n" "$*"; }
+puts_success() {
+  printf "%s: \e[32mSuccess:\e[0m %s\n\n" "$TOOL_NAME" "$*"
+}
 
 
 # -- Print error messages to stdin.
 
-puts-error () { printf "$TOOL_SHRT_NAME: \e[31mError:\e[0m %b\n\n" "$*"; }
+puts_error() {
+  printf "%s: \e[31mError:\e[0m %b\n\n" "$TOOL_NAME" "$*"
+}
+
+
+# -- Print messages or text using multiple lines.
+
+print_message() {
+    local message="${1:-}"
+    local output_stream="${2:-2}"
+
+    printf "%b\n" "$message" >&"$output_stream"
+}
+
+
+# -- Display an error when no flag is used.
+
+error () {
+  puts_error "$TOOL_SHRT_NAME: \e[31mError:\e[0m: $*" >&2
+  exit 1
+}
 
 
 # -- Define the path of the nuts configuration file.
@@ -59,10 +82,10 @@ CONFIG_FILE="/etc/nuts.conf"
 # -- Include fix for SC1090 – ShellCheck.
 
 if [[ ! -f $CONFIG_FILE ]]; then
-    puts-error "$TOOL_NAME configuration file not found!, quitting." 2>&1
+    puts_error "$TOOL_NAME configuration file not found!, quitting." 2>&1
     exit 1
 else
-	puts-success "Success! $TOOL_NAME configuration file found, continuing..."
+	puts_success "Success! $TOOL_NAME configuration file found, continuing..."
 	# shellcheck source=/dev/null
 	. "$CONFIG_FILE"
 fi
@@ -70,13 +93,49 @@ fi
 
 # -- Variables.
 
-CURRENT_DIST=$(tail /etc/os-release | grep "VERSION_CODENAME=*" | rev | cut -d '=' -f 1 | rev)
+CURRENT_DIST=$(awk -F'=' '/VERSION_CODENAME/{print $NF}' /etc/os-release)
 
 
 # -- Functions.
 
-dl_file () { axel -o /tmp -n 10 "$@"; }
-bak_cc () { find "$NUTS_DIR_BAK" -maxdepth 1 -type f | head -n "$BACKUPS_TO_KEEP" | xargs --no-run-if-empty rm; }
+dl_file() {
+    local FILE_URL="$1"
+    local FILE_NAME
+	FILE_NAME="$(basename "$FILE_URL")"
+    local FILE_PATH="/tmp/$FILE_NAME"
+
+    if [ -f "$FILE_PATH" ]; then
+        rm "$FILE_PATH"
+    fi
+
+    if ! command -v axel >/dev/null 2>&1; then
+        return 1
+    fi
+
+    if ! curl --output /dev/null --silent --head --fail "$FILE_URL"; then
+        return 1
+    fi
+
+    axel -o "/tmp" -n 10 "$FILE_URL"
+
+    if [ $? -ne 0 ]; then
+        return 1
+    fi
+}
+
+
+bak_cc() {
+    if [ ! -d "$NUTS_DIR_BAK" ]; then
+        return 1
+    fi
+
+    if ! [[ "$BACKUPS_TO_KEEP" =~ ^[0-9]+$ ]]; then
+        return 1
+    fi
+
+    find "$NUTS_DIR_BAK" -maxdepth 1 -type f -exec rm {} +
+    find "$NUTS_DIR_BAK" -maxdepth 1 -type f | sort -r | tail -n +$((BACKUPS_TO_KEEP + 1)) | xargs --no-run-if-empty rm
+}
 
 
 # -- Mount the devices filesystem.
@@ -108,57 +167,70 @@ done
 # -- Create working directories in /home since this partition will likely have more space than the root partition, as set in our custom partition layout and the instructions on the website.
 
 if [[ ! -d "$NUTS_DIR_DLS" ]] && [[ ! -d "$NUTS_DIR_ISO" ]] && [[ ! -d "$NUTS_DIR_SQS" ]] && [[ ! -d "$NUTS_DIR_BAK" ]]; then
-	puts-info "Creating working directories, continuing..."
+	puts_info "Creating working directories, continuing..."
 	mkdir -p /home/.nuts/{backup,downloads,iso,squashfs}
 else
-	puts-info "Working directories exist, skipping..."
+	puts_info "Working directories exist, skipping..."
 fi
 
 
 # -- Run the backup cleaner.
 # -- Only keep the amount of backups defined in nuts.conf.
 
-puts-info "Cleaning older backups, continuing..."
+puts_info "Cleaning older backups, continuing..."
 bak_cc
 
 
 # -- Create the backup.
 # -- We assume that the /home partition is on an internal storage device (SATA or NVME), but one can never know, so run sync to flush the write cache.
 
-puts-info "Creating backup of ${CURRENT_DIST^n}, continuing..."
+puts_info "Creating backup of ${CURRENT_DIST^n}, continuing..."
 
-mksquashfs / "$NUTS_DIR_BAK"/nuts-backup-"$DATE_BACKUP_FILE".squashfs \
-	-e /boot/* \
-	-e /dev/* \
-	-ef /etc/shadow \
-	-e /home/ \
-	-e /proc/ \
-	-e /media/* \
-	-e /run/* \
-	-e /sys/* \
-	-e /tmp/* \
-	-e /var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp}/ \
+BACKUP_FILE="$NUTS_DIR_BAK/nuts-backup-$DATE_BACKUP_FILE.squashfs"
+
+mksquashfs / "$BACKUP_FILE" \
+	-e '/boot/*' \
+	-e '/dev/*' \
+	-ef '/etc/shadow' \
+	-e '/home/' \
+	-e '/proc/' \
+	-e '/media/*' \
+	-e '/run/*' \
+	-e '/sys/*' \
+	-e '/tmp/*' \
+	-e '/var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp}/' \
 	-comp zstd \
 	-Xcompression-level 22 \
 	-no-progress \
 	-b 1048576
-md5sum "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)" > "$NUTS_DIR_BAK"/nuts-backup.md5sum
+
+md5sum "$BACKUP_FILE" > "$NUTS_DIR_BAK/nuts-backup.md5sum"
+
 sync
 
-puts-success "Success! Backup has been created."
+puts_success "Success! Backup has been created."
 
 
 # -- This utility targets Nitrux version 2.8.0 and newer. However, aria2c is only included by default with version 2.9.0.
 # -- To use this utility in previous versions of Nitrux, we need to download a static binary.
 # -- So, first check if aria2c is available and download it if not.
 
-if [[ -f "/usr/bin/aria2c" ]]; then
-	puts-success "Success! aria2c binary is found, skipping..."
+ARIA2_BINARY="/usr/bin/aria2c"
+ARIA2_RELEASE_URL="https://github.com/abcfy2/aria2-static-build/releases/download/1.36.0/aria2-x86_64-linux-musl_static.zip"
+ARIA2_TEMP_DIR="/tmp/aria2-temp"
+
+if [[ -f "$ARIA2_BINARY" ]]; then
+    puts_success "Success! aria2c binary is found, skipping..."
 else
-	puts-info "Can't find aria2c binary, downloading..."
-	dl_file https://github.com/abcfy2/aria2-static-build/releases/download/1.36.0/aria2-x86_64-linux-musl_static.zip
-	puts-info "Adding aria2c static binary, continuing..."
-	unzip /tmp/aria2-x86_64-linux-musl_static.zip -d /usr/bin
+    puts_info "Can't find aria2c binary, downloading..."
+    dl_file "$ARIA2_RELEASE_URL"
+
+    puts_info "Adding aria2c static binary, continuing..."
+    mkdir -p "$ARIA2_TEMP_DIR"
+    unzip /tmp/aria2-x86_64-linux-musl_static.zip -d "$ARIA2_TEMP_DIR"
+    cp "$ARIA2_TEMP_DIR/aria2c" "$ARIA2_BINARY"
+
+    rm -rf "$ARIA2_TEMP_DIR"
 fi
 
 
@@ -168,40 +240,42 @@ fi
 # -- Use the magnet link from the query file.
 # -- Magnet link is provided by FOSS Torrents https://fosstorrents.com/distributions/nitrux/#downloads.
 
-if [[ -f "$NUTS_DIR_DLS/nitrux.iso" ]]; then
-	puts-info "ISO file found, skipping..."
+ISO_FILE="$NUTS_DIR_DLS/nitrux.iso"
+
+if [[ -f "$ISO_FILE" ]]; then
+    puts_info "ISO file found, skipping..."
 else
-	puts-info "ISO file not found! Dowloading ISO using aria2c, continuing..."
-	MAGNET_LINK="$(tail /tmp/nuts-query.info | grep magnetlink= | rev | cut -d '=' -f -42 | rev)"
-	aria2c -d "$NUTS_DIR_DLS" --log-level=warn --seed-time=0 "$MAGNET_LINK"
-	mv "$(echo "$NUTS_DIR_DLS"/nitrux-nx-desktop-plasma-*-amd64.iso | tr ' ' '\n' | tail -n 1)" "$NUTS_DIR_DLS"/nitrux.iso
+    puts_info "ISO file not found! Downloading ISO using aria2c, continuing..."
+    MAGNET_LINK=$(tail -n 1 /tmp/nuts-query.info | sed -n 's/.*magnetlink=\(.*\)/\1/p')
+    aria2c -d "$NUTS_DIR_DLS" --log-level=warn --seed-time=0 "$MAGNET_LINK"
+    mv "$NUTS_DIR_DLS"/nitrux-nx-desktop-plasma-*-amd64.iso "$ISO_FILE"
 fi
 
 
 # -- Verify the checksum of the ISO. Use the checksum from the query file.
 # -- Exit if checksum doesn't match.
 
-LOCAL_ISO_SUM="$(md5sum "$NUTS_DIR_DLS"/nitrux.iso | cut -c -32)"
-DL_ISO_SUM="$(tail /tmp/nuts-query.info | grep isosum= | cut -c -44 | rev | cut -c -32 | rev)"
+LOCAL_ISO_SUM=$(md5sum "$NUTS_DIR_DLS"/nitrux.iso | awk '{ print $1 }')
+DL_ISO_SUM=$(tail -n 1 /tmp/nuts-query.info | sed -n 's/.*isosum=\(.*\)/\1/p')
 
 if [[ "$LOCAL_ISO_SUM" == "$DL_ISO_SUM" ]]; then
-	puts-info "ISO checksum matches, continuing..."
+    puts_info "ISO checksum matches, continuing..."
 else
-	puts-error "ISO checksum does not match, quitting."
-	rm "$NUTS_DIR_DLS"/nitrux.iso
-	exit 1
+    puts_error "ISO checksum does not match, quitting."
+    rm "$NUTS_DIR_DLS"/nitrux.iso
+    exit 1
 fi
 
 
 # -- Mount the ISO and the SquashFS.
 
-mount "$NUTS_DIR_DLS"/nitrux.iso "$NUTS_DIR_ISO"
-mount "$NUTS_DIR_ISO"/casper/filesystem.squashfs "$NUTS_DIR_SQS"
+mount "$NUTS_DIR_DLS"/nitrux.iso "$NUTS_DIR_ISO" || { puts_error "Failed to mount ISO, quitting."; exit 1; }
+mount "$NUTS_DIR_ISO"/casper/filesystem.squashfs "$NUTS_DIR_SQS" || { puts_error "Failed to mount squashfs file, quitting."; exit 1; }
 
 
 # -- Now comes the good part; proceed with running rsync and update the current installation.
 
-puts-info "Updating ${CURRENT_DIST^n}, continuing..."
+puts_info "Updating ${CURRENT_DIST^n}, continuing..."
 
 dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/rsync-exclude.list
 
@@ -214,7 +288,7 @@ eval "$RSYNC_COMMAND"
 
 sync
 
-puts-success "Success! Update has been applied."
+puts_success "Success! Update has been applied."
 
 
 # -- Unmount the ISO and the SquashFS.
@@ -241,11 +315,20 @@ unmount_directory "/home"
 
 # -- Do a cleanup of the synced root.
 
-puts-info "Calling the $TOOL_NAME Cleanup Crew, continuing..."
+puts_info "Calling the $TOOL_NAME Cleanup Crew, continuing..."
 
-dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-cc
-dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-cc-file.list
-chmod +x /tmp/nuts-cc && bash /tmp/nuts-cc
+CLEANUP_SCRIPT_URL="https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-cc"
+FILE_LIST_URL="https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-cc-file.list"
+
+dl_file "$CLEANUP_SCRIPT_URL" || { puts_error "Failed to download the cleanup script, quitting."; exit 1; }
+dl_file "$FILE_LIST_URL" || { puts_error "Failed to download the file list, quitting."; exit 1; }
+
+if chmod +x /tmp/nuts-cc && bash /tmp/nuts-cc; then
+    puts_success "Cleanup script executed successfully."
+else
+    puts_error "Failed to execute the cleanup script, quitting."
+    exit 1
+fi
 
 
 # -- Update GRUB.
@@ -257,7 +340,7 @@ update-grub
 # -- Leave the Matri... I mean, the overlay.
 
 rm -r \
-	/tmp//nuts-cc
+	/tmp/nuts-cc
 
 exit
 

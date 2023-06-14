@@ -1,10 +1,9 @@
-#! /bin/bash
+#!/bin/bash
 
 #############################################################################################################################################################################
 #   The license used for this file and its contents is: BSD-3-Clause                                                                                                        #
 #                                                                                                                                                                           #
 #   Copyright <2023> <Uri Herrera <uri_herrera@nxos.org>>                                                                                                                   #
-#   Copyright <2023> <Luis Lavaire <luis_lavaire@nxos.org>>                                                                                                                 #
 #                                                                                                                                                                           #
 #   Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:                          #
 #                                                                                                                                                                           #
@@ -32,22 +31,27 @@ set -xe
 # -- Set program name and version.
 
 TOOL_NAME="Nitrux Update System Tool"
-TOOL_SHRT_NAME="nuts"
 
 
 # -- Print informative messages to stdin.
 
-puts-info () { printf "$TOOL_SHRT_NAME: \e[34mInfo:\e[0m %b\n\n" "$*"; }
+puts_info() {
+  printf "%s: \e[34mInfo:\e[0m %s\n\n" "$TOOL_NAME" "$*"
+}
 
 
 # -- Print success messages to stdin.
 
-puts-success () { printf "$TOOL_SHRT_NAME: \e[32mSuccess:\e[0m %b\n\n" "$*"; }
+puts_success() {
+  printf "%s: \e[32mSuccess:\e[0m %s\n\n" "$TOOL_NAME" "$*"
+}
 
 
 # -- Print error messages to stdin.
 
-puts-error () { printf "$TOOL_SHRT_NAME: \e[31mError:\e[0m %b\n\n" "$*"; }
+puts_error() {
+  printf "%s: \e[31mError:\e[0m %b\n\n" "$TOOL_NAME" "$*"
+}
 
 
 # -- Define the path of the nuts configuration file.
@@ -59,10 +63,10 @@ CONFIG_FILE="/etc/nuts.conf"
 # -- Include fix for SC1090 – ShellCheck.
 
 if [[ ! -f $CONFIG_FILE ]]; then
-    puts-error "$TOOL_NAME configuration file not found!, quitting." 2>&1
+    puts_error "$TOOL_NAME configuration file not found!, quitting." 2>&1
     exit 1
 else
-	puts-success "Success! $TOOL_NAME configuration file found, continuing..."
+	puts_success "Success! $TOOL_NAME configuration file found, continuing..."
 	# shellcheck source=/dev/null
 	. "$CONFIG_FILE"
 fi
@@ -70,7 +74,7 @@ fi
 
 # -- Variables.
 
-CURRENT_DIST=$(tail /etc/os-release | grep "VERSION_CODENAME=*" | rev | cut -d '=' -f 1 | rev)
+CURRENT_DIST=$(awk -F'=' '/VERSION_CODENAME/{print $NF}' /etc/os-release)
 
 
 # -- Mount the devices filesystem.
@@ -102,24 +106,24 @@ done
 # -- Create working directories in /home since this partition will likely have more space than the root partition, as set in our custom partition layout and the instructions on the website.
 
 if [[ ! -d "$NUTS_DIR_DLS" ]] && [[ ! -d "$NUTS_DIR_ISO" ]] && [[ ! -d "$NUTS_DIR_SQS" ]] && [[ ! -d "$NUTS_DIR_BAK" ]]; then
-	puts-info "Creating working directories, continuing..."
+	puts_info "Creating working directories, continuing..."
 	mkdir -p /home/.nuts/{backup,downloads,iso,squashfs}
 else
-	puts-info "Working directories exist, skipping..."
+	puts_info "Working directories exist, skipping..."
 fi
 
 
 # -- Verify the checksum of the backup file with the generated checksum file.
 # -- Exit if checksum doesn't match.
 
-BACKUP_SUM="$(md5sum "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)" | cut -c -32)"
-GEN_BAK_SUM="$(tail "$NUTS_DIR_BAK"/nuts-backup.md5sum | cut -c -32)"
+BACKUP_SUM=$(md5sum "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)" | cut -c -32)
+GEN_BAK_SUM=$(tail "$NUTS_DIR_BAK"/nuts-backup.md5sum | cut -c -32)
 
 if [[ "$BACKUP_SUM" == "$GEN_BAK_SUM" ]]; then
-	puts-info "Backup checksum matches, continuing..."
+    puts_info "Backup checksum matches, continuing..."
 else
-	puts-error "Backup checksum does not match, quitting."
-	exit 1
+    puts_error "Backup checksum does not match, quitting."
+    exit 1
 fi
 
 
@@ -131,7 +135,7 @@ mount "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)"
 
 # -- Now comes the good part; proceed with running rsync and restore the backup.
 
-puts-info "Restoring backup of ${CURRENT_DIST^n}, continuing..."
+puts_info "Restoring backup of ${CURRENT_DIST^n}, continuing..."
 
 dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/rsync-exclude.list
 
@@ -144,7 +148,7 @@ eval "$RSYNC_COMMAND"
 
 sync
 
-puts-success "Success! Backup has been restored."
+puts_success "Success! Backup has been restored."
 
 
 # -- Unmount the SquashFS.
