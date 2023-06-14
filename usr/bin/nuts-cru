@@ -109,7 +109,7 @@ done
 
 if [[ ! -d "$NUTS_DIR_CHR" ]] && [[ ! -d "$NUTS_DIR_DLS" ]] && [[ ! -d "$NUTS_DIR_ISO" ]] && [[ ! -d "$NUTS_DIR_SQS" ]] && [[ ! -d "$NUTS_DIR_BAK" ]]; then
 	puts-info "Creating working directories, continuing..."
-	$mkdir -p /home/.nuts/{iso,squashfs,backup}
+	mkdir -p /home/.nuts/{iso,squashfs,backup}
 else
 	puts-info "Working directories exist, skipping..."
 fi
