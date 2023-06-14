@@ -140,7 +140,7 @@ rsync \
 	--no-compress \
 	--exclude-from='/tmp/rsync-exclude.list' \
 	--progress --info=progress2 \
-	"$NUTS_DIR_SQS" /
+	"$NUTS_DIR_SQS"/ /
 
 sync
 
