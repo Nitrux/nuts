@@ -135,7 +135,9 @@ puts-info "Restoring backup of ${CURRENT_DIST^n}, continuing..."
 
 dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/rsync-exclude.list
 
-rsync --no-compress -avh \
+rsync \
+	-avh \
+	--no-compress \
 	--exclude-from='/tmp/rsync-exclude.list' \
 	--progress --info=progress2 \
 	"$NUTS_DIR_SQS" /
