@@ -275,7 +275,7 @@ dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/rsync-exclude.lis
 
 SOURCE_DIR="$NUTS_DIR_SQS"
 DESTINATION_DIR="/"
-EXCLUDES_FILE="rsync-exclude.list"
+EXCLUDES_FILE="/tmp/rsync-exclude.list"
 
 RSYNC_COMMAND="rsync -av --progress --exclude-from=$EXCLUDES_FILE $SOURCE_DIR/ $DESTINATION_DIR"
 eval "$RSYNC_COMMAND"
