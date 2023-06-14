@@ -216,7 +216,7 @@ rsync --no-compress -ahR \
 	--exclude /usr/bin/mount \
 	--exclude /var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp} \
 	--progress --info=progress2 \
-	"$NUTS_DIR_SQS" /
+	"$NUTS_DIR_SQS" ../
 sync
 
 puts-success "Success! Update has been applied."
@@ -247,6 +247,7 @@ umount /home
 
 puts-info "Calling the $TOOL_NAME Cleanup Crew, continuing..."
 dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-cc
+dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-cc-file.list
 chmod +x /tmp/nuts-cc && bash /tmp/nuts-cc
 
 
