@@ -76,7 +76,7 @@ CURRENT_DIST=$(tail /etc/os-release | grep "VERSION_CODENAME=*" | rev | cut -d '
 # -- Functions.
 
 dl_file () { axel -o /tmp -n 10 "$@"; }
-bak_cc () { $ROOT find "$NUTS_DIR_BAK" -maxdepth 1 -type f | head -n "$BACKUPS_TO_KEEP" | xargs --no-run-if-empty rm; }
+bak_cc () { find "$NUTS_DIR_BAK" -maxdepth 1 -type f | head -n "$BACKUPS_TO_KEEP" | xargs --no-run-if-empty rm; }
 
 
 # -- Mount the devices filesystem.
@@ -89,6 +89,7 @@ mount -t devtmpfs dev /dev
 # -- So, let's use the /home partition. We're discovering NX_HOME by the LABEL of the partition.
 
 HOME_PARTITION=$(findfs LABEL=NX_HOME)
+
 mount -t auto "$HOME_PARTITION" /home
 
 
@@ -106,9 +107,9 @@ done
 # -- Create the directories for nuts.
 # -- Create working directories in /home since this partition will likely have more space than the root partition, as set in our custom partition layout and the instructions on the website.
 
-if [[ ! -d "$NUTS_DIR_DLS" ]] && [[ ! -d "$NUTS_DIR_ISO" ]] && [[ ! -d "$NUTS_DIR_SQS" ]] && [[ ! -d "$NUTS_DIR_BAK" ]]; then
+if [[ ! -d "$NUTS_DIR_CHR" ]] && [[ ! -d "$NUTS_DIR_DLS" ]] && [[ ! -d "$NUTS_DIR_ISO" ]] && [[ ! -d "$NUTS_DIR_SQS" ]] && [[ ! -d "$NUTS_DIR_BAK" ]]; then
 	puts-info "Creating working directories, continuing..."
-	$ROOT mkdir -p /home/.nuts/{iso,squashfs,backup}
+	$mkdir -p /home/.nuts/{iso,squashfs,backup}
 else
 	puts-info "Working directories exist, skipping..."
 fi
@@ -126,7 +127,7 @@ bak_cc
 
 puts-info "Creating backup of ${CURRENT_DIST^n}, continuing..."
 
-$ROOT mksquashfs / "$NUTS_DIR_BAK"/nuts-backup-"$DATE_BACKUP_FILE".squashfs \
+mksquashfs / "$NUTS_DIR_BAK"/nuts-backup-"$DATE_BACKUP_FILE".squashfs \
 	-e /boot/* \
 	-e /dev/* \
 	-ef /etc/shadow \
@@ -141,7 +142,7 @@ $ROOT mksquashfs / "$NUTS_DIR_BAK"/nuts-backup-"$DATE_BACKUP_FILE".squashfs \
 	-Xcompression-level 22 \
 	-no-progress \
 	-b 1048576
-$ROOT md5sum "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)" > "$NUTS_DIR_BAK"/nuts-backup.md5sum
+md5sum "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)" > "$NUTS_DIR_BAK"/nuts-backup.md5sum
 sync
 
 puts-success "Success! Backup has been created."
@@ -157,7 +158,7 @@ else
 	puts-info "Can't find aria2c binary, downloading..."
 	dl_file https://github.com/abcfy2/aria2-static-build/releases/download/1.36.0/aria2-x86_64-linux-musl_static.zip
 	puts-info "Adding aria2c static binary, continuing..."
-	$ROOT unzip /tmp/aria2-x86_64-linux-musl_static.zip -d /usr/bin
+	unzip /tmp/aria2-x86_64-linux-musl_static.zip -d /usr/bin
 fi
 
 
@@ -172,8 +173,8 @@ if [[ -f "$NUTS_DIR_DLS/nitrux.iso" ]]; then
 else
 	puts-info "ISO file not found! Dowloading ISO using aria2c, continuing..."
 	MAGNET_LINK="$(tail /tmp/nuts-query.info | grep magnetlink= | rev | cut -d '=' -f -42 | rev)"
-	$ROOT aria2c -d "$NUTS_DIR_DLS" --seed-time=0 "$MAGNET_LINK"
-	$ROOT mv "$(echo "$NUTS_DIR_DLS"/nitrux-nx-desktop-plasma-*-amd64.iso | tr ' ' '\n' | tail -n 1)" "$NUTS_DIR_DLS"/nitrux.iso
+	aria2c -d "$NUTS_DIR_DLS" --seed-time=0 "$MAGNET_LINK"
+	mv "$(echo "$NUTS_DIR_DLS"/nitrux-nx-desktop-plasma-*-amd64.iso | tr ' ' '\n' | tail -n 1)" "$NUTS_DIR_DLS"/nitrux.iso
 fi
 
 
@@ -198,6 +199,13 @@ mount "$NUTS_DIR_DLS"/nitrux.iso "$NUTS_DIR_ISO"
 mount "$NUTS_DIR_ISO"/casper/filesystem.squashfs "$NUTS_DIR_SQS"
 
 
+# -- Mount NX_ROOT partition somewhere else.
+
+ROOT_PARTITION=$(findfs LABEL=NX_ROOT)
+
+mount -t auto "$ROOT_PARTITION" "$NUTS_DIR_ROOT"
+
+
 # -- Now comes the good part; proceed with running rsync and update the current installation.
 
 puts-info "Updating ${CURRENT_DIST^n}, continuing..."
@@ -214,7 +222,7 @@ rsync -avzh \
 	--exclude /sys/ \
 	--exclude /var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp} \
 	--progress \
-	"$NUTS_DIR_SQS" /
+	"$NUTS_DIR_SQS" "$NUTS_DIR_ROOT"
 sync
 
 puts-success "Success! Update has been applied."
