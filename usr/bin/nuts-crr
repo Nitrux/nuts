@@ -77,6 +77,32 @@ fi
 CURRENT_DIST=$(awk -F'=' '/VERSION_CODENAME/{print $NF}' /etc/os-release)
 
 
+# -- Functions.
+
+dl_file() {
+    local FILE_URL="$1"
+    local FILE_NAME
+    FILE_NAME=$(basename "$FILE_URL")
+    local FILE_PATH="/tmp/$FILE_NAME"
+
+    [ -f "$FILE_PATH" ] && rm "$FILE_PATH"
+
+    if ! command -v axel >/dev/null 2>&1; then
+        puts_error "axel command not found, unable to download file."
+        return 1
+    fi
+
+    if ! curl --output /dev/null --silent --head --fail "$FILE_URL"; then
+        puts_error "File URL is not accessible, unable to download file."
+        return 1
+    fi
+
+    if ! axel -o "/tmp" -n 10 "$FILE_URL"; then
+        puts_error "Failed to download file."
+        return 1
+    fi
+}
+
 # -- Mount the devices filesystem.
 # -- Check if /dev is already mounted
 
@@ -154,7 +180,7 @@ dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/rsync-exclude.lis
 
 SOURCE_DIR="$NUTS_DIR_SQS"
 DESTINATION_DIR="/"
-EXCLUDES_FILE="rsync-exclude.list"
+EXCLUDES_FILE="/tmp/rsync-exclude.list"
 
 RSYNC_COMMAND="rsync -av --progress --exclude-from=$EXCLUDES_FILE $SOURCE_DIR/ $DESTINATION_DIR"
 eval "$RSYNC_COMMAND"

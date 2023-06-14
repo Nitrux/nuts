@@ -113,24 +113,23 @@ fi
 dl_file() {
     local FILE_URL="$1"
     local FILE_NAME
-	FILE_NAME="$(basename "$FILE_URL")"
+    FILE_NAME=$(basename "$FILE_URL")
     local FILE_PATH="/tmp/$FILE_NAME"
 
-    if [ -f "$FILE_PATH" ]; then
-        rm "$FILE_PATH"
-    fi
+    [ -f "$FILE_PATH" ] && rm "$FILE_PATH"
 
     if ! command -v axel >/dev/null 2>&1; then
+        puts_error "axel command not found, unable to download file."
         return 1
     fi
 
     if ! curl --output /dev/null --silent --head --fail "$FILE_URL"; then
+        puts_error "File URL is not accessible, unable to download file."
         return 1
     fi
 
-    axel -o "/tmp" -n 10 "$FILE_URL"
-
-    if [ $? -ne 0 ]; then
+    if ! axel -o "/tmp" -n 10 "$FILE_URL"; then
+        puts_error "Failed to download file."
         return 1
     fi
 }
