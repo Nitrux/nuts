@@ -210,7 +210,7 @@ mount -t auto "$ROOT_PARTITION" "$NUTS_DIR_CHR"
 
 puts-info "Updating ${CURRENT_DIST^n}, continuing..."
 
-rsync -avzh \
+rsync --inplace --compress-level=9 -avzh \
 	--exclude /dev/ \
 	--exclude /etc/shadow \
 	--exclude /etc/sddm.conf \
