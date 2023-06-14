@@ -75,7 +75,7 @@ CURRENT_DIST=$(tail /etc/os-release | grep "VERSION_CODENAME=*" | rev | cut -d '
 
 # -- Functions.
 
-dl_file () { axel -o /tmp -n 10 "$@"; }
+dl_file () { axel -q -o /tmp -n 10 "$@"; }
 bak_cc () { find "$NUTS_DIR_BAK" -maxdepth 1 -type f | head -n "$BACKUPS_TO_KEEP" | xargs --no-run-if-empty rm; }
 
 
@@ -109,7 +109,7 @@ done
 
 if [[ ! -d "$NUTS_DIR_CHR" ]] && [[ ! -d "$NUTS_DIR_DLS" ]] && [[ ! -d "$NUTS_DIR_ISO" ]] && [[ ! -d "$NUTS_DIR_SQS" ]] && [[ ! -d "$NUTS_DIR_BAK" ]]; then
 	puts-info "Creating working directories, continuing..."
-	mkdir -p /home/.nuts/{iso,squashfs,backup}
+	mkdir -p /home/.nuts/{iso,squashfs,backup,root}
 else
 	puts-info "Working directories exist, skipping..."
 fi
