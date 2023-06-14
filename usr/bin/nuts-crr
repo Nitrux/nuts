@@ -148,7 +148,7 @@ mount "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)"
 
 # -- Now comes the good part; proceed with running rsync and restore the backup.
 
-puts_info "Restoring backup of ${CURRENT_DIST^n}, continuing..."
+puts_info "Restoring backup of ${CURRENT_DIST^}, continuing..."
 
 dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/rsync-exclude.list
 

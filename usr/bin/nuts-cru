@@ -178,7 +178,7 @@ bak_cc
 # -- Create the backup.
 # -- We assume that the /home partition is on an internal storage device (SATA or NVME), but one can never know, so run sync to flush the write cache.
 
-puts_info "Creating backup of ${CURRENT_DIST^n}, continuing..."
+puts_info "Creating backup of ${CURRENT_DIST^}, continuing..."
 
 BACKUP_FILE="$NUTS_DIR_BAK/nuts-backup-$DATE_BACKUP_FILE.squashfs"
 
@@ -269,7 +269,7 @@ mount "$NUTS_DIR_ISO"/casper/filesystem.squashfs "$NUTS_DIR_SQS" || { puts_error
 
 # -- Now comes the good part; proceed with running rsync and update the current installation.
 
-puts_info "Updating ${CURRENT_DIST^n}, continuing..."
+puts_info "Updating ${CURRENT_DIST^}, continuing..."
 
 dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/rsync-exclude.list
 
