@@ -107,9 +107,9 @@ done
 # -- Create the directories for nuts.
 # -- Create working directories in /home since this partition will likely have more space than the root partition, as set in our custom partition layout and the instructions on the website.
 
-if [[ ! -d "$NUTS_DIR_CHR" ]] && [[ ! -d "$NUTS_DIR_DLS" ]] && [[ ! -d "$NUTS_DIR_ISO" ]] && [[ ! -d "$NUTS_DIR_SQS" ]] && [[ ! -d "$NUTS_DIR_BAK" ]]; then
+if [[ ! -d "$NUTS_DIR_DLS" ]] && [[ ! -d "$NUTS_DIR_ISO" ]] && [[ ! -d "$NUTS_DIR_SQS" ]] && [[ ! -d "$NUTS_DIR_BAK" ]]; then
 	puts-info "Creating working directories, continuing..."
-	mkdir -p /home/.nuts/{backup,iso,root,squashfs}
+	mkdir -p /home/.nuts/{backup,iso,squashfs}
 else
 	puts-info "Working directories exist, skipping..."
 fi
@@ -199,13 +199,6 @@ mount "$NUTS_DIR_DLS"/nitrux.iso "$NUTS_DIR_ISO"
 mount "$NUTS_DIR_ISO"/casper/filesystem.squashfs "$NUTS_DIR_SQS"
 
 
-# -- Mount NX_ROOT partition somewhere else.
-
-ROOT_PARTITION=$(findfs LABEL=NX_ROOT)
-
-mount -t auto "$ROOT_PARTITION" "$NUTS_DIR_CHR"
-
-
 # -- Now comes the good part; proceed with running rsync and update the current installation.
 
 puts-info "Updating ${CURRENT_DIST^n}, continuing..."
@@ -222,7 +215,7 @@ rsync --delete-before --inplace --no-compress -auh \
 	--exclude /sys/ \
 	--exclude /var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp} \
 	--progress --info=progress2 \
-	"$NUTS_DIR_SQS" "$NUTS_DIR_CHR"
+	"$NUTS_DIR_SQS" /
 sync
 
 puts-success "Success! Update has been applied."
