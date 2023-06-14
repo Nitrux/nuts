@@ -31,7 +31,6 @@ set -xe
 # -- Set program name and version.
 
 TOOL_NAME="Nitrux Update System Tool"
-TOOL_SHRT_NAME="nuts"
 
 
 # -- Print informative messages to stdin.
@@ -52,24 +51,6 @@ puts_success() {
 
 puts_error() {
   printf "%s: \e[31mError:\e[0m %b\n\n" "$TOOL_NAME" "$*"
-}
-
-
-# -- Print messages or text using multiple lines.
-
-print_message() {
-    local message="${1:-}"
-    local output_stream="${2:-2}"
-
-    printf "%b\n" "$message" >&"$output_stream"
-}
-
-
-# -- Display an error when no flag is used.
-
-error () {
-  puts_error "$TOOL_SHRT_NAME: \e[31mError:\e[0m: $*" >&2
-  exit 1
 }
 
 
@@ -139,7 +120,14 @@ bak_cc() {
 
 
 # -- Mount the devices filesystem.
+# -- Check if /dev is already mounted
 
+if mountpoint -q /dev; then
+    echo "/dev is already mounted. Unmounting..."
+    umount /dev
+fi
+
+puts_info "Mounting /dev..."
 mount -t devtmpfs dev /dev
 
 
