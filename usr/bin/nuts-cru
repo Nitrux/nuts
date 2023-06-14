@@ -208,18 +208,13 @@ dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/rsync-exclude.lis
 rsync \
 	-avh \
 	--no-compress \
-	--exclude-from='/tmp/rsync-exclude.list' \
+	--exclude-from='{/tmp/rsync-exclude.list}' \
 	--progress --info=progress2 \
 	"$NUTS_DIR_SQS"/ /
 
 sync
 
 puts-success "Success! Update has been applied."
-
-
-# -- Update GRUB.
-
-update-grub
 
 
 # -- Unmount the ISO and the SquashFS.
@@ -245,6 +240,11 @@ puts-info "Calling the $TOOL_NAME Cleanup Crew, continuing..."
 dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-cc
 dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-cc-file.list
 chmod +x /tmp/nuts-cc && bash /tmp/nuts-cc
+
+
+# -- Update GRUB.
+
+update-grub
 
 
 # -- Finalizing.

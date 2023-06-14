@@ -138,18 +138,13 @@ dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/rsync-exclude.lis
 rsync \
 	-avh \
 	--no-compress \
-	--exclude-from='/tmp/rsync-exclude.list' \
+	--exclude-from='{/tmp/rsync-exclude.list}' \
 	--progress --info=progress2 \
 	"$NUTS_DIR_SQS"/ /
 
 sync
 
 puts-success "Success! Backup has been restored."
-
-
-# -- Update GRUB.
-
-update-grub
 
 
 # -- Unmount the SquashFS.
@@ -165,6 +160,11 @@ umount /dev
 # -- Unmount the /home partition.
 
 umount /home
+
+
+# -- Update GRUB.
+
+update-grub
 
 
 # -- Finalizing.
