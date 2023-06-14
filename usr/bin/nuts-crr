@@ -164,6 +164,11 @@ sync
 puts_success "Success! Backup has been restored."
 
 
+# -- Update GRUB.
+
+update-grub
+
+
 # -- Unmount the SquashFS.
 # -- Unmount the devices filesystem.
 # -- Unmount the /home partition.

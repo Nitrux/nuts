@@ -285,6 +285,11 @@ sync
 puts_success "Success! Update has been applied."
 
 
+# -- Update GRUB.
+
+update-grub
+
+
 # -- Unmount the ISO and the SquashFS.
 # -- Unmount the devices filesystem.
 # -- Unmount the /home partition.
@@ -323,11 +328,6 @@ else
     puts_error "Failed to execute the cleanup script, quitting."
     exit 1
 fi
-
-
-# -- Update GRUB.
-
-update-grub
 
 
 # -- Finalizing.
