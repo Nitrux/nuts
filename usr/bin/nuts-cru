@@ -208,12 +208,13 @@ rsync -avzh \
 	--exclude /etc/sddm.conf \
 	--exclude /etc/sddm.conf.d/ \
 	--exclude /home/ \
+	--exclude /media/ \
 	--exclude /proc/ \
 	--exclude /run/ \
 	--exclude /sys/ \
 	--exclude /var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp} \
 	--progress \
-	"$NUTS_DIR_SQS" "$PWD"
+	"$NUTS_DIR_SQS" /
 sync
 
 puts-success "Success! Update has been applied."
