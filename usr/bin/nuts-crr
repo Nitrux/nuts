@@ -140,7 +140,7 @@ mount -t auto "$ROOT_PARTITION" "$NUTS_DIR_CHR"
 
 puts-info "Restoring backup of ${CURRENT_DIST^n}, continuing..."
 
-rsync --inplace --compress-level=9 -avzh \
+rsync --inplace --no-compress -avh \
 	--exclude /dev/ \
 	--exclude /etc/shadow \
 	--exclude /etc/sddm.conf \
@@ -150,7 +150,7 @@ rsync --inplace --compress-level=9 -avzh \
 	--exclude /run/ \
 	--exclude /sys/ \
 	--exclude /var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp} \
-	--progress \
+	--progress --info=progress2 \
 	"$NUTS_DIR_SQS" "$NUTS_DIR_CHR"
 sync
 
