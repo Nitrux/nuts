@@ -250,7 +250,7 @@ fi
 # -- Exit if checksum doesn't match.
 
 LOCAL_ISO_SUM=$(md5sum "$NUTS_DIR_DLS"/nitrux.iso | awk '{ print $1 }')
-DL_ISO_SUM=$(tail -n 1 /tmp/nuts-query.info | sed -n 's/.*isosum=\(.*\)/\1/p')
+DL_ISO_SUM=$(grep -oP '(?<=isosum=)[a-f0-9]{32}' /tmp/nuts-query.info)
 
 if [[ "$LOCAL_ISO_SUM" == "$DL_ISO_SUM" ]]; then
     puts_info "ISO checksum matches, continuing..."
