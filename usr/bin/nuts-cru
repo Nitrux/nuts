@@ -203,7 +203,7 @@ mount "$NUTS_DIR_ISO"/casper/filesystem.squashfs "$NUTS_DIR_SQS"
 
 puts-info "Updating ${CURRENT_DIST^n}, continuing..."
 
-rsync --inplace --no-whole-file --no-compress -ah \
+rsync --inplace --no-whole-file --no-compress -ahR \
 	--exclude /dev/ \
 	--exclude /etc/{fstab,shadow,sddm.conf} \
 	--exclude /etc/sddm.conf.d/ \
