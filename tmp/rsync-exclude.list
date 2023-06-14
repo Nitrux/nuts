@@ -1,0 +1,11 @@
+/dev/
+/etc/{fstab,shadow,sddm.conf}
+/etc/sddm.conf.d/
+/home/
+/media/
+/proc/
+/run/
+/sys/
+/usr/bin/bash
+/usr/bin/mount
+/var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp}
