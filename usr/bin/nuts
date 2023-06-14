@@ -99,10 +99,10 @@ fi
 # -- Exit if not running as root.
 
 if [ "$EUID" -ne 0 ]; then
-    puts_error "%s is not running as root, quitting.\n" "$TOOL_NAME"
+    puts_error "$TOOL_NAME is not running as root, quitting.\n"
     exit 1
 else
-    puts_info "%s is running as root, continuing...\n" "$TOOL_NAME"
+    puts_success "$TOOL_NAME is running as root, continuing...\n"
     ROOT=("sudo")
 fi
 
