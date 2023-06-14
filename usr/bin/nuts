@@ -263,9 +263,9 @@ done
 			# -- If the component and the configuration file don't exist in the chroot, download them.
 			# -- If something failed in a previous run unmount things.
 
-			overlay_ch umount /home
-			overlay_ch umount /home/.nuts/root
-			overlay_ch umount /dev
+			overlay_ch umount /home || true
+			overlay_ch umount /home/.nuts/root || true
+			overlay_ch umount /dev || true
 			overlay_ch rm -r /usr/bin/nuts-cru || true 2>&1
 			overlay_ch axel -q -o /usr/bin -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/main/usr/bin/nuts-cru
 			overlay_ch chmod +x /usr/bin/nuts-cru
@@ -294,9 +294,9 @@ done
 			# -- If the component doesn't exist in the root, download it.
 			# -- If something failed in a previous run unmount things.
 
-			overlay_ch umount /home
-			overlay_ch umount /home/.nuts/root
-			overlay_ch umount /dev
+			overlay_ch umount /home || true
+			overlay_ch umount /home/.nuts/root || true
+			overlay_ch umount /dev || true
 			overlay_ch rm -r /usr/bin/nuts-crr || true 2>&1
 			overlay_ch axel -q -o /usr/bin -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/main/usr/bin/nuts-crr
 			overlay_ch chmod +x /usr/bin/nuts-crr
