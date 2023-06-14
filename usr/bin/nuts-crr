@@ -181,9 +181,8 @@ unmount_directory() {
 }
 
 unmount_directory "$NUTS_DIR_SQS"
-unmount_directory "/dev" 
 unmount_directory "/home"
-
+unmount_directory "/dev"
 
 # -- Update GRUB.
 

@@ -301,10 +301,10 @@ unmount_directory() {
   fi
 }
 
-unmount_directory "$NUTS_DIR_ISO"
 unmount_directory "$NUTS_DIR_SQS"
-unmount_directory "/dev"
+unmount_directory "$NUTS_DIR_ISO"
 unmount_directory "/home"
+unmount_directory "/dev"
 
 
 # -- Do a cleanup of the synced root.
