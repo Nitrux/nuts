@@ -190,13 +190,13 @@ done
 			fi
 
 
-			# -- Check internet connection but do nothing yet.
+			# -- Check Internet connection but do nothing yet.
 			# -- Exit if connection test fails.
 
 			if ping -q -c 1 -W 1 nxos.org >/dev/null; then
-				puts-success "Success! This computer can reach the internet, continuing..."
+				puts-success "Success! This computer can reach the Internet, continuing..."
 			else
-				puts-error "This computer can't reach the internet, quitting."
+				puts-error "This computer can't reach the Internet, quitting."
 				exit 1
 			fi
 
