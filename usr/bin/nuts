@@ -262,6 +262,7 @@ done
 			# -- Run nuts-cru to perform the update actions inside the chroot.
 			# -- If the component and the configuration file don't exist in the chroot, download them.
 
+			overlay_ch rm -r /usr/bin/nuts-cru || true
 			overlay_ch axel -o /usr/bin -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/main/usr/bin/nuts-cru
 			overlay_ch chmod +x /usr/bin/nuts-cru
 			overlay_ch axel -o /etc -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/main/etc/nuts.conf
@@ -288,6 +289,7 @@ done
 			# -- Run nuts-crr to perform the restore actions inside the chroot.
 			# -- If the component doesn't exist in the root, download it.
 
+			overlay_ch rm -r /usr/bin/nuts-crr || true
 			overlay_ch axel -o /usr/bin -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/main/usr/bin/nuts-crr
 			overlay_ch chmod +x /usr/bin/nuts-crr
 			overlay_ch axel -o /etc -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/main/etc/nuts.conf
