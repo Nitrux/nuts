@@ -78,6 +78,14 @@ CURRENT_DIST=$(tail /etc/os-release | grep "VERSION_CODENAME=*" | rev | cut -d '
 mount -t devtmpfs dev /dev
 
 
+# -- Mount NX_HOME partition.
+# -- When entering the chroot, only the root partition is mounted, but that's likely to not have enough storage.
+# -- So, let's use the /home partition. We're discovering by the LABEL of the partition.
+
+HOME_PARTITION=$(blkid | grep NX_HOME | cut -d '=' -f 1)
+mount -t auto "$HOME_PARTITION" /home
+
+
 #   ====== START ======
 
 # -- Flag parsing.
@@ -152,6 +160,11 @@ umount "$NUTS_DIR_SQS"
 # -- Unmount the devices filesystem.
 
 umount /dev
+
+
+# -- Unmount the /home partition.
+
+umount /home
 
 
 # -- Finalizing.
