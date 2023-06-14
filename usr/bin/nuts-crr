@@ -133,12 +133,13 @@ mount "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)"
 
 puts-info "Restoring backup of ${CURRENT_DIST^n}, continuing..."
 
-rsync --delete-before --inplace --no-compress -auh \
+rsync --inplace --no-compress -auh \
 	--exclude /dev/ \
 	--exclude /etc/shadow \
 	--exclude /etc/sddm.conf \
 	--exclude /etc/sddm.conf.d/ \
 	--exclude /home/ \
+	--exclude /media/ \
 	--exclude /proc/ \
 	--exclude /run/ \
 	--exclude /sys/ \
