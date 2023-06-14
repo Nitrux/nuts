@@ -1,5 +1,9 @@
 /etc/fstab
 /etc/shadow
+/etc/group
+/etc/gshadow
+/etc/subgid
+/etc/subuid
 /etc/sddm.conf
 /usr/bin/bash
 /usr/bin/mount
