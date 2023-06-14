@@ -26,7 +26,7 @@
 
 # -- Exit on errors.
 
-set -e
+set -xe
 
 
 # -- Set program name and version.
