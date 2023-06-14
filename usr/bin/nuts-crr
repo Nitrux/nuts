@@ -129,6 +129,13 @@ fi
 mount "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)" "$NUTS_DIR_SQS"
 
 
+# -- Mount NX_ROOT partition somewhere else.
+
+ROOT_PARTITION=$(findfs LABEL=NX_ROOT)
+
+mount -t auto "$ROOT_PARTITION" "$NUTS_DIR_CHR"
+
+
 # -- Now comes the good part; proceed with running rsync and restore the backup.
 
 puts-info "Restoring backup of ${CURRENT_DIST^n}, continuing..."
@@ -144,7 +151,7 @@ rsync --inplace --compress-level=9 -avzh \
 	--exclude /sys/ \
 	--exclude /var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp} \
 	--progress \
-	"$NUTS_DIR_SQS" /
+	"$NUTS_DIR_SQS" "$NUTS_DIR_CHR"
 sync
 
 puts-success "Success! Backup has been restored."
