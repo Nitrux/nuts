@@ -254,7 +254,7 @@ chmod +x /tmp/nuts-cc && bash /tmp/nuts-cc
 # -- Leave the Matri... I mean, the overlay.
 
 rm -r \
-	/tmp//nuts-cc \
+	/tmp//nuts-cc
 
 exit
 
