@@ -183,16 +183,16 @@ puts_info "Creating backup of ${CURRENT_DIST^n}, continuing..."
 BACKUP_FILE="$NUTS_DIR_BAK/nuts-backup-$DATE_BACKUP_FILE.squashfs"
 
 mksquashfs / "$BACKUP_FILE" \
-	-e '/boot/*' \
-	-e '/dev/*' \
-	-ef '/etc/shadow' \
-	-e '/home/' \
-	-e '/proc/' \
-	-e '/media/*' \
-	-e '/run/*' \
-	-e '/sys/*' \
-	-e '/tmp/*' \
-	-e '/var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp}/' \
+	-e /boot/* \
+	-e /dev/* \
+	-ef /etc/shadow \
+	-e /home/ \
+	-e /proc/ \
+	-e /media/* \
+	-e /run/* \
+	-e /sys/* \
+	-e /tmp/* \
+	-e /var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp}/ \
 	-comp zstd \
 	-Xcompression-level 22 \
 	-no-progress \
