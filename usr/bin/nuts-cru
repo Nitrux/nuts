@@ -255,7 +255,6 @@ chmod +x /tmp/nuts-cc && bash /tmp/nuts-cc
 
 rm -r \
 	/tmp//nuts-cc \
-	"$NUTS_DIR_DLS"/nitrux.iso
 
 exit
 
