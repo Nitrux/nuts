@@ -137,6 +137,12 @@ mount -t devtmpfs dev /dev
 
 HOME_PARTITION=$(findfs LABEL=NX_HOME)
 
+if mountpoint -q /home; then
+    echo "/home is already mounted. Unmounting..."
+    umount /home
+fi
+
+puts_info "Mounting $HOME_PARTITION to /home..."
 mount -t auto "$HOME_PARTITION" /home
 
 
