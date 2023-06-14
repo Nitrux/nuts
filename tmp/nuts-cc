@@ -44,7 +44,7 @@ puts-success () { printf "$TOOL_SHRT_NAME: \e[32mSuccess:\e[0m %b\n\n" "$*"; }
 
 # -- Remove unwanted files and directories.
 
-sed 's/.*/rm -r "\0"/' /tmp/nuts-cc-file.list | bash || true
+sed 's/.*/rm -r "\0"/' /tmp/nuts-cc-file.list || true
 
 puts-success "Success! Cleanup complete, continuing..."
 
