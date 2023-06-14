@@ -1,5 +1,7 @@
 /dev/
-/etc/{fstab,shadow,sddm.conf}
+/etc/fstab
+/etc/shadow
+/etc/sddm.conf
 /etc/sddm.conf.d/
 /home/
 /media/

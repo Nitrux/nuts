@@ -44,7 +44,7 @@ puts-success () { printf "$TOOL_SHRT_NAME: \e[32mSuccess:\e[0m %b\n\n" "$*"; }
 
 # -- Remove unwanted files and directories.
 
-xargs rm -rf </tmp/nuts-cc-file.list
+sed 's/.*/rm -r "\0"/' /tmp/nuts-cc-file.list | bash
 
 puts-success "Success! Cleanup complete, continuing..."
 
