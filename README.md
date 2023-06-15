@@ -27,7 +27,7 @@ To see the partition label run the command `blkid`.
 `nuts` is a simple and minimalistic system update and rollback utility. It performs three steps:
 
 1. Creates a backup of the current root directory using SquashFS.
-2. Downloads an ISO image using the BitTorrent protocol and updates the system using rsync.
+2. Downloads an ISO image using the BitTorrent protocol and updates the system using `rsync`.
 3. When restoring a backup, `nuts` uses the locally generated SquashFS file instead of downloading.
 
 
