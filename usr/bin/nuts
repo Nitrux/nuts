@@ -322,7 +322,7 @@ done
 
 			# -- Enter the Matri... I mean, the overlay.
 			# -- Run nuts-cru to perform the backup and update.
-			# -- If the component and the configuration file don't exist in the chroot, download them.
+			# -- Always download the latest component.
 
 			overlay_ch rm -r /usr/bin/nuts-cru || true
 			overlay_ch axel -o /usr/bin -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/main/usr/bin/nuts-cru
@@ -347,11 +347,10 @@ done
 			# -- Step 1: Restore Process
 
 			# -- The restore process is the same as the Actual Update sub-process but using the backup SquashFS.
-			# -- As before, this is done inside the chroot.
 
 			# -- Enter the Matri... I mean, the overlay.
 			# -- Run nuts-crr to perform the restore actions inside the chroot.
-			# -- If the component doesn't exist in the root, download it.
+			# -- Always download the latest component.
 
 			overlay_ch rm -r /usr/bin/nuts-crr || true
 			overlay_ch axel -o /usr/bin -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/main/usr/bin/nuts-crr
