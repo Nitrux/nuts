@@ -276,7 +276,7 @@ SOURCE_DIR="$NUTS_DIR_SQS"
 DESTINATION_DIR="/"
 EXCLUDES_FILE="/tmp/rsync-exclude.list"
 
-RSYNC_COMMAND="rsync -aHAXr --progress --inplace --exclude-from=$EXCLUDES_FILE $SOURCE_DIR/ $DESTINATION_DIR"
+RSYNC_COMMAND="rsync -aHAXr --progress --exclude-from=$EXCLUDES_FILE $SOURCE_DIR/ $DESTINATION_DIR"
 eval "$RSYNC_COMMAND"
 
 sync
