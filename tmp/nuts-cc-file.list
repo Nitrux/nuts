@@ -23,6 +23,7 @@
 /usr/lib/x86_64-linux-gnu/calamares/
 /usr/libexec/dpkg
 /usr/share/applications/calamares.desktop
+/usr/share/applications/org.nxos.installer.desktop
 /usr/share/calamares/
 /usr/share/doc/calamares/
 /usr/share/doc/dpkg/
