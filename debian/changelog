@@ -1,3 +1,9 @@
+nuts (1.0.0) nitrux; urgency=medium
+
+  * Everything is now functional.
+
+ -- Uri Herrera <uri_herrera@nxos.org>  Thu, 15 Jun 2023 00:00:00 -0500
+
 nuts (0.5.0) nitrux; urgency=medium
 
   * The update process is now functional.
