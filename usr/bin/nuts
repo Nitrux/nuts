@@ -301,7 +301,7 @@ done
 
 			# -- This process begins as a step before doing an update.
 			# -- Backup files are only generated when updating; the user can't ask the utility to create them on demand.
-            # -- This process is done inside the chroot; otherwise, when using overlayroot-chroot, the files, and paths will not exist.
+			# -- This process is done inside the chroot; otherwise, when using overlayroot-chroot, the files, and paths will not exist.
 
 
 			# -- Step 2: Actual Update sub-process
