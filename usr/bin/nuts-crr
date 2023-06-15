@@ -215,11 +215,6 @@ unmount_directory "/home"
 unmount_directory "/dev"
 
 
-# -- Update GRUB.
-
-update-grub
-
-
 # -- Finalizing.
 # -- Leave the Matri... I mean, the overlay.
 

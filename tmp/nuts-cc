@@ -87,9 +87,17 @@ ln -svf "$(echo /boot/initrd* | tr ' ' '\n' | tail -n 1)" /initrd.img
 
 cd /boot || exit
 
-NEWEST_FILE=$(find . -maxdepth 1 -type f -printf "%T@ %p\n" | sort -n | tail -n1 | awk '{print $2}')
+sorted_files=$(ls -t1 vmlinuz* initrd.img* System.map* config* 2>/dev/null)
 
-find . -maxdepth 1 -type f ! -name "$NEWEST_FILE" -delete
+highest_version=$(echo "$sorted_files" | head -n1 | grep -oP '(\d+\.){2}\d+')
+
+for file in $sorted_files; do
+  version=$(echo "$file" | grep -oP '(\d+\.){2}\d+')
+  if [ "$version" != "$highest_version" ]; then
+    rm -f "$file"
+  fi
+done
+
 
 puts_success "Success! Ready to use newer kernel, continuing..."
 

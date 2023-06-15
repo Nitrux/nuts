@@ -284,6 +284,24 @@ sync
 puts_success "Success! Update has been applied."
 
 
+# -- Do a cleanup of the synced root.
+
+puts_info "Calling the $TOOL_NAME Cleanup Crew, continuing..."
+
+CLEANUP_SCRIPT_URL="https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-cc"
+FILE_LIST_URL="https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-cc-file.list"
+
+dl_file "$CLEANUP_SCRIPT_URL" || { puts_error "Failed to download the cleanup script, quitting."; exit 1; }
+dl_file "$FILE_LIST_URL" || { puts_error "Failed to download the file list, quitting."; exit 1; }
+
+if chmod +x /tmp/nuts-cc && bash /tmp/nuts-cc; then
+    puts_success "Cleanup script executed successfully."
+else
+    puts_error "Failed to execute the cleanup script, quitting."
+    exit 1
+fi
+
+
 # -- Update GRUB.
 
 update-grub
@@ -308,24 +326,6 @@ unmount_directory "$NUTS_DIR_SQS"
 unmount_directory "$NUTS_DIR_ISO"
 unmount_directory "/home"
 unmount_directory "/dev"
-
-
-# -- Do a cleanup of the synced root.
-
-puts_info "Calling the $TOOL_NAME Cleanup Crew, continuing..."
-
-CLEANUP_SCRIPT_URL="https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-cc"
-FILE_LIST_URL="https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-cc-file.list"
-
-dl_file "$CLEANUP_SCRIPT_URL" || { puts_error "Failed to download the cleanup script, quitting."; exit 1; }
-dl_file "$FILE_LIST_URL" || { puts_error "Failed to download the file list, quitting."; exit 1; }
-
-if chmod +x /tmp/nuts-cc && bash /tmp/nuts-cc; then
-    puts_success "Cleanup script executed successfully."
-else
-    puts_error "Failed to execute the cleanup script, quitting."
-    exit 1
-fi
 
 
 # -- Finalizing.
