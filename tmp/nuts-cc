@@ -77,13 +77,10 @@ puts_success "Success! Cleanup complete, continuing..."
 
 # -- Link kernel image to newer kernel
 
-# Change directory to /boot
 cd /boot || exit
 
-# Sort vmlinuz, initrd.img, System.map, and config files by modification time in descending order
 SORTED_FILES=$(ls -t1 vmlinuz* initrd.img* System.map* config* 2>/dev/null)
 
-# Get the highest version number from the sorted files (equal to or superior to 6.3.4-1-liquorix-amd64)
 HIGHEST_VERSION=""
 for FILE in $SORTED_FILES; do
   VERSION=$(echo "$FILE" | grep -oP '(\d+\.){2}\d+-liquorix-amd64')
@@ -93,7 +90,6 @@ for FILE in $SORTED_FILES; do
   fi
 done
 
-# Delete files that do not match the highest version number
 for FILE in $SORTED_FILES; do
   VERSION=$(echo "$FILE" | grep -oP '(\d+\.){2}\d+-liquorix-amd64')
   if [[ "$VERSION" != "$HIGHEST_VERSION" ]]; then
@@ -101,7 +97,6 @@ for FILE in $SORTED_FILES; do
   fi
 done
 
-# Create soft links to vmlinuz and initrd.img in the root directory using the files that match the highest version number and file name
 ln -svf "/boot/vmlinuz-$HIGHEST_VERSION" "/vmlinuz"
 ln -svf "/boot/initrd.img-$HIGHEST_VERSION" "/initrd.img"
 
