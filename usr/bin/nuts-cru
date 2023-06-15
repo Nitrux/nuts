@@ -327,6 +327,8 @@ unmount_directory "$NUTS_DIR_ISO"
 unmount_directory "/home"
 unmount_directory "/dev"
 
+sync
+
 
 # -- Finalizing.
 # -- Leave the Matri... I mean, the overlay.
