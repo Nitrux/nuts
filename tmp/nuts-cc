@@ -85,8 +85,10 @@ if [[ ! -L "/vmlinuz" || ! -L "/initrd.img" ]]; then
   exit 1
 fi
 
-# Delete non-linked vmlinuz and initrd.img files in /boot
-find /boot -maxdepth 1 -type f \( -name "vmlinuz-*" -o -name "initrd.img-*" \) -not -lname "/vmlinuz" -not -lname "/initrd.img" -not -name "vmlinuz" -not -name "initrd.img" -delete
+linked_vmlinuz=$(readlink -f "/vmlinuz")
+linked_initrd=$(readlink -f "/initrd.img")
+
+find /boot -maxdepth 1 -type f \( -name "vmlinuz-*" -o -name "initrd.img-*" \) -not -path "$linked_vmlinuz" -not -path "$linked_initrd" -delete
 
 puts_success "Non-linked vmlinuz-* and initrd.img-* files in /boot deleted successfully."
 
