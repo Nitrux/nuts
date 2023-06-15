@@ -87,17 +87,16 @@ ln -svf "$(echo /boot/initrd* | tr ' ' '\n' | tail -n 1)" /initrd.img
 
 cd /boot || exit
 
-sorted_files=$(ls -t1 vmlinuz* initrd.img* System.map* config* 2>/dev/null)
+SORTED_FILES=$(ls -t1 vmlinuz* initrd.img* System.map* config* 2>/dev/null)
 
-highest_version=$(echo "$sorted_files" | head -n1 | grep -oP '(\d+\.){2}\d+')
+HIGHEST_VERSION=$(echo "$SORTED_FILES" | head -n1 | grep -oP '(\d+\.){2}\d+')
 
-for file in $sorted_files; do
-  version=$(echo "$file" | grep -oP '(\d+\.){2}\d+')
-  if [ "$version" != "$highest_version" ]; then
-    rm -f "$file"
+for FILE in $SORTED_FILES; do
+  VERSION=$(echo "$FILE" | grep -oP '(\d+\.){2}\d+')
+  if [ "$VERSION" != "$HIGHEST_VERSION" ]; then
+    rm -f "$FILE"
   fi
 done
-
 
 puts_success "Success! Ready to use newer kernel, continuing..."
 
