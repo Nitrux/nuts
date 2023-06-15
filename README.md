@@ -6,7 +6,7 @@
 
 # Introduction
 
-The nuts utility is designed to update the [Nitrux OS](https://nxos.org/) and provide a backup option for rollbacks.
+The nuts utility is designed to update [Nitrux OS](https://nxos.org/) and provide a backup option for rollbacks.
 
 > _⚠️ Important: `nuts` is intended to work exclusively in Nitrux OS, and using this utility in other distributions will break them or not work at all. Please do not open issues regarding this use case; they will be closed._
 
