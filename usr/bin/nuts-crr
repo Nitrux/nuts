@@ -202,7 +202,6 @@ update-grub
 unmount_directory() {
   local DIRECTORY="$1"
 
-  # Check if the directory is already mounted
   if mountpoint -q "$DIRECTORY"; then
     echo "Unmounting: $DIRECTORY"
     umount "$DIRECTORY"
@@ -214,6 +213,7 @@ unmount_directory() {
 unmount_directory "$NUTS_DIR_SQS"
 unmount_directory "/home"
 unmount_directory "/dev"
+
 
 # -- Update GRUB.
 

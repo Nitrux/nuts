@@ -60,20 +60,17 @@ error() {
 
 FILE_LIST="/tmp/nuts-cc-file.list"
 
-# Read the file list and iterate over each line
 while IFS= read -r ITEM; do
-  # Remove leading/trailing whitespace
   ITEM="$(echo "$ITEM" | awk '{$1=$1};1')"
 
-  # Remove the item
   if [[ -e "$ITEM" ]]; then
     echo "Deleting: $ITEM"
     rm -rf "$ITEM"
+    find /usr/share/locale/ -name 'calamares-python.mo' -exec rm -f {} \;
   else
     echo "Item not found: $ITEM"
   fi
 done < "$FILE_LIST"
-
 
 puts_success "Success! Cleanup complete, continuing..."
 
@@ -84,6 +81,15 @@ puts_info "Preparing to boot new kernel and initram, continuing..."
 
 ln -svf "$(echo /boot/vmlinuz* | tr ' ' '\n' | tail -n 1)" /vmlinuz
 ln -svf "$(echo /boot/initrd* | tr ' ' '\n' | tail -n 1)" /initrd.img
+
+
+# -- Clean /boot to remove older kernels.
+
+cd /boot || exit
+
+NEWEST_FILE=$(find . -maxdepth 1 -type f -printf "%T@ %p\n" | sort -n | tail -n1 | awk '{print $2}')
+
+find . -maxdepth 1 -type f ! -name "$NEWEST_FILE" -delete
 
 puts_success "Success! Ready to use newer kernel, continuing..."
 

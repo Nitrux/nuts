@@ -4,91 +4,77 @@
 ![](https://raw.githubusercontent.com/Nitrux/luv-icon-theme/master/Luv/apps/64/nx-software-updater.svg)
 
 
-## Introduction
+# Introduction
 
-The point of this utility is twofold, first, to be able to update the Nitrux Operating System. And second, to back up the root for rollbacks.
-
-`nuts` targets Nitrux 2.8.0+.
+The nuts utility is designed to update the Nitrux Operating System and provide a backup option for rollbacks.
 
 > _⚠️ Important: `nuts` is intended to work exclusively in Nitrux OS, and using this utility in other distributions will break them or not work at all. Please do not open issues regarding this use case; they will be closed._
 
 
-### What is `nuts` (and what it isn't)
+## Requeriments
 
-#### Overview
+- Nitrux 2.8.0 or newer.
 
-`nuts` is a simple (read. [KISS](https://people.apache.org/~fhanik/kiss.html)) system update and rollback utility.
 
-`nuts` works in three steps. First by creating a backup of the current root directory using SquashFS; then, `nuts` downloads an ISO image using the BitTorrent protocol, and uses `rsync` to update the system. 
+#### Support for Previous Releases
 
-Afterward, when using `nuts` to restore a backup, `nuts` will do the exact process but use the locally generated SquashFS instead, so, no downloads.
+`nuts` can technically work with previous releases that use an immutable root, such as Nitrux 2.6.0, 2.6.1, 2.7.0, and 2.7.1, as long as the partition labels match the specific values (`NX_ROOT` for the root partition and `NX_HOME` for the home partition).
 
-#### What `nuts` is ✅
+To see the partition label run the command `blkid`.
 
- - `nuts` is minimalistic.
-   - `nuts` was designed to only do what it needs to do and nothing else.
-   - `nuts` is a CLI utility.
-- `nuts` is 100% Free (as in Freedom) Open Source Software; see [License](#licensing).
-- `nuts` is written entirely in [POSIX-compliant scripting language](https://en.wikipedia.org/wiki/Shell_script#Typical_POSIX_scripting_languages).
+# Overview
 
-#### What `nuts` is not ❎
+`nuts` is a simple and minimalistic system update and rollback utility. It performs three steps:
 
-- `nuts` is not a package manager.
+1. Creates a backup of the current root directory using SquashFS.
+2. Downloads an ISO image using the BitTorrent protocol and updates the system using rsync.
+3. When restoring a backup, `nuts` uses the locally generated SquashFS file instead of downloading.
+
+
+#### What `nuts` is
+
+- Minimalistic, focusing on necessary functionality.
+- A CLI utility.
+- 100% Free and Open Source Software written entirely in [POSIX-compliant scripting language](https://en.wikipedia.org/wiki/Shell_script#Typical_POSIX_scripting_languages).
+
+#### What `nuts` is not
+
+- A package manager.
   - `nuts` does not interact with any sort of packaging format.
   - `nuts` does not interact with any software "repository" either.
   - `nuts` does not interact with any package manager to perform any operation.
-- `nuts` is not an installer.
+- An installer.
   - `nuts` is inspired by the functional workflow of most Linux installers, that is, extracting a SquashFS file. However, `nuts` does not handle in any way locale configuration, user creation, partition mounts, or bootloader configuration, etc.
-- `nuts` is not "only" a backup utility.
+- Solely a backup utility.
   - `nuts` is not designed exclusively as a backup utility in the way that other utilities like _restic_, _bup_ or filesystem-level tools like _xfsdump_ and _xfsrestore_, _btrfs-snapshot_ or _lvmcreate_ were.
-- `nuts` is not a container or a virtual machine, or a utility to make Live USBs, a Linux distribution, a desktop environment, etc.; see [Overview](#overview).
+- A container, virtual machine, Live USB creator, Linux distribution, or desktop environment.
   - _**Note**: We don't know why anyone would think that, but one can never know, so let's clarify that._
 
-## Usage
+# Usage
 
-This utility is designed to be highly autonomous.
+`nuts` is designed to be highly autonomous.
 
-To use `nuts`, do the following.
+### Commands:
 
-Open a terminal and run one of the following commands.
+**Update**: `sudo nuts update`
+- Updates the currently installed root using the specified media in nuts-query and backs up the current root directory.
 
-### Update
+**Restore**: `sudo nuts restore`
+- Restores the backup of the root directory generated during the update.
 
-```
-sudo nuts update
-```
+### Configuration:
 
-* The command above will update the currently installed root using the media specified in `nuts-query` and backup the current root directory.
+`nuts` uses the file `/etc/nuts/nuts.conf` to load some settings.
 
-### Restore
-```
-sudo nuts restore
-```
+### Options:
 
-* The command above will restore the backup of the root directory generated during the update.
-
-### Configuration
-
-This utility is not designed to be highly configurable.
-
-However, `nuts` uses the file in `/etc/nuts/nuts.conf` to load some settings.
-
-### Options
-
-This utility is not designed to be highly interactive.
-
-```
-sudo nuts -h
-```
-
-* This command will display the help of `nuts`.
-
+`sudo nuts -h`: Displays the help of `nuts`.
 
 # Licensing
 
-The license used for this repository and its contents is: BSD-3-Clause.
+The repository and its contents are licensed under BSD-3-Clause.
 
 # Issues
-If you find problems with the contents of this repository please create an issue.
+If any problems are encountered, users can create an issue.
 
 ©2023 Nitrux Latinoamericana S.C.
