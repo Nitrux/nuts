@@ -69,6 +69,8 @@ To see the partition label run the command `blkid`.
 ### Options:
 
 `sudo nuts -h`: Displays the help of `nuts`.
+`sudo nuts -d`: Runs `nuts` in verbose mode.
+`sudo nuts -v`: Displays the version of `nuts`.
 
 # Licensing
 
