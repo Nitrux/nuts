@@ -297,7 +297,7 @@ dl_file "$FILE_LIST_URL" || { puts_error "Failed to download the file list, quit
 if chmod +x /tmp/nuts-cc && bash /tmp/nuts-cc; then
     puts_success "Cleanup script executed successfully."
 else
-    puts_error "Failed to execute the cleanup script, quitting."
+    puts_error "Something failed in the cleanup script, quitting."
     exit 1
 fi
 

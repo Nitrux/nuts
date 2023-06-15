@@ -79,26 +79,49 @@ puts_success "Success! Cleanup complete, continuing..."
 
 cd /boot || exit
 
-SORTED_FILES=$(ls -t1 vmlinuz* initrd.img* System.map* config* 2>/dev/null)
+FILES=(vmlinuz* initrd.img* System.map* config*)
+
+version_compare() {
+  local ver1=$1
+  local ver2=$2
+  if [[ $ver1 == $ver2 ]]; then
+    echo 0
+    return
+  fi
+  local IFS=.
+  local i ver1Arr=($ver1) ver2Arr=($ver2)
+  local maxLength=$(( ${#ver1Arr[@]} > ${#ver2Arr[@]} ? ${#ver1Arr[@]} : ${#ver2Arr[@]} ))
+  for ((i=0; i<maxLength; i++)); do
+    local part1=${ver1Arr[$i]:-0}
+    local part2=${ver2Arr[$i]:-0}
+    if (( part1 > part2 )); then
+      echo 1
+      return
+    elif (( part1 < part2 )); then
+      echo 2
+      return
+    fi
+  done
+  echo 0
+}
 
 HIGHEST_VERSION=""
-for FILE in $SORTED_FILES; do
-  VERSION=$(echo "$FILE" | grep -oP '(\d+\.){2}\d+-liquorix-amd64')
-  if [[ "$VERSION" > "6.3.4-1-liquorix-amd64" ]]; then
+for FILE in "${FILES[@]}"; do
+  VERSION=$(echo "$FILE" | grep -oP '(\d+\.){2}\d+(?=-liquorix-amd64)')
+  if [[ -z $HIGHEST_VERSION || $(version_compare "$VERSION" "$HIGHEST_VERSION") == 1 ]]; then
     HIGHEST_VERSION="$VERSION"
-    break
   fi
 done
 
-for FILE in $SORTED_FILES; do
-  VERSION=$(echo "$FILE" | grep -oP '(\d+\.){2}\d+-liquorix-amd64')
+for FILE in "${FILES[@]}"; do
+  VERSION=$(echo "$FILE" | grep -oP '(\d+\.){2}\d+(?=-liquorix-amd64)')
   if [[ "$VERSION" != "$HIGHEST_VERSION" ]]; then
     rm -f "$FILE"
   fi
 done
 
-ln -svf "/boot/vmlinuz-$HIGHEST_VERSION" "/vmlinuz"
-ln -svf "/boot/initrd.img-$HIGHEST_VERSION" "/initrd.img"
+ln -svf "/boot/vmlinuz-${HIGHEST_VERSION}-liquorix-amd64" "/vmlinuz"
+ln -svf "/boot/initrd.img-${HIGHEST_VERSION}-liquorix-amd64" "/initrd.img"
 
 puts_success "Success! Ready to use newer kernel, continuing..."
 
