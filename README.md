@@ -15,7 +15,7 @@ The nuts utility is designed to update [Nitrux OS](https://nxos.org/) and provid
 
 - Nitrux 2.8.0 or newer.
 - An active Internet connection.
-- Up to 1.6 GB of available space in the root partition.
+- Up to 1.6 GB of available space in the root partition and more than 3.2 GB in the home partition.
 
 
 #### Support for Previous Releases
