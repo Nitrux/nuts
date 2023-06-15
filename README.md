@@ -1,5 +1,4 @@
 # Nitrux Update Tool System (`nuts`)
-[![Build and push packages to PackageCloud.](https://github.com/Nitrux/nuts/actions/workflows/build.yml/badge.svg)](https://github.com/Nitrux/nuts/actions/workflows/build.yml)
 
 ![](https://raw.githubusercontent.com/Nitrux/luv-icon-theme/master/Luv/apps/64/nx-software-updater.svg)
 
