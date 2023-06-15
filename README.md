@@ -13,16 +13,27 @@ The nuts utility is designed to update [Nitrux OS](https://nxos.org/) and provid
 
 ## Requeriments
 
-- Nitrux 2.8.0 or newer.
+- Nitrux 2.8.0+.
+  - _`nuts` is included by default starting with Nitrux 2.9.0._
 - An active Internet connection.
 - Up to 1.6 GB of available space in the root partition and more than 3.2 GB in the home partition.
 
 
-#### Support for Previous Releases
+### Support for Previous Releases
 
 `nuts` can technically work with previous releases that use an immutable root, such as Nitrux 2.6.0, 2.6.1, 2.7.0, and 2.7.1, as long as the partition labels match the specific values (`NX_ROOT` for the root partition and `NX_HOME` for the home partition).
 
 To see the partition label run the command `blkid`.
+
+**How to go `nuts` on Previous Releases**
+
+For releases of Nitrux where `nuts` is not available by default, do the following.
+
+```
+git clone --depth=1 https://github.com/Nitrux/nuts.git $HOME/nuts
+sudo cp $HOME/nuts/usr/bin/nuts /usr/bin
+sudo cp $HOME/nuts/nuts.conf /etc
+```
 
 # Overview
 
