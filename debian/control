@@ -14,5 +14,5 @@ Description:  A simple utility to update Nitrux.
  The point of this utility is twofold:
   - Update the Nitrux Operating System
   - Create backups of the root for rollbacks
- nuts targets Nitrux 2.6.0+.
+ nuts targets Nitrux 2.8.0+.
 
