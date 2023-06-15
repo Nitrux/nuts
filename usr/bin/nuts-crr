@@ -144,12 +144,23 @@ done
 # -- Create the directories for nuts.
 # -- Create working directories in /home since this partition will likely have more space than the root partition, as set in our custom partition layout and the instructions on the website.
 
-if [[ ! -d "$NUTS_DIR_DLS" ]] && [[ ! -d "$NUTS_DIR_ISO" ]] && [[ ! -d "$NUTS_DIR_SQS" ]] && [[ ! -d "$NUTS_DIR_BAK" ]]; then
-	puts_info "Creating working directories, continuing..."
-	mkdir -p /home/.nuts/{backup,downloads,iso,squashfs}
-else
-	puts_info "Working directories exist, skipping..."
-fi
+# Array of directories to check and create
+DIRECTORIES=("$NUTS_DIR_BAK" "$NUTS_DIR_ISO" "$NUTS_DIR_DLS" "$NUTS_DIR_SQS")
+
+# Check and create directories if missing
+for DIR in "${DIRECTORIES[@]}"; do
+  if [[ ! -d "$DIR" ]]; then
+    puts_error "Directory '$DIR' does not exist. Creating the directory..."
+    mkdir -p "$DIR"
+    if [[ $? -ne 0 ]]; then
+      puts_error "Failed to create directory '$DIR'. Exiting..."
+      exit 1
+    fi
+    puts_info "Directory '$DIR' created successfully."
+  fi
+done
+
+puts_info "All required directories exist."
 
 
 # -- Verify the checksum of the backup file with the generated checksum file.

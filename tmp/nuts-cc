@@ -77,52 +77,18 @@ puts_success "Success! Cleanup complete, continuing..."
 
 # -- Link kernel image to newer kernel
 
-cd /boot || exit
+ln -svf "$(echo /boot/vmlinuz* | tr ' ' '\n' | tail -n 1)" /vmlinuz
+ln -svf "$(echo /boot/initrd* | tr ' ' '\n' | tail -n 1)" /initrd.img
 
-FILES=(vmlinuz* initrd.img* System.map* config*)
+if [[ ! -L "/vmlinuz" || ! -L "/initrd.img" ]]; then
+  puts_info "Soft links '/vmlinuz' or '/initrd.img' in the root directory do not exist. Exiting..."
+  exit 1
+fi
 
-version_compare() {
-  local ver1=$1
-  local ver2=$2
-  if [[ $ver1 == $ver2 ]]; then
-    echo 0
-    return
-  fi
-  local IFS=.
-  local i ver1Arr=($ver1) ver2Arr=($ver2)
-  local maxLength=$(( ${#ver1Arr[@]} > ${#ver2Arr[@]} ? ${#ver1Arr[@]} : ${#ver2Arr[@]} ))
-  for ((i=0; i<maxLength; i++)); do
-    local part1=${ver1Arr[$i]:-0}
-    local part2=${ver2Arr[$i]:-0}
-    if (( part1 > part2 )); then
-      echo 1
-      return
-    elif (( part1 < part2 )); then
-      echo 2
-      return
-    fi
-  done
-  echo 0
-}
+# Delete non-linked vmlinuz and initrd.img files in /boot
+find /boot -maxdepth 1 -type f \( -name "vmlinuz-*" -o -name "initrd.img-*" \) -not -lname "/vmlinuz" -not -lname "/initrd.img" -not -name "vmlinuz" -not -name "initrd.img" -delete
 
-HIGHEST_VERSION=""
-for FILE in "${FILES[@]}"; do
-  VERSION=$(echo "$FILE" | grep -oP '(\d+\.){2}\d+(?=-liquorix-amd64)')
-  if [[ -z $HIGHEST_VERSION || $(version_compare "$VERSION" "$HIGHEST_VERSION") == 1 ]]; then
-    HIGHEST_VERSION="$VERSION"
-  fi
-done
+puts_success "Non-linked vmlinuz-* and initrd.img-* files in /boot deleted successfully."
 
-for FILE in "${FILES[@]}"; do
-  VERSION=$(echo "$FILE" | grep -oP '(\d+\.){2}\d+(?=-liquorix-amd64)')
-  if [[ "$VERSION" != "$HIGHEST_VERSION" ]]; then
-    rm -f "$FILE"
-  fi
-done
-
-ln -svf "/boot/vmlinuz-${HIGHEST_VERSION}-liquorix-amd64" "/vmlinuz"
-ln -svf "/boot/initrd.img-${HIGHEST_VERSION}-liquorix-amd64" "/initrd.img"
-
-puts_success "Success! Ready to use newer kernel, continuing..."
 
 #   ====== END ======
