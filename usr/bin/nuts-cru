@@ -336,14 +336,14 @@ unmount_directory "$NUTS_DIR_ISO"
 unmount_directory "/home"
 unmount_directory "/dev"
 
+rm -r \
+	/tmp/nuts-ccu
+
 sync
 
 
 # -- Finalizing.
 # -- Leave the Matri... I mean, the overlay.
-
-rm -r \
-	/tmp/nuts-ccu
 
 exit
 

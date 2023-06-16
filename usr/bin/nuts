@@ -62,10 +62,7 @@ puts_error() {
 # -- Print messages or text using multiple lines.
 
 print_message() {
-    local message="${1:-}"
-    local output_stream="${2:-2}"
-
-    printf "%b\n" "$message" >&"$output_stream"
+  printf "%s\n" "$@" >&2;
 }
 
 
@@ -99,13 +96,12 @@ fi
 # -- Exit if not running as root.
 
 if [ "$EUID" -ne 0 ]; then
-    puts_error "$TOOL_NAME is not running as root, quitting.\n"
+    puts_error "$TOOL_NAME is not running as root, quitting."
     exit 1
 else
-    puts_success "$TOOL_NAME is running as root, continuing...\n"
+    puts_success "$TOOL_NAME is running as root, continuing..."
     ROOT=("sudo")
 fi
-
 
 
 # -- Functions.
@@ -198,7 +194,7 @@ for cmd; do
 			;;
 
 		(-v | --version)
-			print_message "$TOOL_NAME — version: $TOOL_VERSION." \
+			print_message "$TOOL_NAME: version: $TOOL_VERSION." \
 				"" \
 				"The license used for this file and its contents is: BSD-3-Clause." \
 				"" \
@@ -242,7 +238,7 @@ done
 			# -- Check Internet connection but do nothing yet.
 			# -- Exit if connection test fails.
 
-			if ping -q -c 1 -W 1 nxos.org >/dev/null; then
+			if ping -q -c 1 -W 1 nxos.org >/dev/null && ping -q -c 1 -W 1 github.com >/dev/null; then
 				puts_success "This computer can reach the Internet. Continuing..."
 			else
 				puts_error "This computer cannot reach the Internet. Quitting."
