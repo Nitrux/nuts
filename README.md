@@ -76,7 +76,7 @@ sudo cp $HOME/nuts/etc/nuts.conf /etc
 
 ### Configuration:
 
-`nuts` uses the file `/etc/nuts/nuts.conf` to load some settings.
+`nuts` uses the file `/etc/nuts.conf` to load some settings.
 
 ### Options:
 
