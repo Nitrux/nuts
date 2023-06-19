@@ -31,7 +31,7 @@ For releases of Nitrux where `nuts` is not available by default, do the followin
 ```
 git clone --depth=1 https://github.com/Nitrux/nuts.git $HOME/nuts
 sudo cp $HOME/nuts/usr/bin/nuts /usr/bin
-sudo cp $HOME/nuts/nuts.conf /etc
+sudo cp $HOME/nuts/etc/nuts.conf /etc
 ```
 
 # Overview
