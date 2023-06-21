@@ -16,7 +16,7 @@ The Nitrux Update Tool System (`nuts`) utility is designed to update [Nitrux OS]
 `nuts` is a simple and minimalistic system update and rollback utility. It performs three steps:
 
 1. Creates a backup of the root directory using SquashFS and stores it locally.
-2. Downloads the latest ISO image using the BitTorrent protocol and update the system using `rsync`.
+2. Downloads the latest ISO image using the BitTorrent protocol and updates the system using `rsync`.
 3. When restoring a backup, uses the locally generated SquashFS file (instead of downloading an ISO).
 
 _`nuts` is included by default starting with Nitrux 2.9.0._
