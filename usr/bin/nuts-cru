@@ -36,21 +36,21 @@ TOOL_NAME="Nitrux Update System Tool"
 # -- Print informative messages to stdin.
 
 puts_info() {
-  printf "%s: \e[34mInfo:\e[0m %s\n\n" "$TOOL_NAME" "$*"
+  printf "%s: \e[34mInfo:\e[0m %s\n" "$TOOL_NAME" "$*"
 }
 
 
 # -- Print success messages to stdin.
 
 puts_success() {
-  printf "%s: \e[32mSuccess:\e[0m %s\n\n" "$TOOL_NAME" "$*"
+  printf "%s: \e[32mSuccess:\e[0m %s\n" "$TOOL_NAME" "$*"
 }
 
 
 # -- Print error messages to stdin.
 
 puts_error() {
-  printf "%s: \e[31mError:\e[0m %b\n\n" "$TOOL_NAME" "$*"
+  printf "%s: \e[31mError:\e[0m %b\n" "$TOOL_NAME" "$*"
 }
 
 
@@ -75,6 +75,7 @@ fi
 # -- Variables.
 
 CURRENT_DIST=$(awk -F'=' '/VERSION_CODENAME/{print $NF}' /etc/os-release)
+OUTPUT_FILE=$(mktemp)
 
 
 # -- Functions.
@@ -164,8 +165,7 @@ DIRECTORIES=("$NUTS_DIR_BAK" "$NUTS_DIR_ISO" "$NUTS_DIR_DLS" "$NUTS_DIR_SQS")
 for DIR in "${DIRECTORIES[@]}"; do
   if [[ ! -d "$DIR" ]]; then
     puts_error "Directory '$DIR' does not exist. Creating the directory..."
-    mkdir -p "$DIR"
-    if [[ $? -ne 0 ]]; then
+    if ! mkdir -p "$DIR"; then
       puts_error "Failed to create directory '$DIR'. Exiting..."
       exit 1
     fi
@@ -173,7 +173,7 @@ for DIR in "${DIRECTORIES[@]}"; do
   fi
 done
 
-puts_info "All required directories exist."
+puts_info "All required directories exist. Continuing."
 
 
 # -- Run the backup cleaner.
@@ -191,19 +191,18 @@ puts_info "Creating backup of ${CURRENT_DIST^}, continuing..."
 BACKUP_FILE="$NUTS_DIR_BAK/nuts-backup-$DATE_BACKUP_FILE.squashfs"
 
 mksquashfs / "$BACKUP_FILE" \
+	-quiet \
 	-e /boot/* \
 	-e /dev/* \
 	-ef /etc/shadow \
 	-e /home/ \
 	-e /proc/ \
-	-e /media/* \
 	-e /run/* \
 	-e /sys/* \
 	-e /tmp/* \
 	-e /var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp}/ \
 	-comp zstd \
 	-Xcompression-level 22 \
-	-no-progress \
 	-b 1048576
 
 md5sum "$BACKUP_FILE" > "$NUTS_DIR_BAK/nuts-backup.md5sum"
@@ -225,11 +224,11 @@ if [[ -f "$ARIA2_BINARY" ]]; then
     puts_success "Success! aria2c binary is found, skipping..."
 else
     puts_info "Can't find aria2c binary, downloading..."
-    dl_file "$ARIA2_RELEASE_URL"
+    dl_file "$ARIA2_RELEASE_URL" >"$OUTPUT_FILE"
 
     puts_info "Adding aria2c static binary, continuing..."
     mkdir -p "$ARIA2_TEMP_DIR"
-    unzip /tmp/aria2-x86_64-linux-musl_static.zip -d "$ARIA2_TEMP_DIR"
+    unzip /tmp/aria2-x86_64-linux-musl_static.zip -d "$ARIA2_TEMP_DIR" >"$OUTPUT_FILE"
     cp "$ARIA2_TEMP_DIR/aria2c" "$ARIA2_BINARY"
 
     rm -rf "$ARIA2_TEMP_DIR"
@@ -249,7 +248,10 @@ if [[ -f "$ISO_FILE" ]]; then
 else
     puts_info "ISO file not found! Downloading ISO using aria2c, continuing..."
     MAGNET_LINK=$(tail -n 1 /tmp/nuts-query.info | sed -n 's/.*magnetlink=\(.*\)/\1/p')
-    aria2c -d "$NUTS_DIR_DLS" --log-level=warn --seed-time=0 "$MAGNET_LINK"
+    aria2c -q -d "$NUTS_DIR_DLS" --log-level=warn --seed-time=0 "$MAGNET_LINK" | awk '/\[.*%\]/ {print $2}' | while read -r progress; do
+        echo -ne "Progress: $progress\r"
+    done
+    puts_info "Download complete!, continuing..."
     mv "$NUTS_DIR_DLS"/nitrux-nx-desktop-plasma-*-amd64.iso "$ISO_FILE"
 fi
 
@@ -271,22 +273,27 @@ fi
 
 # -- Mount the ISO and the SquashFS.
 
-mount "$NUTS_DIR_DLS"/nitrux.iso "$NUTS_DIR_ISO" || { puts_error "Failed to mount ISO, quitting."; exit 1; }
-mount "$NUTS_DIR_ISO"/casper/filesystem.squashfs "$NUTS_DIR_SQS" || { puts_error "Failed to mount squashfs file, quitting."; exit 1; }
+mount "$NUTS_DIR_DLS"/nitrux.iso "$NUTS_DIR_ISO" >"$OUTPUT_FILE" 2>&1 || { puts_error "Failed to mount ISO, quitting."; exit 1; }
+mount "$NUTS_DIR_ISO"/casper/filesystem.squashfs "$NUTS_DIR_SQS" >"$OUTPUT_FILE" || { puts_error "Failed to mount SquashFS file, quitting."; exit 1; }
 
 
 # -- Now comes the good part; proceed with running rsync and update the current installation.
 
 puts_info "Updating ${CURRENT_DIST^}, continuing..."
 
-dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/rsync-exclude.list
+dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/rsync-exclude.list >"$OUTPUT_FILE"
 
 SOURCE_DIR="$NUTS_DIR_SQS"
 DESTINATION_DIR="/"
 EXCLUDES_FILE="/tmp/rsync-exclude.list"
 
-RSYNC_COMMAND="rsync -aHAXr --progress --exclude-from=$EXCLUDES_FILE $SOURCE_DIR/ $DESTINATION_DIR"
-eval "$RSYNC_COMMAND"
+RSYNC_COMMAND="stdbuf -oL rsync -aHAXrh --info=progress2 --progress --exclude-from=$EXCLUDES_FILE $SOURCE_DIR/ $DESTINATION_DIR"
+eval "$RSYNC_COMMAND" | {
+  while IFS= read -r line; do
+    echo -ne "\rProgress: $line\033[K"
+  done
+  echo -e "\n"
+}
 
 sync
 
@@ -297,23 +304,25 @@ puts_success "Success! Update has been applied."
 
 puts_info "Calling the $TOOL_NAME Cleanup Crew, continuing..."
 
-CLEANUP_SCRIPT_URL="https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-ccu"
-FILE_LIST_URL="https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-cc-file.list"
+CLEANUP_SCRIPT_URL="https://raw.githubusercontent.com/Nitrux/nuts/development/tmp/nuts-ccu"
+FILE_LIST_URL="https://raw.githubusercontent.com/Nitrux/nuts/development/tmp/nuts-cc-file.list"
 
-dl_file "$CLEANUP_SCRIPT_URL" || { puts_error "Failed to download the cleanup script, quitting."; exit 1; }
-dl_file "$FILE_LIST_URL" || { puts_error "Failed to download the file list, quitting."; exit 1; }
+dl_file "$CLEANUP_SCRIPT_URL" >"$OUTPUT_FILE" || { puts_error "Failed to download the cleanup script, quitting."; exit 1; }
+dl_file "$FILE_LIST_URL" >"$OUTPUT_FILE" || { puts_error "Failed to download the file list, quitting."; exit 1; }
 
-if chmod +x /tmp/nuts-ccu && bash /tmp/nuts-ccu; then
+if chmod +x /tmp/nuts-ccu && bash /tmp/nuts-ccu >"$OUTPUT_FILE"; then
     puts_success "Cleanup script executed successfully."
 else
     puts_error "Something failed in the cleanup script, quitting."
     exit 1
 fi
 
+rm -f /tmp/nuts-ccu
+
 
 # -- Update GRUB.
 
-update-grub
+update-grub >"$OUTPUT_FILE" 2>&1
 
 
 # -- Unmount the ISO and the SquashFS.
@@ -331,13 +340,13 @@ unmount_directory() {
   fi
 }
 
-unmount_directory "$NUTS_DIR_SQS"
-unmount_directory "$NUTS_DIR_ISO"
-unmount_directory "/home"
-unmount_directory "/dev"
+unmount_directory "$NUTS_DIR_SQS" >"$OUTPUT_FILE"
+unmount_directory "$NUTS_DIR_ISO" >"$OUTPUT_FILE"
+unmount_directory "/home" >"$OUTPUT_FILE"
+unmount_directory "/dev" >"$OUTPUT_FILE"
 
-rm -r \
-	/tmp/nuts-ccu
+
+# -- **DO NOT PERFORM ANY FILE OPERATION AFTER THIS POINT**
 
 sync
 

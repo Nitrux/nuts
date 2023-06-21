@@ -36,21 +36,21 @@ TOOL_NAME="Nitrux Update System Tool"
 # -- Print informative messages to stdin.
 
 puts_info() {
-  printf "%s: \e[34mInfo:\e[0m %s\n\n" "$TOOL_NAME" "$*"
+  printf "%s: \e[34mInfo:\e[0m %s\n" "$TOOL_NAME" "$*"
 }
 
 
 # -- Print success messages to stdin.
 
 puts_success() {
-  printf "%s: \e[32mSuccess:\e[0m %s\n\n" "$TOOL_NAME" "$*"
+  printf "%s: \e[32mSuccess:\e[0m %s\n" "$TOOL_NAME" "$*"
 }
 
 
 # -- Print error messages to stdin.
 
 puts_error() {
-  printf "%s: \e[31mError:\e[0m %b\n\n" "$TOOL_NAME" "$*"
+  printf "%s: \e[31mError:\e[0m %b\n" "$TOOL_NAME" "$*"
 }
 
 
@@ -75,6 +75,7 @@ fi
 # -- Variables.
 
 CURRENT_DIST=$(awk -F'=' '/VERSION_CODENAME/{print $NF}' /etc/os-release)
+OUTPUT_FILE=$(mktemp)
 
 
 # -- Functions.
@@ -102,6 +103,7 @@ dl_file() {
         return 1
     fi
 }
+
 
 # -- Mount the devices filesystem.
 # -- Check if /dev is already mounted
@@ -144,15 +146,12 @@ done
 # -- Create the directories for nuts.
 # -- Create working directories in /home since this partition will likely have more space than the root partition, as set in our custom partition layout and the instructions on the website.
 
-# Array of directories to check and create
 DIRECTORIES=("$NUTS_DIR_BAK" "$NUTS_DIR_ISO" "$NUTS_DIR_DLS" "$NUTS_DIR_SQS")
 
-# Check and create directories if missing
 for DIR in "${DIRECTORIES[@]}"; do
   if [[ ! -d "$DIR" ]]; then
     puts_error "Directory '$DIR' does not exist. Creating the directory..."
-    mkdir -p "$DIR"
-    if [[ $? -ne 0 ]]; then
+    if ! mkdir -p "$DIR"; then
       puts_error "Failed to create directory '$DIR'. Exiting..."
       exit 1
     fi
@@ -160,7 +159,7 @@ for DIR in "${DIRECTORIES[@]}"; do
   fi
 done
 
-puts_info "All required directories exist."
+puts_info "All required directories exist. Continuing."
 
 
 # -- Verify the checksum of the backup file with the generated checksum file.
@@ -180,21 +179,41 @@ fi
 # -- Mount the SquashFS.
 # -- **ALWAYS** use the newest SquashFS in the directory. The user can't select which backup to restore.
 
-mount "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)" "$NUTS_DIR_SQS"
+mount "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)" "$NUTS_DIR_SQS" >"$OUTPUT_FILE" || { puts_error "Failed to mount SquashFS file, quitting."; exit 1; }
+
+
+# -- Check that the backup is not the same as the current installation.
+# -- If the checksum matches, exit because the root had been restored in a previous run. There's no point in restoring the *same* root.
+# -- If the checksum doesn't match, continue because the root differs from the backup's contents and is potentially newer.
+
+LOCAL_SUM=$(md5sum /installed_pkgs_end.txt | cut -c -32)
+BACKUP_LIST_SUM=$(md5sum "$NUTS_DIR_SQS"/installed_pkgs_end.txt | cut -c -32)
+
+if [ "$LOCAL_SUM" == "$BACKUP_LIST_SUM" ]; then
+  puts_info "The current installation of ${TARGET_DIST^} is the same as the backup."
+  exit 0
+else
+  puts_info "Preparing to restore ${TARGET_DIST^}, continuing..."
+fi
 
 
 # -- Now comes the good part; proceed with running rsync and restore the backup.
 
 puts_info "Restoring backup of ${CURRENT_DIST^}, continuing..."
 
-dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/rsync-exclude.list
+dl_file https://raw.githubusercontent.com/Nitrux/nuts/development/tmp/rsync-exclude.list >"$OUTPUT_FILE"
 
 SOURCE_DIR="$NUTS_DIR_SQS"
 DESTINATION_DIR="/"
 EXCLUDES_FILE="/tmp/rsync-exclude.list"
 
-RSYNC_COMMAND="rsync -aHAXr --progress --exclude-from=$EXCLUDES_FILE $SOURCE_DIR/ $DESTINATION_DIR"
-eval "$RSYNC_COMMAND"
+RSYNC_COMMAND="stdbuf -oL rsync -aHAXrh --info=progress2 --progress --exclude-from=$EXCLUDES_FILE $SOURCE_DIR/ $DESTINATION_DIR"
+eval "$RSYNC_COMMAND" | {
+  while IFS= read -r line; do
+    echo -ne "\rProgress: $line\033[K"
+  done
+  echo -e "\n"
+}
 
 sync
 
@@ -205,23 +224,25 @@ puts_success "Success! Backup has been restored."
 
 puts_info "Calling the $TOOL_NAME Cleanup Crew, continuing..."
 
-CLEANUP_SCRIPT_URL="https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-ccr"
-FILE_LIST_URL="https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-cc-file.list"
+CLEANUP_SCRIPT_URL="https://raw.githubusercontent.com/Nitrux/nuts/development/tmp/nuts-ccr"
+FILE_LIST_URL="https://raw.githubusercontent.com/Nitrux/nuts/development/tmp/nuts-cc-file.list"
 
-dl_file "$CLEANUP_SCRIPT_URL" || { puts_error "Failed to download the cleanup script, quitting."; exit 1; }
-dl_file "$FILE_LIST_URL" || { puts_error "Failed to download the file list, quitting."; exit 1; }
+dl_file "$CLEANUP_SCRIPT_URL" >"$OUTPUT_FILE" || { puts_error "Failed to download the cleanup script, quitting."; exit 1; }
+dl_file "$FILE_LIST_URL" >"$OUTPUT_FILE" || { puts_error "Failed to download the file list, quitting."; exit 1; }
 
-if chmod +x /tmp/nuts-ccr && bash /tmp/nuts-ccr; then
+if chmod +x /tmp/nuts-ccr && bash /tmp/nuts-ccr >"$OUTPUT_FILE"; then
     puts_success "Cleanup script executed successfully."
 else
     puts_error "Something failed in the cleanup script, quitting."
     exit 1
 fi
 
+rm -f /tmp/nuts-ccr
+
 
 # -- Update GRUB.
 
-update-grub
+update-grub >"$OUTPUT_FILE" 2>&1
 
 
 # -- Unmount the SquashFS.
@@ -239,12 +260,12 @@ unmount_directory() {
   fi
 }
 
-unmount_directory "$NUTS_DIR_SQS"
-unmount_directory "/home"
-unmount_directory "/dev"
+unmount_directory "$NUTS_DIR_SQS" >"$OUTPUT_FILE"
+unmount_directory "/home" >"$OUTPUT_FILE"
+unmount_directory "/dev" >"$OUTPUT_FILE"
 
-rm -r \
-	/tmp/nuts-ccr
+
+# -- **DO NOT PERFORM ANY FILE OPERATION AFTER THIS POINT**
 
 sync
 

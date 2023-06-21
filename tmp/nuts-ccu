@@ -36,14 +36,14 @@ TOOL_SHRT_NAME="nuts-cc"
 # -- Print informative messages to stdin.
 
 puts_info() {
-  printf "%s: \e[34mInfo:\e[0m %s\n\n" "$TOOL_NAME" "$*"
+  printf "%s: \e[34mInfo:\e[0m %s\n" "$TOOL_NAME" "$*"
 }
 
 
 # -- Print success messages to stdin.
 
 puts_success() {
-  printf "%s: \e[32mSuccess:\e[0m %s\n\n" "$TOOL_NAME" "$*"
+  printf "%s: \e[32mSuccess:\e[0m %s\n" "$TOOL_NAME" "$*"
 }
 
 
