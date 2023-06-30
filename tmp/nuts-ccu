@@ -101,5 +101,4 @@ find /boot -maxdepth 1 -type f -name "System.map-*" ! -name "System.map-$VERSION
 
 puts_success "Non-linked vmlinuz-* and initrd.img-* files in /boot deleted successfully."
 
-
 #   ====== END ======

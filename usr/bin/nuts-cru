@@ -31,6 +31,7 @@ set -e
 # -- Set program name and version.
 
 TOOL_NAME="Nitrux Update System Tool"
+UPCP_VERSION="$(md5sum /usr/bin/nuts-cru | cut -c -32)"
 
 
 # -- Print informative messages to stdin.
@@ -120,7 +121,7 @@ bak_cc() {
 
 
 # -- Mount the devices filesystem.
-# -- Check if /dev is already mounted
+# -- Check if /dev is already mounted.
 
 if mountpoint -q /dev; then
     echo "/dev is already mounted. Unmounting..."
@@ -152,6 +153,22 @@ mount -t auto "$HOME_PARTITION" /home
 
 for cmd; do
 	case "$cmd" in
+		(-v | --version)
+			print_message "$TOOL_NAME" \
+				"" \
+				"Version (update component): $UPCP_VERSION." \
+				"" \
+				"The license used for this file and its contents is: BSD-3-Clause." \
+				"" \
+				"Authors:" \
+				"" \
+				"    Copyright <2023> <Uri Herrera <uri_herrera@nxos.org>>" \
+				"" \
+				"(c) $FECHA Some Rights Reserved. Made by $VENDOR"
+
+			exit
+			;;
+
 		( -d | --debug )  set -x; shift;;
 	esac
 done
@@ -323,6 +340,18 @@ rm -f /tmp/nuts-ccu
 # -- Update GRUB.
 
 update-grub >"$OUTPUT_FILE" 2>&1
+
+
+# -- Use kexec to load the new kernel without rebooting the computer.
+# -- Check if kexec exists and exit if it not.
+
+if command -v kexec >"$OUTPUT_FILE"; then
+    KERNEL_PARAMETERS=$(tail -n 1 /proc/cmdline)
+    kexec -l --initrd="$KEXEC_INITRD" --append="@${KERNEL_PARAMETERS}" "$KEXEC_VMLINUZ"
+    kexec -e
+else
+    puts_error "Can't find kexec; the kernel cannot be replaced live. Reboot to load the new kernel."
+fi
 
 
 # -- Unmount the ISO and the SquashFS.
