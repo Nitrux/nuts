@@ -1,6 +1,6 @@
 nuts (1.0.6) nitrux; urgency=medium
 
-  * Add functionalityto replace running kernel.
+  * Add functionality to replace running kernel.
 
  -- Uri Herrera <uri_herrera@nxos.org>  Fri, 20 Jun 2023 06:06:00 -0500
 
