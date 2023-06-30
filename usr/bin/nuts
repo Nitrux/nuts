@@ -275,7 +275,7 @@ done
 			# -- Overwrite the file if it already exists.
 
 			INFO_FILE="/tmp/nuts-query.info"
-			REMOTE_URL="https://raw.githubusercontent.com/Nitrux/nuts/development/tmp/nuts-query.info"
+			REMOTE_URL="https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-query.info"
 
 			if [ ! -f "$INFO_FILE" ]; then
 				puts_info "Can't find nuts-query.info, downloading..."
@@ -331,9 +331,9 @@ done
 			# -- Always download the latest component.
 
 			overlay_ch rm -f /usr/bin/nuts-cru >"$OUTPUT_FILE" 2>&1
-			overlay_ch axel -o /usr/bin -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/development/usr/bin/nuts-cru >"$OUTPUT_FILE"
-			overlay_ch axel -o /etc -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/development/etc/nuts.conf >"$OUTPUT_FILE"
-			overlay_ch axel -o /tmp -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/development/tmp/nuts-query.info >"$OUTPUT_FILE"
+			overlay_ch axel -o /usr/bin -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/main/usr/bin/nuts-cru >"$OUTPUT_FILE"
+			overlay_ch axel -o /etc -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/main/etc/nuts.conf >"$OUTPUT_FILE"
+			overlay_ch axel -o /tmp -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-query.info >"$OUTPUT_FILE"
 			overlay_ch chmod +x /usr/bin/nuts-cru >"$OUTPUT_FILE"
 			overlay_ch nuts-cru
 
@@ -359,8 +359,8 @@ done
 			# -- Always download the latest component.
 
 			overlay_ch rm -r /usr/bin/nuts-crr >"$OUTPUT_FILE" 2>&1
-			overlay_ch axel -o /usr/bin -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/development/usr/bin/nuts-crr >"$OUTPUT_FILE"
-			overlay_ch axel -o /etc -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/development/etc/nuts.conf >"$OUTPUT_FILE"
+			overlay_ch axel -o /usr/bin -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/main/usr/bin/nuts-crr >"$OUTPUT_FILE"
+			overlay_ch axel -o /etc -c -n 10 https://raw.githubusercontent.com/Nitrux/nuts/main/etc/nuts.conf >"$OUTPUT_FILE"
 			overlay_ch chmod +x /usr/bin/nuts-crr >"$OUTPUT_FILE"
 			overlay_ch nuts-crr
 

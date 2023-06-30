@@ -218,7 +218,7 @@ fi
 
 puts_info "Restoring backup of ${CURRENT_DIST^}, continuing..."
 
-dl_file https://raw.githubusercontent.com/Nitrux/nuts/development/tmp/rsync-exclude.list >"$OUTPUT_FILE"
+dl_file https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/rsync-exclude.list >"$OUTPUT_FILE"
 
 SOURCE_DIR="$NUTS_DIR_SQS"
 DESTINATION_DIR="/"
@@ -241,8 +241,8 @@ puts_success "Success! Backup has been restored."
 
 puts_info "Calling the $TOOL_NAME Cleanup Crew, continuing..."
 
-CLEANUP_SCRIPT_URL="https://raw.githubusercontent.com/Nitrux/nuts/development/tmp/nuts-ccr"
-FILE_LIST_URL="https://raw.githubusercontent.com/Nitrux/nuts/development/tmp/nuts-cc-file.list"
+CLEANUP_SCRIPT_URL="https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-ccr"
+FILE_LIST_URL="https://raw.githubusercontent.com/Nitrux/nuts/main/tmp/nuts-cc-file.list"
 
 dl_file "$CLEANUP_SCRIPT_URL" >"$OUTPUT_FILE" || { puts_error "Failed to download the cleanup script, quitting."; exit 1; }
 dl_file "$FILE_LIST_URL" >"$OUTPUT_FILE" || { puts_error "Failed to download the file list, quitting."; exit 1; }
