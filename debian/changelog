@@ -1,8 +1,10 @@
 nuts (1.0.7) nitrux; urgency=medium
 
-  * Add functionality to replace running kernel.
+  * Correct syntax for case statements.
+  * Add checks to avoid word splitting.
+  * Exit on unset varaibles.
 
- -- Uri Herrera <uri_herrera@nxos.org>  Fri, 20 Jun 2023 06:06:00 -0500
+ -- Uri Herrera <uri_herrera@nxos.org>  Fri, 21 Jul 2023 01:52:00 -0500
 
 nuts (1.0.6) nitrux; urgency=medium
 
