@@ -25,7 +25,7 @@
 
 # -- Exit on errors.
 
-set -e
+set -eu
 
 
 # -- Set program name and version.
@@ -34,24 +34,39 @@ TOOL_NAME="Nitrux Update System Tool"
 BKCP_VERSION="$(md5sum /usr/bin/nuts-crr | cut -c -32)"
 
 
-# -- Print informative messages to stdin.
+# -- Print informative messages to stderr.
 
 puts_info() {
-  printf "%s: \e[34mInfo:\e[0m %s\n" "$TOOL_NAME" "$*"
+	if [ -n "$1" ]; then
+		printf "%s: \e[34mInfo:\e[0m %s\n" "$TOOL_NAME" "$*" >&2
+	fi
 }
 
 
-# -- Print success messages to stdin.
+# -- Print success messages to stderr.
 
 puts_success() {
-  printf "%s: \e[32mSuccess:\e[0m %s\n" "$TOOL_NAME" "$*"
+	if [ -n "$1" ]; then
+		printf "%s: \e[32mSuccess:\e[0m %s\n" "$TOOL_NAME" "$*" >&2
+	fi
 }
 
 
-# -- Print error messages to stdin.
+# -- Print error messages to stderr.
 
 puts_error() {
-  printf "%s: \e[31mError:\e[0m %b\n" "$TOOL_NAME" "$*"
+	if [ -n "$1" ]; then
+		printf "%s: \e[31mError:\e[0m %b\n" "$TOOL_NAME" "$*" >&2
+	fi
+}
+
+
+# -- Print messages or text using multiple lines to stderr.
+
+print_message() {
+	if [ -n "$1" ]; then
+		printf "%s\n" "$@" >&2
+	fi
 }
 
 
@@ -139,7 +154,7 @@ mount -t auto "$HOME_PARTITION" /home
 
 for cmd; do
 	case "$cmd" in
-		(-v | --version)
+		-v | --version)
 			print_message "$TOOL_NAME" \
 				"" \
 				"Version (backup component): $BKCP_VERSION." \
@@ -155,7 +170,7 @@ for cmd; do
 			exit
 			;;
 
-		( -d | --debug )  set -x; shift;;
+		-d | --debug )  set -x; shift;;
 	esac
 done
 

@@ -25,7 +25,7 @@
 
 # -- Exit on errors.
 
-set -e
+set -eu
 
 
 # -- Set program name and version.
@@ -33,17 +33,21 @@ set -e
 TOOL_SHRT_NAME="nuts-cc"
 
 
-# -- Print informative messages to stdin.
+# -- Print informative messages to stderr.
 
 puts_info() {
-  printf "%s: \e[34mInfo:\e[0m %s\n" "$TOOL_NAME" "$*"
+	if [ -n "$1" ]; then
+		printf "%s: \e[34mInfo:\e[0m %s\n" "$TOOL_NAME" "$*" >&2
+	fi
 }
 
 
-# -- Print success messages to stdin.
+# -- Print success messages to stderr.
 
 puts_success() {
-  printf "%s: \e[32mSuccess:\e[0m %s\n" "$TOOL_NAME" "$*"
+	if [ -n "$1" ]; then
+		printf "%s: \e[32mSuccess:\e[0m %s\n" "$TOOL_NAME" "$*" >&2
+	fi
 }
 
 

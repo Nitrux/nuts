@@ -19,7 +19,7 @@ The Nitrux Update Tool System (`nuts`) utility is designed to update [Nitrux OS]
 2. Downloads the latest ISO image using the BitTorrent protocol and updates the system using `rsync`.
 3. When restoring a backup, uses the locally generated SquashFS file (instead of downloading an ISO).
 
-_`nuts` is included by default starting with Nitrux 2.9.0._
+> _♦ Information: `nuts` is included by default starting with Nitrux 2.9.0._
 
 ---
 
@@ -49,7 +49,6 @@ _`nuts` is included by default starting with Nitrux 2.9.0._
 - Nitrux 2.8.0+.
 - An active Internet connection.
 - Up to 1.6 GB of available space in the root partition and more than 3.2 GB in the home partition.
-
 
 ### Support for Previous Releases
 

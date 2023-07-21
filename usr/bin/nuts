@@ -26,7 +26,7 @@
 
 # -- Exit on errors.
 
-set -e
+set -eu
 
 
 # -- Set program name and version.
@@ -38,43 +38,51 @@ VENDOR='Nitrux Latinoamericana S.C.'
 FECHA=$(date +%Y)
 
 
-# -- Print informative messages to stdin.
+# -- Print informative messages to stderr.
 
 puts_info() {
-  printf "%s: \e[34mInfo:\e[0m %s\n" "$TOOL_NAME" "$*"
+	if [ -n "$1" ]; then
+		printf "%s: \e[34mInfo:\e[0m %s\n" "$TOOL_NAME" "$*" >&2
+	fi
 }
 
 
-# -- Print success messages to stdin.
+# -- Print success messages to stderr.
 
 puts_success() {
-  printf "%s: \e[32mSuccess:\e[0m %s\n" "$TOOL_NAME" "$*"
+	if [ -n "$1" ]; then
+		printf "%s: \e[32mSuccess:\e[0m %s\n" "$TOOL_NAME" "$*" >&2
+	fi
 }
 
 
-# -- Print error messages to stdin.
+# -- Print error messages to stderr.
 
 puts_error() {
-  printf "%s: \e[31mError:\e[0m %b\n" "$TOOL_NAME" "$*"
+	if [ -n "$1" ]; then
+		printf "%s: \e[31mError:\e[0m %b\n" "$TOOL_NAME" "$*" >&2
+	fi
 }
 
 
-# -- Print messages or text using multiple lines.
+# -- Print messages or text using multiple lines to stderr.
 
 print_message() {
-  printf "%s\n" "$@" >&2;
+	if [ -n "$1" ]; then
+		printf "%s\n" "$@" >&2
+	fi
 }
 
 
 # -- Check if this is running as root.
 # -- Exit if not running as root.
 
-if [ "$EUID" -ne 0 ]; then
-    puts_error "$TOOL_NAME is not running as root, quitting."
-    exit 1
+if [ "$(id -u)" -ne 0 ]; then
+	puts_error "$TOOL_NAME is not running as root, quitting."
+	exit 1
 else
-    puts_success "$TOOL_NAME is running as root, continuing..."
-    ROOT=("sudo")
+	puts_success "$TOOL_NAME is running as root, continuing..."
+	ROOT="sudo"
 fi
 
 
@@ -142,7 +150,7 @@ overlay_ch() {
     local ROOT=("sudo" "overlayroot-chroot" "$@")
 
     if ! command -v "${ROOT[0]}" >/dev/null 2>&1; then
-        printf "Error: '%s' command not found. Please make sure it's installed and try again.\n" "${ROOT[0]}"
+        puts_error "Error: '${ROOT[0]}' command not found. Please make sure it's installed and try again."
         return 1
     fi
 
@@ -156,7 +164,7 @@ overlay_ch() {
 if [ -f "$NUTS_LOG" ]; then
 	puts_info "$TOOL_NAME log file found, skipping..."
 else
-	puts_info "Unable to locate $TOOL_NAME log file. Creating new log file, continuing..."
+	puts_info "Unable to locate $TOOL_NAME log file. Creating a new log file, continuing..."
 fi
 
 
@@ -172,13 +180,13 @@ OUTPUT_FILE=$(mktemp)
 
 for cmd; do
 	case "$cmd" in
-		(-h | --help)
+		-h | --help)
 			print_message "$TOOL_NAME" \
 				"" \
 				"Description:" \
 				"" \
-				"    $TOOL_NAME or nuts is a utility to update the Nitrux Operating System and back up the root for rollbacks." \
-				"    ⚠️ Important: nuts is intended to work exclusively in Nitrux OS, and using this utility in other distributions will break them or not work at all." \
+				"    $TOOL_NAME or $TOOL_SHRT_NAME is a utility to update the Nitrux Operating System and back up the root for rollbacks." \
+				"    ⚠️ Important: $TOOL_SHRT_NAME is intended to work exclusively in Nitrux OS, and using this utility in other distributions will break them or not work at all." \
 				"" \
 				"    Report bugs at: https://github.com/Nitrux/nuts/issues." \
 				"" \
@@ -201,7 +209,7 @@ for cmd; do
 			exit
 			;;
 
-		(-v | --version)
+		-v | --version)
 			print_message "$TOOL_NAME" \
 				"" \
 				"Version: $TOOL_VERSION." \
@@ -218,7 +226,7 @@ for cmd; do
 			exit
 			;;
 
-		(-d | --debug)
+		-d | --debug)
 			set -x
 			shift
 			;;
@@ -228,9 +236,9 @@ done
 
 ( for cmd; do
 	case "$cmd" in
-		( '' )  error "No operation specified (use -h to see a list of operations).";;
+		'' )  error "No operation specified (use -h to see a list of operations).";;
 
-		( update )
+		update )
 
 			# -- Step 0: Run checks before actually doing anything.
 
@@ -348,7 +356,7 @@ done
 			# -- Update process ends.
 
 
-		( restore )
+		restore )
 
 			# -- Step 1: Restore Process
 
