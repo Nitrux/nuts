@@ -358,7 +358,7 @@ update-grub >"$OUTPUT_FILE" 2>&1
 
 
 # -- Use kexec to load the new kernel without rebooting the computer.
-# -- Check if kexec exists and exit if it not.
+# -- Check if kexec exists and continue if not.
 
 if command -v kexec >"$OUTPUT_FILE"; then
     KERNEL_PARAMETERS=$(tail -n 1 /proc/cmdline)
