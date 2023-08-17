@@ -44,7 +44,7 @@ The Nitrux Update Tool System (`nuts`) utility is designed to update [Nitrux OS]
 
 ----
 
-### Requeriments
+### Requirements
 
 - Nitrux 2.8.0+.
 - An active Internet connection.
@@ -52,7 +52,7 @@ The Nitrux Update Tool System (`nuts`) utility is designed to update [Nitrux OS]
 
 ### Support for Previous Releases
 
-`nuts` can technically work with previous releases that use an immutable root, such as Nitrux 2.6.0, 2.6.1, 2.7.0, and 2.7.1, as long as the partition labels match the specific values (`NX_ROOT` for the root partition and `NX_HOME` for the home partition).
+`nuts` can technically work with previous releases that use an immutable root, such as Nitrux 2.6.0, 2.6.1, 2.7.0, and 2.7.1, as long as the partition labels match the specific values (`NX_ROOT` for the root partition and `NX_HOME` for the home partition which is standard since [Nitrux 2.8.0](https://nxos.org/changelog/release-announcement-nitrux-2-8-0/)).
 
 To see the partition label run the command `blkid`.
 
