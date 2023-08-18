@@ -1,3 +1,10 @@
+nuts (1.1.0) nitrux; urgency=medium
+
+  * Update nuts, nuts-cru and nuts-crr to use the Git branch specified in nuts.conf.
+  * Check if backup checksum exists.
+
+ -- Uri Herrera <uri_herrera@nxos.org>  Fri, 18 Aug 2023 13:00:00 -0500
+
 nuts (1.0.10) nitrux; urgency=medium
 
   * Actually, unmount everything because it is an early exit lol.
