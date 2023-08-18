@@ -234,8 +234,10 @@ LOCAL_SUM=$(md5sum /installed_pkgs_end.txt | cut -c -32)
 BACKUP_LIST_SUM=$(md5sum "$NUTS_DIR_SQS"/installed_pkgs_end.txt | cut -c -32)
 
 if [ "$LOCAL_SUM" == "$BACKUP_LIST_SUM" ]; then
-  puts_info "The current installation of ${TARGET_DIST^} is the same as the backup."
+  puts_info "The current installation of ${TARGET_DIST^} is the same as the backup, quitting."
   unmount_directory "$NUTS_DIR_SQS" >"$OUTPUT_FILE"
+  unmount_directory "/home" >"$OUTPUT_FILE"
+  unmount_directory "/dev" >"$OUTPUT_FILE"
   exit 0
 else
   puts_info "Preparing to restore ${TARGET_DIST^}, continuing..."
