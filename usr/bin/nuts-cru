@@ -143,9 +143,11 @@ bak_cc() {
     find "$NUTS_DIR_BAK" -maxdepth 1 -type f | sort -r | tail -n +$((BACKUPS_TO_KEEP + 1)) | xargs --no-run-if-empty rm
 }
 
+
 get_gpu_manufacturer() {
     nvidia-smi -L | awk -F ' ' '$3=="NVIDIA"{print $3; exit}'
 }
+
 
 unmount_directory() {
   local DIRECTORY="$1"
