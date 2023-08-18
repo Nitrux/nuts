@@ -120,6 +120,17 @@ dl_file() {
     fi
 }
 
+unmount_directory() {
+  local DIRECTORY="$1"
+
+  if mountpoint -q "$DIRECTORY"; then
+    echo "Unmounting: $DIRECTORY"
+    umount "$DIRECTORY"
+  else
+    echo "Directory is not mounted: $DIRECTORY"
+  fi
+}
+
 
 # -- Mount the devices filesystem.
 # -- Check if /dev is already mounted.
@@ -277,20 +288,7 @@ rm -f /tmp/nuts-ccr
 update-grub >"$OUTPUT_FILE" 2>&1
 
 
-# -- Unmount the SquashFS.
-# -- Unmount the devices filesystem.
-# -- Unmount the /home partition.
-
-unmount_directory() {
-  local DIRECTORY="$1"
-
-  if mountpoint -q "$DIRECTORY"; then
-    echo "Unmounting: $DIRECTORY"
-    umount "$DIRECTORY"
-  else
-    echo "Directory is not mounted: $DIRECTORY"
-  fi
-}
+# -- Unmount all the stuff.
 
 unmount_directory "$NUTS_DIR_SQS" >"$OUTPUT_FILE"
 unmount_directory "/home" >"$OUTPUT_FILE"

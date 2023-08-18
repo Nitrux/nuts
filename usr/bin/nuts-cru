@@ -70,6 +70,15 @@ print_message() {
 }
 
 
+# -- Print warning messages to stderr.
+
+puts_warning() {
+    if [ -n "$1" ]; then
+        printf "%s: \e[33mWarning:\e[0m %s\n" "$TOOL_NAME" "$*" >&2
+    fi
+}
+
+
 # -- Define the path of the nuts configuration file.
 
 CONFIG_FILE="/etc/nuts.conf"
@@ -134,6 +143,20 @@ bak_cc() {
     find "$NUTS_DIR_BAK" -maxdepth 1 -type f | sort -r | tail -n +$((BACKUPS_TO_KEEP + 1)) | xargs --no-run-if-empty rm
 }
 
+get_gpu_manufacturer() {
+    nvidia-smi -L | awk -F ' ' '$3=="NVIDIA"{print $3; exit}'
+}
+
+unmount_directory() {
+  local DIRECTORY="$1"
+
+  if mountpoint -q "$DIRECTORY"; then
+    echo "Unmounting: $DIRECTORY"
+    umount "$DIRECTORY"
+  else
+    echo "Directory is not mounted: $DIRECTORY"
+  fi
+}
 
 # -- Mount the devices filesystem.
 # -- Check if /dev is already mounted.
@@ -360,29 +383,32 @@ update-grub >"$OUTPUT_FILE" 2>&1
 # -- Use kexec to load the new kernel without rebooting the computer.
 # -- Check if kexec exists and continue if not.
 
-if command -v kexec >"$OUTPUT_FILE"; then
-    KERNEL_PARAMETERS=$(tail -n 1 /proc/cmdline)
-    kexec -l --initrd="$KEXEC_INITRD" --append="@${KERNEL_PARAMETERS}" "$KEXEC_VMLINUZ"
-    kexec -e
+if [ "$(get_gpu_manufacturer)" == "NVIDIA" ]; then
+    puts_warning "Nvidia GPU detected. Cannot use kexec; the kernel cannot be replaced live. Reboot to load the new kernel."
 else
-    puts_error "Can't find kexec; the kernel cannot be replaced live. Reboot to load the new kernel."
+    if command -v kexec >"$OUTPUT_FILE"; then
+        KERNEL_PARAMETERS=$(tail -n 1 /proc/cmdline)
+        kexec -l --initrd="$KEXEC_INITRD" --append="@${KERNEL_PARAMETERS}" "$KEXEC_VMLINUZ"
+
+        # -- Unmount stuff before doing switching the kernel.
+
+        unmount_directory "$NUTS_DIR_SQS"
+        unmount_directory "$NUTS_DIR_ISO"
+        unmount_directory "/home"
+        unmount_directory "/dev"
+
+        sync
+
+        kexec -e
+    else
+        puts_error "Can't find kexec; the kernel cannot be replaced live. Reboot to load the new kernel."
+    fi
 fi
 
 
 # -- Unmount the ISO and the SquashFS.
 # -- Unmount the devices filesystem.
 # -- Unmount the /home partition.
-
-unmount_directory() {
-  local DIRECTORY="$1"
-
-  if mountpoint -q "$DIRECTORY"; then
-    echo "Unmounting: $DIRECTORY"
-    umount "$DIRECTORY"
-  else
-    echo "Directory is not mounted: $DIRECTORY"
-  fi
-}
 
 unmount_directory "$NUTS_DIR_SQS" >"$OUTPUT_FILE"
 unmount_directory "$NUTS_DIR_ISO" >"$OUTPUT_FILE"
