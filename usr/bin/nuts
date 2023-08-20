@@ -404,17 +404,18 @@ done
 
 			# -- Step X: Rescue Process
 
-			# -- The rescue process is a special handling of an unforeseen event; as such, this <operation> does not require using overlayroot-chroot.
+			# -- The Rescue Process is a special handling of an unforeseen event; as such, this <operation> does not require using overlayroot-chroot.
 
-			# -- We do this if, during the sync process with rsync, that rsync is interrupted; thus, the root is left in an inconsistent state.
+			# -- We do this because if, during the Actual Update sub-process with rsync, rsync is interrupted, the root will be in an inconsistent state.
 			# -- That means the root is unusable, i.e., the user can't access the GUI or, worse, a TTY, so the user can't restore the SquashFS.
-			# -- With that being the case, the user can restore the entire partition from a Live session.
+			# -- With that being the case, this <operation> allows the user to restore the root partition from a Live session.
 
 			# -- Automatically check if this utility is running in a Live session. Calamares is an easy check as it's only available in a Live session.
 			# -- This check assumes that the root is now inconsistent; thus, using the SquashFS backup is impossible, so we must restore the XFS backup hence why the user tells this utility to restore a backup from a Live session.
-			# -- If the check returns that this utility is not running from a Live session, use the SquashFS backup instead, as it'd mean running in a functional installation.
+			# -- If the check returns that this utility is not running from a Live session, use the SquashFS backup instead.
 
 			ROOT_PARTITION=$(findfs LABEL=NX_ROOT)
+			ROOT_PARTITION_LABEL=$(blkid -o value -s LABEL "$ROOT_PARTITION")
 			HOME_PARTITION=$(findfs LABEL=NX_HOME)
 
 			if mountpoint -q /media/root; then
@@ -433,11 +434,12 @@ done
 			puts_info "Mounting $HOME_PARTITION to /media/home..."
 			mount -t auto "$HOME_PARTITION" /media/home
 
-			XFS_BACKUP_FILE="/media/$NUTS_DIR_XFS/xfs-backup-$DATE_BACKUP_FILE.xfs.zst"
+			COMPRESSED_XFS_BACKUP="/media/$NUTS_DIR_XFS/xfs-backup.xfs.zst"
 			XFS_BACKUP_CHECKSUM_FILE="/media/$NUTS_DIR_XFS/xfs-backup.md5sum"
+			DECOMPRESSED_XFS_BACKUP="/media/$NUTS_DIR_XFS/xfs-backup.xfs"
 
-			if [ ! -f "$XFS_BACKUP_FILE" ]; then
-				puts_error "XFS backup file $XFS_BACKUP_FILE not found. Quitting."
+			if [ ! -f "$COMPRESSED_XFS_BACKUP" ]; then
+				puts_error "XFS backup file $COMPRESSED_XFS_BACKUP not found. Quitting."
 				exit 1
 			fi
 
@@ -446,7 +448,7 @@ done
 				exit 1
 			fi
 
-			BACKUP_SUM=$(md5sum "$XFS_BACKUP_FILE" | cut -c -32)
+			BACKUP_SUM=$(md5sum "$COMPRESSED_XFS_BACKUP" | cut -c -32)
 			GEN_BAK_SUM=$(tail "$XFS_BACKUP_CHECKSUM_FILE" | cut -c -32)
 
 			if [[ "$BACKUP_SUM" == "$GEN_BAK_SUM" ]]; then
@@ -457,22 +459,24 @@ done
 			fi
 
 			if [ -x "/usr/bin/calamares" ]; then
-				puts_info "Running $TOOL_NAME from a Live session, proceed with restoration of XFS partition, continuing..."
-				zstd -dc "$XFS_BACKUP_FILE" | xfsrestore -f - "$ROOT_PARTITION"
+				puts_info "Running $TOOL_NAME from a Live session, proceed with restoration of $ROOT_PARTITION_LABEL, continuing..."
+				zstd -dc "$COMPRESSED_XFS_BACKUP"
+				xfsrestore -f "$DECOMPRESSED_XFS_BACKUP" "$ROOT_PARTITION"
 
-				puts_success "Success! XFS partition has been rescued."
+				puts_success "Success! $ROOT_PARTITION_LABEL has been restored."
 
 				unmount_directory /media/root
 				unmount_directory /media/home
 			else
-				puts_warning "Only use this option from a Live session. To restore a functional installation use: $TOOL_SHRT_NAME restore. Quitting."
+				puts_warning "Only use this option from a Live session and in an emergency."
+				puts_info "For a non-emergency situation, use: "$TOOL_SHRT_NAME restore"."
 
 				unmount_directory /media/root
 				unmount_directory /media/home
 				exit 0
 			fi
 
-			# -- After running rsync reboot the device.
+			# -- After restoring the XFS backup reboot the device.
 
 			puts_info "Time to reboot. Bye."
 

@@ -1,3 +1,12 @@
+nuts (1.1.1) nitrux; urgency=medium
+
+  * Add new rescue option to create and restore a backup of the root partition.
+  * Fix command to create xfs backup.
+  * Use as many threads as possible to compress xfs backup file.
+  * Update filename of compressed xfs backup for decompression and utilization.
+
+ -- Uri Herrera <uri_herrera@nxos.org>  Fri, 18 Aug 2023 13:00:00 -0500
+
 nuts (1.1.0) nitrux; urgency=medium
 
   * Update nuts, nuts-cru and nuts-crr to use the Git branch specified in nuts.conf.
