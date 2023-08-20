@@ -79,7 +79,7 @@ sudo cp $HOME/nuts/etc/nuts.conf /etc
 - Restores the backup of the root directory generated during the update.
 
 **Rescue**: `sudo nuts rescue`
-- Restore the backup of the XFS root partition in case of an interrupted update.
+- Restores the backup of the XFS root partition in case of an interrupted update.
    - _♦ Information: This operation is a special handling of an unforeseen event. If rsync were to be interrupted, the root would be inconsistent. That means the root is unusable, i.e., the user can't access the GUI or, worse, a TTY, so the user can't restore the SquashFS. This operation will allow the user to restore the root partition from a Live session. This operation does not replace `restore`; it exists if using `restore` is impossible._
 
 ### Configuration:
