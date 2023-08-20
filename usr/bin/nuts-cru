@@ -383,23 +383,6 @@ rm -f /tmp/nuts-ccu
 update-grub >"$OUTPUT_FILE" 2>&1
 
 
-# -- Use kexec to load the new kernel without rebooting the computer.
-# -- Check if kexec exists and continue if not.
-# -- Check if using Nvidia hardware, if true don't use kexec.
-
-# if [ "$(get_gpu_manufacturer)" == "NVIDIA" ]; then
-#     puts_warning "Nvidia GPU detected. Cannot use kexec; the kernel cannot be replaced live. Reboot to load the new kernel."
-# else
-#     if command -v kexec >"$OUTPUT_FILE"; then
-#         KERNEL_PARAMETERS=$(tail -n 1 /proc/cmdline)
-#         kexec -l --initrd="$KEXEC_INITRD" --append="@${KERNEL_PARAMETERS}" "$KEXEC_VMLINUZ"
-#         kexec -e
-#     else
-#         puts_error "Can't find kexec; the kernel cannot be replaced live. Reboot to load the new kernel."
-#     fi
-# fi
-
-
 # -- Unmount all the stuff.
 
 unmount_directory "$NUTS_DIR_SQS" >"$OUTPUT_FILE"
