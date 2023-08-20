@@ -400,9 +400,7 @@ else
 fi
 
 
-# -- Unmount the ISO and the SquashFS.
-# -- Unmount the devices filesystem.
-# -- Unmount the /home partition.
+# -- Unmount all the stuff.
 
 unmount_directory "$NUTS_DIR_SQS" >"$OUTPUT_FILE"
 unmount_directory "$NUTS_DIR_ISO" >"$OUTPUT_FILE"
