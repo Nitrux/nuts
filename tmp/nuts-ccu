@@ -98,10 +98,7 @@ find /boot -maxdepth 1 -type f \( -name "vmlinuz-*" -o -name "initrd.img-*" \) -
 
 VERSION_PATTERN_VMLINUZ=${LINKED_VMLINUZ#*-}
 
-# Delete files starting with 'config-' in /boot that do not match the version number pattern
 find /boot -maxdepth 1 -type f -name "config-*" ! -name "config-$VERSION_PATTERN_VMLINUZ" -delete
-
-# Delete files starting with 'System.map-' in /boot that do not match the version number pattern
 find /boot -maxdepth 1 -type f -name "System.map-*" ! -name "System.map-$VERSION_PATTERN_VMLINUZ" -delete
 
 puts_success "Non-linked vmlinuz-* and initrd.img-* files in /boot deleted successfully."
