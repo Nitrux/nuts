@@ -393,16 +393,6 @@ else
     if command -v kexec >"$OUTPUT_FILE"; then
         KERNEL_PARAMETERS=$(tail -n 1 /proc/cmdline)
         kexec -l --initrd="$KEXEC_INITRD" --append="@${KERNEL_PARAMETERS}" "$KEXEC_VMLINUZ"
-
-        # -- Unmount stuff before doing switching the kernel.
-
-        unmount_directory "$NUTS_DIR_SQS"
-        unmount_directory "$NUTS_DIR_ISO"
-        unmount_directory "/home"
-        unmount_directory "/dev"
-
-        sync
-
         kexec -e
     else
         puts_error "Can't find kexec; the kernel cannot be replaced live. Reboot to load the new kernel."
