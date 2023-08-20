@@ -423,7 +423,7 @@ else
         KERNEL_PARAMETERS=$(tail -n 1 /proc/cmdline)
         kexec -l --initrd="$KEXEC_INITRD" --append="@${KERNEL_PARAMETERS}" "$KEXEC_VMLINUZ"
 
-        # -- Unmount stuff before doing switching the kernel.
+        # -- Unmount stuff before switching the kernel.
 
         unmount_directory "$NUTS_DIR_SQS" >"$OUTPUT_FILE"
         unmount_directory "$NUTS_DIR_ISO" >"$OUTPUT_FILE"
@@ -432,7 +432,10 @@ else
 
         sync
 
-        puts_info "Switching the kernel and loading updating system. Bye."
+        TIMEOUT_DURATION=5
+        puts_info "Waiting for ${TIMEOUT_DURATION} seconds before switching the kernel and loading the updated system. Bye."
+        
+        sleep $TIMEOUT_DURATION
 
         kexec -e
     else
