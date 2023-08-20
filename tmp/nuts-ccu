@@ -30,6 +30,7 @@ set -eu
 
 # -- Set program name and version.
 
+TOOL_NAME="Nitrux Update System Tool"
 TOOL_SHRT_NAME="nuts-cc"
 
 
