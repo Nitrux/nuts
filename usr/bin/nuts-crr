@@ -159,6 +159,12 @@ fi
 puts_info "Mounting $HOME_PARTITION to /home..."
 mount -t auto "$HOME_PARTITION" /home
 
+# -- Variables.
+
+CURRENT_DIST=$(awk -F'=' '/VERSION_CODENAME/{print $NF}' /etc/os-release)
+TARGET_DIST="nitrux"
+OUTPUT_FILE=$(mktemp)
+
 
 #   ====== START ======
 
