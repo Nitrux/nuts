@@ -425,10 +425,10 @@ else
 
         # -- Unmount stuff before doing switching the kernel.
 
-        unmount_directory "$NUTS_DIR_SQS"
-        unmount_directory "$NUTS_DIR_ISO"
-        unmount_directory "/home"
-        unmount_directory "/dev"
+        unmount_directory "$NUTS_DIR_SQS" >"$OUTPUT_FILE"
+        unmount_directory "$NUTS_DIR_ISO" >"$OUTPUT_FILE"
+        unmount_directory "/home" >"$OUTPUT_FILE"
+        unmount_directory "/dev" >"$OUTPUT_FILE"
 
         sync
 
@@ -439,9 +439,7 @@ else
 fi
 
 
-# -- Unmount the ISO and the SquashFS.
-# -- Unmount the devices filesystem.
-# -- Unmount the /home partition.
+# -- Unmount all the stuff.
 
 unmount_directory "$NUTS_DIR_SQS" >"$OUTPUT_FILE"
 unmount_directory "$NUTS_DIR_ISO" >"$OUTPUT_FILE"
