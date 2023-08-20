@@ -70,15 +70,6 @@ print_message() {
 }
 
 
-# -- Print warning messages to stderr.
-
-puts_warning() {
-    if [ -n "$1" ]; then
-        printf "%s: \e[33mWarning:\e[0m %s\n" "$TOOL_NAME" "$*" >&2
-    fi
-}
-
-
 # -- Define the path of the nuts configuration file.
 
 CONFIG_FILE="/etc/nuts.conf"
