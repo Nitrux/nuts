@@ -286,7 +286,7 @@ xfsdump -l0 -L "Nitrux_Update_Tool_System-XFS_Backup" -M "NX_BAK-Vol-1" -f "$XFS
 
 if [ -e "$COMPRESSED_XFS_BACKUP" ]; then
     puts_info "Deleting existing compressed backup: $COMPRESSED_XFS_BACKUP"
-    rm "$COMPRESSED_XFS_BACKUP"
+    rm -f "$COMPRESSED_XFS_BACKUP"
 fi
 
 zstd -T"$ZSTD_COMP_THREADS" --ultra -19 "$XFS_BACKUP_FILE" -o "$COMPRESSED_XFS_BACKUP"

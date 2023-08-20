@@ -1,3 +1,14 @@
+nuts (1.1.2) nitrux; urgency=medium
+
+  * Add new rescue operation to help.
+  * Fixed file paths when using rescue from Live session.
+  * Create directories used during the execution of the rescue operation.
+  * Remove the compressed xfs backup as we only intend to keep one.
+  * Specify that using a different branch of nuts in nuts.conf does not download a different ISO.
+  * Also update the README on the source repository with information about the new operation.
+
+ -- Uri Herrera <uri_herrera@nxos.org>  Sun, 20 Aug 2023 09:40:00 -0500
+
 nuts (1.1.1) nitrux; urgency=medium
 
   * Add new rescue option to create and restore a backup of the root partition.
@@ -5,7 +16,7 @@ nuts (1.1.1) nitrux; urgency=medium
   * Use as many threads as possible to compress xfs backup file.
   * Update filename of compressed xfs backup for decompression and utilization.
 
- -- Uri Herrera <uri_herrera@nxos.org>  Fri, 18 Aug 2023 13:00:00 -0500
+ -- Uri Herrera <uri_herrera@nxos.org>  Sat, 19 Aug 2023 23:25:00 -0500
 
 nuts (1.1.0) nitrux; urgency=medium
 

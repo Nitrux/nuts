@@ -218,6 +218,7 @@ for cmd; do
 				"Operations:" \
 				"    update       Update the currently installed root using the media specified in nuts-query and creates a backup of the current root directory." \
 				"    restore      Restore the backup of the root directory generated during the update." \
+				"    rescue       Restore the backup of the root partition in case of an interrupted update.." \
 				"" \
 				"Usage:" \
 				"    sudo nuts <flag> (operation)" \
@@ -417,26 +418,29 @@ done
 			ROOT_PARTITION=$(findfs LABEL=NX_ROOT)
 			ROOT_PARTITION_LABEL=$(blkid -o value -s LABEL "$ROOT_PARTITION")
 			HOME_PARTITION=$(findfs LABEL=NX_HOME)
+			HOME_PARTITION_LABEL=$(blkid -o value -s LABEL "$HOME_PARTITION")
 
-			if mountpoint -q /media/root; then
+			if mountpoint -q "/media/$USER/NX_ROOT"; then
 				puts_info "/media/root is already mounted. Unmounting..."
-				umount /media/root
+				umount "/media/$USER/NX_ROOT"
 			fi
 
-			if mountpoint -q /media/home; then
+			if mountpoint -q "/media/$USER/NX_HOME"; then
 				puts_info "/media/home is already mounted. Unmounting..."
-				umount /media/home
+				umount "/media/$USER/NX_HOME"
 			fi
 
-			puts_info "Mounting $ROOT_PARTITION to /media/root..."
-			mount -t auto "$ROOT_PARTITION" /media/root
+			mkdir -p "/media/$USER/NX_ROOT" "/media/$USER/NX_HOME"
 
-			puts_info "Mounting $HOME_PARTITION to /media/home..."
-			mount -t auto "$HOME_PARTITION" /media/home
+			puts_info "Mounting $ROOT_PARTITION_LABEL to /media/$USER/NX_ROOT..."
+			mount -t auto "$ROOT_PARTITION" "/media/$USER/NX_ROOT"
 
-			COMPRESSED_XFS_BACKUP="/media/$NUTS_DIR_XFS/xfs-backup.xfs.zst"
-			XFS_BACKUP_CHECKSUM_FILE="/media/$NUTS_DIR_XFS/xfs-backup.md5sum"
-			DECOMPRESSED_XFS_BACKUP="/media/$NUTS_DIR_XFS/xfs-backup.xfs"
+			puts_info "Mounting $HOME_PARTITION_LABEL to /media/$USER/NX_HOME..."
+			mount -t auto "$HOME_PARTITION" "/media/$USER/NX_HOME"
+
+			COMPRESSED_XFS_BACKUP="/media/$USER/NX_HOME/$NUTS_DIR_XFS/xfs-backup.xfs.zst"
+			XFS_BACKUP_CHECKSUM_FILE="/media/$USER/NX_HOME/$NUTS_DIR_XFS/xfs-backup.md5sum"
+			DECOMPRESSED_XFS_BACKUP="/media/$USER/NX_HOME/$NUTS_DIR_XFS/xfs-backup.xfs"
 
 			if [ ! -f "$COMPRESSED_XFS_BACKUP" ]; then
 				puts_error "XFS backup file $COMPRESSED_XFS_BACKUP not found. Quitting."
