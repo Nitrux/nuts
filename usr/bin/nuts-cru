@@ -417,7 +417,7 @@ update-grub >"$OUTPUT_FILE" 2>&1
 # -- Check if using Nvidia hardware, if true don't use kexec.
 
 if [ "$(get_gpu_manufacturer)" == "NVIDIA" ]; then
-    puts_warning "Nvidia GPU detected. Cannot use kexec; the kernel cannot be replaced live. Reboot to load the new kernel."
+    puts_warning "Nvidia GPU detected. Cannot use kexec; the kernel cannot be switched. Reboot to load the new kernel."
 else
     if command -v kexec >"$OUTPUT_FILE"; then
         KERNEL_PARAMETERS=$(tail -n 1 /proc/cmdline)
@@ -433,13 +433,13 @@ else
         sync
 
         TIMEOUT_DURATION=5
-        puts_info "Waiting for ${TIMEOUT_DURATION} seconds before switching the kernel and loading the updated system. Bye."
+        puts_info "Waiting for ${TIMEOUT_DURATION} seconds before switching the kernel. Bye."
         
         sleep $TIMEOUT_DURATION
 
         kexec -e
     else
-        puts_error "Can't find kexec; the kernel cannot be replaced live. Reboot to load the new kernel."
+        puts_error "Can't find kexec; the kernel cannot be switched. Reboot to load the new kernel."
     fi
 fi
 
