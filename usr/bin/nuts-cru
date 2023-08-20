@@ -432,6 +432,8 @@ else
 
         sync
 
+        puts_info "Switching the kernel and loading updating system. Bye."
+
         kexec -e
     else
         puts_error "Can't find kexec; the kernel cannot be replaced live. Reboot to load the new kernel."
