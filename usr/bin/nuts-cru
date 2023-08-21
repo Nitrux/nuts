@@ -195,8 +195,6 @@ for cmd; do
 
 			exit
 			;;
-
-		-d | --debug )  set -x; shift;;
 	esac
 done
 
