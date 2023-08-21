@@ -339,6 +339,35 @@ done
 			# -- This process is done inside the chroot; otherwise, when using overlayroot-chroot, the files, and paths will not exist.
 
 
+			# -- Create a backup of the partition for redundancy using xfsdump to later use it during a rescue operation from a Live session.
+			# -- By the way, only *one* backup file is created.
+			# -- Compress the backup file using zstd.
+
+			ROOT_PARTITION=$(findfs LABEL=NX_ROOT)
+			ROOT_PARTITION_LABEL=$(blkid -o value -s LABEL "$ROOT_PARTITION")
+			XFS_BACKUP_FILE="$NUTS_DIR_XFS/xfs-backup.xfs"
+			COMPRESSED_XFS_BACKUP="$XFS_BACKUP_FILE.zst"
+			ZSTD_COMP_THREADS=$(nproc)
+
+			puts_info "Creating redundant backup of $ROOT_PARTITION_LABEL, continuing..."
+
+			xfsdump -l0 -L "Nitrux_Update_Tool_System-XFS_Backup" -M "NX_BAK-Vol-1" -f "$XFS_BACKUP_FILE" "$ROOT_PARTITION" 
+
+			if [ -e "$COMPRESSED_XFS_BACKUP" ]; then
+				puts_info "Deleting existing compressed backup: $COMPRESSED_XFS_BACKUP"
+				rm -f "$COMPRESSED_XFS_BACKUP"
+			fi
+
+			zstd -T"$ZSTD_COMP_THREADS" --ultra -19 "$XFS_BACKUP_FILE" -o "$COMPRESSED_XFS_BACKUP"
+			md5sum "$COMPRESSED_XFS_BACKUP" > "$NUTS_DIR_BAK/xfs-backup.md5sum"
+
+			rm -f "$XFS_BACKUP_FILE"
+
+			sync
+
+			puts_success "Success! Redundant backup has been created."
+
+
 			# -- Step 2: Actual Update sub-process
 
 			# -- This process is also done inside the chroot and it is the same as Calamares, except for user creation, mounts and bootloader configuration.
