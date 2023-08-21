@@ -356,23 +356,20 @@ done
 				rm -f "$XFS_BACKUP_FILE"
 			else
 				puts_info "Backup file not found: $XFS_BACKUP_FILE, continuing..."
+				xfsdump -v silent -l0 -L "Nitrux_Update_Tool_System-XFS_Backup" -M "NX_BAK-Vol-1" -f "$XFS_BACKUP_FILE" "$ROOT_PARTITION"
 			fi
 
-			xfsdump -v silent -l0 -L "Nitrux_Update_Tool_System-XFS_Backup" -M "NX_BAK-Vol-1" -f "$XFS_BACKUP_FILE" "$ROOT_PARTITION"
 
 			if [ -e "$COMPRESSED_XFS_BACKUP" ]; then
 				puts_info "Deleting existing compressed backup: $COMPRESSED_XFS_BACKUP, continuing..."
 				rm -f "$COMPRESSED_XFS_BACKUP"
 			else
 				puts_info "Compressed backup file not found: $COMPRESSED_XFS_BACKUP, continuing..."
+				puts_info "Compressing $XFS_BACKUP_FILE, continuing..."
+				zstd -T"$ZSTD_COMP_THREADS" --ultra -19 "$XFS_BACKUP_FILE" | pv > "$COMPRESSED_XFS_BACKUP"
 			fi
 
-			puts info "Compressing $XFS_BACKUP_FILE, continuing..."
-
-			zstd -T"$ZSTD_COMP_THREADS" --ultra -19 "$XFS_BACKUP_FILE" | pv > "$COMPRESSED_XFS_BACKUP"
 			md5sum "$COMPRESSED_XFS_BACKUP" > "$NUTS_DIR_BAK/xfs-backup.md5sum"
-
-			rm -f "$XFS_BACKUP_FILE"
 
 			sync
 
