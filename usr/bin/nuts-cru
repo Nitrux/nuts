@@ -144,11 +144,6 @@ bak_cc() {
 }
 
 
-get_gpu_manufacturer() {
-    nvidia-smi -L | awk -F ' ' '$3=="NVIDIA"{print $3; exit}'
-}
-
-
 unmount_directory() {
   local DIRECTORY="$1"
 
