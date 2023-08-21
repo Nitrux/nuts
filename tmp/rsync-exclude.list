@@ -4,12 +4,7 @@
 /run/
 /run/udev/
 /sys/firmware/efi/efivars/
-/etc/passwd
-/etc/shadow
-/etc/group
-/etc/gshadow
-/etc/login.defs
-/etc/sudoers
+/etc/
 /home/
 /media/
 /mnt/
