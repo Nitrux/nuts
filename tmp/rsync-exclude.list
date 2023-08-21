@@ -4,7 +4,12 @@
 /run/
 /run/udev/
 /sys/firmware/efi/efivars/
-/etc/
+/etc/passwd
+/etc/shadow
+/etc/group
+/etc/gshadow
+/etc/login.defs
+/etc/sudoers
 /home/
 /media/
 /mnt/
@@ -12,4 +17,3 @@
 /srv/
 /tmp/
 /var/
-/usr/
