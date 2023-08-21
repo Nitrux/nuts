@@ -383,7 +383,6 @@ done
 				rm -f "$COMPRESSED_XFS_BACKUP"
 			else
 				puts_info "Compressed backup file not found: $COMPRESSED_XFS_BACKUP, creating it..."
-				puts_info "Compressing $XFS_BACKUP_FILE, continuing..."
 				zstd -T"$ZSTD_COMP_THREADS" --ultra -19 "$XFS_BACKUP_FILE" -o "$COMPRESSED_XFS_BACKUP"
 			fi
 
