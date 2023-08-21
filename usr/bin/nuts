@@ -359,7 +359,6 @@ done
 				xfsdump -v silent -l0 -L "Nitrux_Update_Tool_System-XFS_Backup" -M "NX_BAK-Vol-1" -f "$XFS_BACKUP_FILE" "$ROOT_PARTITION"
 			fi
 
-
 			if [ -e "$COMPRESSED_XFS_BACKUP" ]; then
 				puts_info "Deleting existing compressed backup: $COMPRESSED_XFS_BACKUP, continuing..."
 				rm -f "$COMPRESSED_XFS_BACKUP"
