@@ -15,7 +15,7 @@ The Nitrux Update Tool System (`nuts`) utility is designed to update [Nitrux OS]
 
 `nuts` is a simple and minimalistic system update and rollback utility. It performs three steps:
 
-1. Creates a backup of the root directory using SquashFS and stores it locally.
+1. Creates a backup of the root directory using SquashFS and the XFS partition and stores them locally.
 2. Downloads the latest ISO image using the BitTorrent protocol and updates the system using `rsync`.
 3. When restoring a backup, uses the locally generated SquashFS file (instead of downloading an ISO).
 
@@ -73,10 +73,15 @@ sudo cp $HOME/nuts/etc/nuts.conf /etc
 ### Commands:
 
 **Update**: `sudo nuts update`
-- Updates the currently installed root using the specified media in `nuts-query` and backs up the current root directory.
+- Updates the currently installed root using the specified media in `nuts-query` and backs up the current root directory and partition.
+   - _♦ Information: This operation also switches the kernel on supported hardware after completing the update, i.e., not you, Nvidia._
 
 **Restore**: `sudo nuts restore`
 - Restores the backup of the root directory generated during the update.
+
+**Rescue**: `sudo nuts rescue`
+- Restores the backup of the XFS root partition in case of an interrupted update.
+   - _♦ Information: This operation is a special handling of an unforeseen event. If rsync were to be interrupted, the root would be inconsistent. That means the root is unusable, i.e., the user can't access the GUI or, worse, a TTY, so the user can't restore the SquashFS. This operation will allow the user to restore the root partition from a Live session. This operation does not replace `restore`; it exists if using `restore` is impossible._
 
 ### Configuration:
 

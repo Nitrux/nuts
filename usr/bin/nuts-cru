@@ -70,15 +70,6 @@ print_message() {
 }
 
 
-# -- Print warning messages to stderr.
-
-puts_warning() {
-    if [ -n "$1" ]; then
-        printf "%s: \e[33mWarning:\e[0m %s\n" "$TOOL_NAME" "$*" >&2
-    fi
-}
-
-
 # -- Define the path of the nuts configuration file.
 
 CONFIG_FILE="/etc/nuts.conf"
@@ -148,10 +139,10 @@ unmount_directory() {
   local DIRECTORY="$1"
 
   if mountpoint -q "$DIRECTORY"; then
-    echo "Unmounting: $DIRECTORY"
+    puts_info "Unmounting: $DIRECTORY"
     umount "$DIRECTORY"
   else
-    echo "Directory is not mounted: $DIRECTORY"
+    puts_info "Directory is not mounted: $DIRECTORY"
   fi
 }
 
@@ -160,7 +151,7 @@ unmount_directory() {
 # -- Check if /dev is already mounted.
 
 if mountpoint -q /dev; then
-    echo "/dev is already mounted. Unmounting..."
+    puts_info "/dev is already mounted. Unmounting..."
     umount /dev
 fi
 
@@ -175,7 +166,7 @@ mount -t devtmpfs dev /dev
 HOME_PARTITION=$(findfs LABEL=NX_HOME)
 
 if mountpoint -q /home; then
-    echo "/home is already mounted. Unmounting..."
+    puts_info "/home is already mounted. Unmounting..."
     umount /home
 fi
 
@@ -204,8 +195,6 @@ for cmd; do
 
 			exit
 			;;
-
-		-d | --debug )  set -x; shift;;
 	esac
 done
 
@@ -213,7 +202,7 @@ done
 # -- Create the directories for nuts.
 # -- Create working directories in /home since this partition will likely have more space than the root partition.
 
-DIRECTORIES=("$NUTS_DIR_BAK" "$NUTS_DIR_ISO" "$NUTS_DIR_DLS" "$NUTS_DIR_SQS")
+DIRECTORIES=("$NUTS_DIR_BAK" "$NUTS_DIR_XFS" "$NUTS_DIR_ISO" "$NUTS_DIR_DLS" "$NUTS_DIR_SQS")
 
 for DIR in "${DIRECTORIES[@]}"; do
   if [[ ! -d "$DIR" ]]; then

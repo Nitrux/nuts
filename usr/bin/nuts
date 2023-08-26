@@ -74,6 +74,15 @@ print_message() {
 }
 
 
+# -- Print warning messages to stderr.
+
+puts_warning() {
+    if [ -n "$1" ]; then
+        printf "%s: \e[33mWarning:\e[0m %s\n" "$TOOL_NAME" "$*" >&2
+    fi
+}
+
+
 # -- Check if this is running as root.
 # -- Exit if not running as root.
 
@@ -157,6 +166,17 @@ overlay_ch() {
     "${ROOT[@]}"
 }
 
+unmount_directory() {
+  local DIRECTORY="$1"
+
+  if mountpoint -q "$DIRECTORY"; then
+    puts_info "Unmounting: $DIRECTORY"
+    umount "$DIRECTORY"
+  else
+    puts_info "Directory is not mounted: $DIRECTORY"
+  fi
+}
+
 
 # -- Use a log file.
 # -- Everything below will go to the file nuts.log.
@@ -198,6 +218,7 @@ for cmd; do
 				"Operations:" \
 				"    update       Update the currently installed root using the media specified in nuts-query and creates a backup of the current root directory." \
 				"    restore      Restore the backup of the root directory generated during the update." \
+				"    rescue       Restore the backup of the root partition in case of an interrupted update.." \
 				"" \
 				"Usage:" \
 				"    sudo nuts <flag> (operation)" \
@@ -311,11 +332,66 @@ done
 			fi
 
 
+			# -- Create the directories for nuts.
+			# -- Create working directories in /home since this partition will likely have more space than the root partition.
+
+			DIRECTORIES=("$NUTS_DIR_BAK" "$NUTS_DIR_XFS" "$NUTS_DIR_ISO" "$NUTS_DIR_DLS" "$NUTS_DIR_SQS")
+
+			for DIR in "${DIRECTORIES[@]}"; do
+			if [[ ! -d "$DIR" ]]; then
+				puts_error "Directory '$DIR' does not exist. Creating the directory..."
+				if ! mkdir -p "$DIR"; then
+				puts_error "Failed to create directory '$DIR'. Exiting..."
+				exit 1
+				fi
+				puts_info "Directory '$DIR' created successfully."
+			fi
+			done
+
+			puts_info "All required directories exist. Continuing."
+
+
 			# -- Step 1: Backup sub-process
 
 			# -- This process begins as a step before doing an update.
 			# -- Backup files are only generated when updating; the user can't ask the utility to create them on demand.
 			# -- This process is done inside the chroot; otherwise, when using overlayroot-chroot, the files, and paths will not exist.
+
+
+			# -- Create a backup of the partition for redundancy using xfsdump to later use it during a rescue operation from a Live session.
+			# -- By the way, only *one* backup file is created.
+			# -- Compress the backup file using zstd.
+			# -- This backup is created outside of the chroot because xfsdump relies on /etc/mtab, and that file is unavailable when using overlayroot-chroot.
+
+			ROOT_PARTITION=$(findfs LABEL=NX_ROOT)
+			ROOT_PARTITION_LABEL=$(blkid -o value -s LABEL "$ROOT_PARTITION")
+			XFS_BACKUP_FILE="$NUTS_DIR_XFS/xfs-backup.xfs"
+			COMPRESSED_XFS_BACKUP="$XFS_BACKUP_FILE.zst"
+			ZSTD_COMP_THREADS=$(nproc)
+
+			puts_info "Creating redundant backup of $ROOT_PARTITION_LABEL, continuing..."
+
+			if [ -e "$XFS_BACKUP_FILE" ]; then
+				puts_info "Deleting existing backup: $XFS_BACKUP_FILE, continuing..."
+				rm -f "$XFS_BACKUP_FILE"
+			else
+				puts_info "Backup file not found: $XFS_BACKUP_FILE, creating it..."
+				xfsdump -l0 -L "Nitrux_Update_Tool_System-XFS_Backup" -M "NX_BAK-Vol-1" -f "$XFS_BACKUP_FILE" "$ROOT_PARTITION"
+			fi
+
+			if [ -e "$COMPRESSED_XFS_BACKUP" ]; then
+				puts_info "Deleting existing compressed backup: $COMPRESSED_XFS_BACKUP, continuing..."
+				rm -f "$COMPRESSED_XFS_BACKUP"
+			else
+				puts_info "Compressed backup file not found: $COMPRESSED_XFS_BACKUP, creating it..."
+				zstd -T"$ZSTD_COMP_THREADS" --ultra -19 "$XFS_BACKUP_FILE" -o "$COMPRESSED_XFS_BACKUP"
+			fi
+
+			md5sum "$COMPRESSED_XFS_BACKUP" > "$NUTS_DIR_BAK/xfs-backup.md5sum"
+
+			sync
+
+			puts_success "Success! $ROOT_PARTITION_LABEL redundant backup has been created."
 
 
 			# -- Step 2: Actual Update sub-process
@@ -374,6 +450,92 @@ done
 
 
 			# -- After running rsync reboot the device.
+
+			puts_info "Time to reboot. Bye."
+
+			shift;;
+
+
+		rescue )
+
+			# -- Step X: Rescue Process
+
+			# -- The Rescue Process is a special handling of an unforeseen event; as such, this <operation> does not require using overlayroot-chroot.
+
+			# -- We do this because if, during the Actual Update sub-process with rsync, rsync is interrupted, the root will be in an inconsistent state.
+			# -- That means the root is unusable, i.e., the user can't access the GUI or, worse, a TTY, so the user can't restore the SquashFS.
+			# -- With that being the case, this <operation> allows the user to restore the root partition from a Live session.
+
+			# -- Automatically check if this utility is running in a Live session. Calamares is an easy check as it's only available in a Live session.
+			# -- This check assumes that the root is now inconsistent; thus, using the SquashFS backup is impossible, so we must restore the XFS backup hence why the user tells this utility to restore a backup from a Live session.
+			# -- If the check returns that this utility is not running from a Live session, use the SquashFS backup instead.
+
+			ROOT_PARTITION=$(findfs LABEL=NX_ROOT)
+			ROOT_PARTITION_LABEL=$(blkid -o value -s LABEL "$ROOT_PARTITION")
+			HOME_PARTITION=$(findfs LABEL=NX_HOME)
+			HOME_PARTITION_LABEL=$(blkid -o value -s LABEL "$HOME_PARTITION")
+
+			if mountpoint -q "/media/$USER/NX_ROOT"; then
+				puts_info "/media/root is already mounted. Unmounting..."
+				umount "/media/$USER/NX_ROOT"
+			fi
+
+			if mountpoint -q "/media/$USER/NX_HOME"; then
+				puts_info "/media/home is already mounted. Unmounting..."
+				umount "/media/$USER/NX_HOME"
+			fi
+
+			mkdir -p "/media/$USER/NX_ROOT" "/media/$USER/NX_HOME"
+
+			puts_info "Mounting $ROOT_PARTITION_LABEL to /media/$USER/NX_ROOT..."
+			mount -t auto "$ROOT_PARTITION" "/media/$USER/NX_ROOT"
+
+			puts_info "Mounting $HOME_PARTITION_LABEL to /media/$USER/NX_HOME..."
+			mount -t auto "$HOME_PARTITION" "/media/$USER/NX_HOME"
+
+			COMPRESSED_XFS_BACKUP="/media/$USER/NX_HOME/$NUTS_DIR_XFS/xfs-backup.xfs.zst"
+			XFS_BACKUP_CHECKSUM_FILE="/media/$USER/NX_HOME/$NUTS_DIR_XFS/xfs-backup.md5sum"
+			DECOMPRESSED_XFS_BACKUP="/media/$USER/NX_HOME/$NUTS_DIR_XFS/xfs-backup.xfs"
+
+			if [ ! -f "$COMPRESSED_XFS_BACKUP" ]; then
+				puts_error "XFS backup file $COMPRESSED_XFS_BACKUP not found. Quitting."
+				exit 1
+			fi
+
+			if [ ! -f "$XFS_BACKUP_CHECKSUM_FILE" ]; then
+				puts_error "XFS backup checksum file $XFS_BACKUP_CHECKSUM_FILE not found. Quitting."
+				exit 1
+			fi
+
+			BACKUP_SUM=$(md5sum "$COMPRESSED_XFS_BACKUP" | cut -c -32)
+			GEN_BAK_SUM=$(tail "$XFS_BACKUP_CHECKSUM_FILE" | cut -c -32)
+
+			if [[ "$BACKUP_SUM" == "$GEN_BAK_SUM" ]]; then
+				puts_info "Backup checksum matches, continuing..."
+			else
+				puts_error "Backup checksum does not match, quitting."
+				exit 1
+			fi
+
+			if [ -x "/usr/bin/calamares" ]; then
+				puts_info "Running $TOOL_NAME from a Live session, proceed with restoration of $ROOT_PARTITION_LABEL, continuing..."
+				zstd -dc "$COMPRESSED_XFS_BACKUP"
+				xfsrestore -f "$DECOMPRESSED_XFS_BACKUP" "$ROOT_PARTITION"
+
+				puts_success "Success! $ROOT_PARTITION_LABEL has been restored."
+
+				unmount_directory /media/root
+				unmount_directory /media/home
+			else
+				puts_warning "Only use this option from a Live session and in an emergency."
+				puts_info "For a non-emergency situation, use: "$TOOL_SHRT_NAME restore"."
+
+				unmount_directory /media/root
+				unmount_directory /media/home
+				exit 0
+			fi
+
+			# -- After restoring the XFS backup reboot the device.
 
 			puts_info "Time to reboot. Bye."
 
