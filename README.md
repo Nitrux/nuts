@@ -74,7 +74,6 @@ sudo cp $HOME/nuts/etc/nuts.conf /etc
 
 **Update**: `sudo nuts update`
 - Updates the currently installed root using the specified media in `nuts-query` and backs up the current root directory and partition.
-   - _♦ Information: This operation also switches the kernel on supported hardware after completing the update, i.e., not you, Nvidia._
 
 **Restore**: `sudo nuts restore`
 - Restores the backup of the root directory generated during the update.
