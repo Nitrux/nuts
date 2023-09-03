@@ -494,9 +494,9 @@ done
 			puts_info "Mounting $HOME_PARTITION_LABEL to /media/$NUTS_USER/NX_HOME..."
 			mount -t auto "$HOME_PARTITION" "/media/$NUTS_USER/NX_HOME"
 
-			COMPRESSED_XFS_BACKUP="/media/$NUTS_USER/NX_HOME/$NUTS_DIR_XFS/xfs-backup.xfs.zst"
-			XFS_BACKUP_CHECKSUM_FILE="/media/$NUTS_USER/NX_HOME/$NUTS_DIR_XFS/xfs-backup.md5sum"
-			DECOMPRESSED_XFS_BACKUP="/media/$NUTS_USER/NX_HOME/$NUTS_DIR_XFS/xfs-backup.xfs"
+			COMPRESSED_XFS_BACKUP="/media/$NUTS_USER/NX_HOME/.nuts/xfs-backup.xfs.zst"
+			XFS_BACKUP_CHECKSUM_FILE="/media/$NUTS_USER/NX_HOME/.nuts/xfs-backup.md5sum"
+			DECOMPRESSED_XFS_BACKUP="/media/$NUTS_USER/NX_HOME/.nuts/xfs-backup.xfs"
 
 			if [ ! -f "$COMPRESSED_XFS_BACKUP" ]; then
 				puts_error "XFS backup file $COMPRESSED_XFS_BACKUP not found. Quitting."
