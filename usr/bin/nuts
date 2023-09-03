@@ -387,7 +387,7 @@ done
 				zstd -T"$ZSTD_COMP_THREADS" --ultra -19 "$XFS_BACKUP_FILE" -o "$COMPRESSED_XFS_BACKUP"
 			fi
 
-			md5sum "$COMPRESSED_XFS_BACKUP" > "$NUTS_DIR_BAK/xfs-backup.md5sum"
+			md5sum "$COMPRESSED_XFS_BACKUP" > "$NUTS_DIR_XFS/xfs-backup.md5sum"
 
 			sync
 
