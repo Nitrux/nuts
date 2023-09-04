@@ -520,7 +520,7 @@ done
 
 			if [ -x "/usr/bin/calamares" ]; then
 				puts_info "Running $TOOL_NAME from a Live session, proceed with restoration of $ROOT_PARTITION_LABEL, continuing..."
-				zstd -dc "$COMPRESSED_XFS_BACKUP"
+				zstd -d "$COMPRESSED_XFS_BACKUP"
 				xfsrestore -f "$DECOMPRESSED_XFS_BACKUP" "$ROOT_PARTITION"
 
 				puts_success "Success! $ROOT_PARTITION_LABEL has been restored."
