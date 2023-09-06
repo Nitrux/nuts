@@ -275,7 +275,7 @@ done
 
 
 			# -- Check Internet connection but do nothing yet.
-			# -- For some reason, ping fails in GNOME Boxes even though ping works literally everywhere else. Use curl as an alternative to verify a connection.
+			# -- For some reason, ping fails in GNOME Boxes even though ping works literally everywhere else. Use wget as an alternative to verify a connection.
 			# -- Exit if connection test fails.
 
 			if ping -q -c 1 -W 1 nxos.org >/dev/null && ping -q -c 1 -W 1 github.com >/dev/null || wget -q --spider https://filesamples.com/samples/document/txt/sample1.txt; then
