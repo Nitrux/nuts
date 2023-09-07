@@ -258,7 +258,7 @@ SOURCE_DIR="$NUTS_DIR_SQS"
 DESTINATION_DIR="/"
 EXCLUDES_FILE="/tmp/rsync-exclude.list"
 
-RSYNC_COMMAND="stdbuf -oL rsync -aHAXrh --info=progress2 --progress --exclude-from=$EXCLUDES_FILE $SOURCE_DIR/ $DESTINATION_DIR"
+RSYNC_COMMAND="stdbuf -oL rsync -aDHAXrh --numeric-ids --delete --force --info=progress2 --progress --exclude-from=$EXCLUDES_FILE $SOURCE_DIR/ $DESTINATION_DIR"
 eval "$RSYNC_COMMAND" | {
   while IFS= read -r line; do
     echo -ne "\rProgress: $line\033[K"

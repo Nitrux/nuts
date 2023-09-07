@@ -1,4 +1,14 @@
-/dev/*
+# List of files and directories to be excluded when using rsync.
+# rsync-exclude.list 2023 (c) Nitrux Latinoamericana S.C.
+
+# This list is used for both update and restore operations.
+#
+# To exclude a file specifiy the full path, i.e., /etc/fstab
+# To exclude a directory and its contents specify the path of the directory, i.e., /home/
+# To exclude a directory but not its contents specify the path of directory and use an asterisk, i.e., /home/*
+# To include a directory and its contents or a file, don't add either to the list.
+
+/dev/
 /etc/fstab
 /etc/group
 /etc/gshadow
@@ -14,7 +24,16 @@
 /etc/default/grub
 /home/
 /proc/
-/run/*
-/sys/*
-/tmp/*
-/var/*
+/run/
+/sys/
+/tmp/
+/var/cache/
+/var/lib/
+/var/local/
+/var/lock/
+/var/log/
+/var/mail/
+/var/opt/
+/var/run/
+/var/spool/
+/var/tmp/
