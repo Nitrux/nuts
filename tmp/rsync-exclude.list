@@ -17,5 +17,5 @@
 /run/*
 /sys/*
 /tmp/*
-/usr/*
+/usr/lib/*
 /var/*
