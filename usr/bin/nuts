@@ -360,10 +360,9 @@ done
 
 
 			# -- Create a backup of the partition for redundancy using xfsdump to later use it during a rescue operation from a Live session.
-			# -- By the way, only *one* backup file is created.
-			# -- Compress the backup file using zstd.
+			# -- By the way, only *one* backup file is created, then compress the backup file using zstd. We must delete the original file after compression.
 			# -- This backup is created outside of the chroot because xfsdump relies on /etc/mtab, and that file is unavailable when using overlayroot-chroot.
-			# -- Since the XFS backup is a "full-backup" (level 0), delete that file if it exists, as it won't support incremental updates, nor is that the point.
+			# -- Since the XFS backup is a "full-backup" (level 0), it won't support incremental updates.
 
 			ROOT_PARTITION=$(findfs LABEL=NX_ROOT)
 			ROOT_PARTITION_LABEL=$(blkid -o value -s LABEL "$ROOT_PARTITION")
@@ -371,24 +370,17 @@ done
 			COMPRESSED_XFS_BACKUP="$XFS_BACKUP_FILE.zst"
 			ZSTD_COMP_THREADS=$(nproc)
 
-			if [ -e "$COMPRESSED_XFS_BACKUP" ] || [ -e "$XFS_BACKUP_FILE" ]; then
-				puts_info "Cleaning existing redundant backup files, continuing..."
-				rm -f "$XFS_BACKUP_FILE" "$COMPRESSED_XFS_BACKUP"
+			if [ -e "$COMPRESSED_XFS_BACKUP" ]; then
+				puts_error "Redundant backup of $ROOT_PARTITION_LABEL not found!, creating it..."
+				xfsdump -l0 -L "Nitrux_Update_Tool_System-XFS_Backup" -M "NX_BAK-Vol-1" -f "$XFS_BACKUP_FILE" "$ROOT_PARTITION"
+				zstd -T"$ZSTD_COMP_THREADS" --ultra -19 "$XFS_BACKUP_FILE" -o "$COMPRESSED_XFS_BACKUP"
+				rm -f "$XFS_BACKUP_FILE"
+				md5sum "$COMPRESSED_XFS_BACKUP" > "$NUTS_DIR_XFS/xfs-backup.md5sum"
+				sync
+				puts_success "Success! $ROOT_PARTITION_LABEL redundant backup has been created."
+			else
+				puts_info "Redundant backup of $ROOT_PARTITION_LABEL found, skipping..."
 			fi
-
-			puts_info "Creating redundant backup of $ROOT_PARTITION_LABEL, continuing..."
-			xfsdump -l0 -L "Nitrux_Update_Tool_System-XFS_Backup" -M "NX_BAK-Vol-1" -f "$XFS_BACKUP_FILE" "$ROOT_PARTITION"
-
-			puts_info "Compressed backup file not found: $COMPRESSED_XFS_BACKUP, creating it..."
-			zstd -T"$ZSTD_COMP_THREADS" --ultra -19 "$XFS_BACKUP_FILE" -o "$COMPRESSED_XFS_BACKUP"
-
-			rm -f "$XFS_BACKUP_FILE"
-
-			md5sum "$COMPRESSED_XFS_BACKUP" > "$NUTS_DIR_XFS/xfs-backup.md5sum"
-
-			sync
-
-			puts_success "Success! $ROOT_PARTITION_LABEL redundant backup has been created."
 
 
 			# -- Step 2: Actual Update sub-process
@@ -412,10 +404,10 @@ done
 			# -- Always download the latest component.
 
 			overlay_ch rm -f /usr/bin/nuts-cru >"$OUTPUT_FILE" 2>&1
-			overlay_ch axel -o /usr/bin -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/usr/bin/nuts-cru" >"$OUTPUT_FILE"
-			overlay_ch axel -o /etc -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/etc/nuts.conf" >"$OUTPUT_FILE"
-			overlay_ch axel -o /tmp -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-query.info" >"$OUTPUT_FILE"
-			overlay_ch chmod +x /usr/bin/nuts-cru >"$OUTPUT_FILE"
+			overlay_ch axel -o /usr/bin -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/usr/bin/nuts-cru" >"$OUTPUT_FILE" 2>&1
+			overlay_ch axel -o /etc -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/etc/nuts.conf" >"$OUTPUT_FILE" 2>&1
+			overlay_ch axel -o /tmp -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-query.info" >"$OUTPUT_FILE" 2>&1
+			overlay_ch chmod +x /usr/bin/nuts-cru >"$OUTPUT_FILE" 2>&1
 			overlay_ch nuts-cru
 
 
@@ -437,9 +429,9 @@ done
 			# -- Always download the latest component.
 
 			overlay_ch rm -f /usr/bin/nuts-crr >"$OUTPUT_FILE" 2>&1
-			overlay_ch axel -o /usr/bin -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/usr/bin/nuts-crr" >"$OUTPUT_FILE"
-			overlay_ch axel -o /etc -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/etc/nuts.conf" >"$OUTPUT_FILE"
-			overlay_ch chmod +x /usr/bin/nuts-crr >"$OUTPUT_FILE"
+			overlay_ch axel -o /usr/bin -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/usr/bin/nuts-crr" >"$OUTPUT_FILE" 2>&1
+			overlay_ch axel -o /etc -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/etc/nuts.conf" >"$OUTPUT_FILE" 2>&1
+			overlay_ch chmod +x /usr/bin/nuts-crr >"$OUTPUT_FILE" 2>&1
 			overlay_ch nuts-crr
 
 
@@ -549,11 +541,11 @@ done
 
 			NUTS_GIT_DIR=$(mktemp -d)
 
-			overlay_ch mount -t devtmpfs dev /dev >"$OUTPUT_FILE"
-			overlay_ch git clone --depth=1 --branch "$NUTS_BRANCH" https://github.com/Nitrux/nuts.git "$NUTS_GIT_DIR" >"$OUTPUT_FILE"
-			overlay_ch cp /nuts/usr/bin/nuts /usr/bin >"$OUTPUT_FILE"
-			overlay_ch cp /nuts/etc/nuts.conf /etc >"$OUTPUT_FILE"
-			overlay_ch umount /dev >"$OUTPUT_FILE"
+			overlay_ch mount -t devtmpfs dev /dev >"$OUTPUT_FILE" 2>&1
+			overlay_ch git clone --depth=1 --branch "$NUTS_BRANCH" https://github.com/Nitrux/nuts.git "$NUTS_GIT_DIR" >"$OUTPUT_FILE" 2>&1
+			overlay_ch cp /nuts/usr/bin/nuts /usr/bin >"$OUTPUT_FILE" 2>&1
+			overlay_ch cp /nuts/etc/nuts.conf /etc >"$OUTPUT_FILE" 2>&1
+			overlay_ch umount /dev >"$OUTPUT_FILE" 2>&1
 
 			puts_success "Success! $TOOL_NAME has been updated."
 
