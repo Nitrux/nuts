@@ -17,11 +17,5 @@
 /run/*
 /sys/*
 /tmp/*
-/usr/bin/*
-/usr/games/*
-/usr/include/*
-/usr/local/*
-/usr/sbin/*
-/usr/share/*
-/usr/src/*
+/usr/lib/dbus-1.0/*
 /var/*
