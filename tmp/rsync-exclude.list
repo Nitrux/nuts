@@ -11,6 +11,7 @@
 /etc/subuid
 /etc/sudoers
 /etc/timezone
+/etc/default/grub
 /home/
 /proc/
 /run/*
