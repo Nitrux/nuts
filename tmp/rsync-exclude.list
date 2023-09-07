@@ -1,6 +1,15 @@
-/boot/*
 /dev/*
 /etc/shadow
+/etc/group
+/etc/fstab
+/etc/gshadow
+/etc/hostname
+/etc/passwd
+/etc/resolv.conf
+/etc/subgid
+/etc/subuid
+/etc/sudoers
+/etc/timezone
 /home/
 /proc/
 /run/*
