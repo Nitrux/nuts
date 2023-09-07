@@ -525,14 +525,14 @@ done
 
 				rm -f "$DECOMPRESSED_XFS_BACKUP"
 
-				unmount_directory /media/root
-				unmount_directory /media/home
+				unmount_directory "/media/$NUTS_USER/NX_ROOT"
+				unmount_directory "/media/$NUTS_USER/NX_HOME"
 			else
 				puts_warning "Only use this option from a Live session and in an emergency."
 				puts_info "For a non-emergency situation, use: "$TOOL_SHRT_NAME restore"."
 
-				unmount_directory /media/root
-				unmount_directory /media/home
+				unmount_directory "/media/$NUTS_USER/NX_ROOT"
+				unmount_directory "/media/$NUTS_USER/NX_HOME"
 				exit 0
 			fi
 
