@@ -523,6 +523,8 @@ done
 
 				puts_success "Success! $ROOT_PARTITION_LABEL has been restored."
 
+				rm -f "$DECOMPRESSED_XFS_BACKUP"
+
 				unmount_directory /media/root
 				unmount_directory /media/home
 			else
