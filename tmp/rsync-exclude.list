@@ -17,5 +17,5 @@
 /run/*
 /sys/*
 /tmp/*
-/usr/lib/qt5/*
+/usr/lib/policykit-1/*
 /var/*
