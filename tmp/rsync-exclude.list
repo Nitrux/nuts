@@ -18,4 +18,10 @@
 /sys/*
 /tmp/*
 /usr/bin/*
+/usr/games/*
+/usr/include/*
+/usr/local/*
+/usr/sbin/*
+/usr/share/*
+/usr/src/*
 /var/*
