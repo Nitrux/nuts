@@ -363,6 +363,7 @@ done
 			# -- By the way, only *one* backup file is created.
 			# -- Compress the backup file using zstd.
 			# -- This backup is created outside of the chroot because xfsdump relies on /etc/mtab, and that file is unavailable when using overlayroot-chroot.
+			# -- Since the XFS backup is a "full-backup" (level 0), delete that file if it exists, as it won't support incremental updates, nor is that the point.
 
 			ROOT_PARTITION=$(findfs LABEL=NX_ROOT)
 			ROOT_PARTITION_LABEL=$(blkid -o value -s LABEL "$ROOT_PARTITION")
@@ -370,15 +371,13 @@ done
 			COMPRESSED_XFS_BACKUP="$XFS_BACKUP_FILE.zst"
 			ZSTD_COMP_THREADS=$(nproc)
 
-			puts_info "Creating redundant backup of $ROOT_PARTITION_LABEL, continuing..."
-
-			puts_info "Backup file not found: $XFS_BACKUP_FILE, creating it..."
-			xfsdump -l0 -L "Nitrux_Update_Tool_System-XFS_Backup" -M "NX_BAK-Vol-1" -f "$XFS_BACKUP_FILE" "$ROOT_PARTITION"
-
-			if [ -e "$COMPRESSED_XFS_BACKUP" ]; then
+			if [ -e "$COMPRESSED_XFS_BACKUP" ] || [ -e "$XFS_BACKUP_FILE" ]; then
 				puts_info "Cleaning existing redundant backup files, continuing..."
-				rm -f "$COMPRESSED_XFS_BACKUP"
+				rm -f "$XFS_BACKUP_FILE" "$COMPRESSED_XFS_BACKUP"
 			fi
+
+			puts_info "Creating redundant backup of $ROOT_PARTITION_LABEL, continuing..."
+			xfsdump -l0 -L "Nitrux_Update_Tool_System-XFS_Backup" -M "NX_BAK-Vol-1" -f "$XFS_BACKUP_FILE" "$ROOT_PARTITION"
 
 			puts_info "Compressed backup file not found: $COMPRESSED_XFS_BACKUP, creating it..."
 			zstd -T"$ZSTD_COMP_THREADS" --ultra -19 "$XFS_BACKUP_FILE" -o "$COMPRESSED_XFS_BACKUP"
