@@ -17,5 +17,16 @@
 /run/*
 /sys/*
 /tmp/*
-/usr/lib/x86_64-linux-gnu/*
+/usr/bin/*
+/usr/games/*
+/usr/include/*
+/usr/lib/*
+/usr/lib32/*
+/usr/lib64/*
+/usr/libexec/*
+/usr/libx32/*
+/usr/local/*
+/usr/sbin/*
+/usr/share/*
+/usr/src/*
 /var/*
