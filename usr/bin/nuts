@@ -370,7 +370,7 @@ done
 			COMPRESSED_XFS_BACKUP="$XFS_BACKUP_FILE.zst"
 			ZSTD_COMP_THREADS=$(nproc)
 
-			if [ -e "$COMPRESSED_XFS_BACKUP" ]; then
+			if [ -e "$COMPRESSED_XFS_BACKUP" ] || [ -e "$XFS_BACKUP_FILE" ]; then
 				puts_error "Redundant backup of $ROOT_PARTITION_LABEL not found!, creating it..."
 				xfsdump -l0 -L "Nitrux_Update_Tool_System-XFS_Backup" -M "NX_BAK-Vol-1" -f "$XFS_BACKUP_FILE" "$ROOT_PARTITION"
 				zstd -T"$ZSTD_COMP_THREADS" --ultra -19 "$XFS_BACKUP_FILE" -o "$COMPRESSED_XFS_BACKUP"
