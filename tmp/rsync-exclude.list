@@ -17,5 +17,6 @@
 /run/*
 /sys/*
 /tmp/*
-/usr/lib/dbus-1.0/*
+/usr/lib/kauth/*
+/usr/lib/polkit-1/*
 /var/*

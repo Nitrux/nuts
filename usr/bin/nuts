@@ -536,8 +536,7 @@ done
 
 			# -- Step Y: Self-Update Process
 
-			# -- Whenever a new update to the utility is uploaded to the repository, users must do the following to update the utility itself.
-			# -- Basically enter the chroot, download the main script and then the configuration file and exit.
+			# -- Whenever a new update to the utility is uploaded to the repository, users use this <operation> to update nuts.
 
 			overlay_ch rm -f /usr/bin/nuts-sup >"$OUTPUT_FILE" 2>&1
 			overlay_ch axel -o /usr/bin -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/usr/bin/nuts-sup" >"$OUTPUT_FILE" 2>&1
