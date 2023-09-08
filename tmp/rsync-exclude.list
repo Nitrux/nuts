@@ -8,4 +8,23 @@
 # To exclude a directory but not its contents specify the path of directory and use an asterisk, i.e., /home/*
 # To include a directory and its contents or a file, don't add either to the list.
 
-/
+/dev/*
+/etc/fstab
+/etc/group
+/etc/gshadow
+/etc/hostname
+/etc/hosts
+/etc/passwd
+/etc/resolv.conf
+/etc/shadow
+/etc/subgid
+/etc/subuid
+/etc/sudoers
+/etc/timezone
+/etc/default/grub
+/home/*
+/proc/*
+/run/*
+/sys/*
+/tmp/*
+/var/*
