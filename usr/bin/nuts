@@ -370,7 +370,7 @@ done
 			COMPRESSED_XFS_BACKUP="$XFS_BACKUP_FILE.zst"
 			ZSTD_COMP_THREADS=$(nproc)
 
-			if [ -f "$COMPRESSED_XFS_BACKUP" ]; then
+			if [[ -f "$COMPRESSED_XFS_BACKUP" ]]; then
 				puts_info "Redundant backup of $ROOT_PARTITION_LABEL found, skipping..."
 			else
 				puts_error "Redundant backup of $ROOT_PARTITION_LABEL not found, creating it..."
