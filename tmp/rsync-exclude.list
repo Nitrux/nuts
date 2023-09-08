@@ -9,6 +9,7 @@
 # To include a directory and its contents or a file, don't add either to the list.
 
 /dev/*
+/etc/default/grub
 /etc/fstab
 /etc/group
 /etc/gshadow
@@ -17,12 +18,12 @@
 /etc/passwd
 /etc/resolv.conf
 /etc/sddm.conf
+/etc/sddm.conf.d/kde_settings.conf
 /etc/shadow
 /etc/subgid
 /etc/subuid
 /etc/sudoers
 /etc/timezone
-/etc/default/grub
 /home/
 /proc/
 /run/*
