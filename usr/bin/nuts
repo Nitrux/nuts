@@ -403,7 +403,7 @@ done
 			# -- Run nuts-cru to perform the backup and update.
 			# -- Always download the latest component. The component will remain in the filesystem after using it; however, once the user executes this <operation> again, it will be deleted and re-downloaded.
 
-			overlay_ch find /usr/bin -type f -name "nuts-crr" -exec rm {} \; >"$OUTPUT_FILE" 2>&1
+			overlay_ch find /usr/bin -type f -name "nuts-cru" -exec rm {} \; >"$OUTPUT_FILE" 2>&1
 			overlay_ch axel -o /usr/bin -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-cru" >"$OUTPUT_FILE" 2>&1
 			overlay_ch axel -o /tmp -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-query.info" >"$OUTPUT_FILE" 2>&1
 			overlay_ch nuts-cru
