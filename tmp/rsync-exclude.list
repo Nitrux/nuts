@@ -16,6 +16,7 @@
 /etc/hosts
 /etc/passwd
 /etc/resolv.conf
+/etc/sddm.conf
 /etc/shadow
 /etc/subgid
 /etc/subuid
