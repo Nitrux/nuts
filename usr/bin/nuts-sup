@@ -60,6 +60,24 @@ error() {
 }
 
 
+# -- Define the path of the nuts configuration file.
+
+CONFIG_FILE="/etc/nuts.conf"
+
+
+# -- Load values from configuration file.
+# -- Include fix for SC1090 – ShellCheck.
+
+if [[ ! -f $CONFIG_FILE ]]; then
+    puts_error "$TOOL_NAME configuration file not found!, quitting." 2>&1
+    exit 1
+else
+	puts_success "Success! $TOOL_NAME configuration file found, continuing..."
+	# shellcheck source=/dev/null
+	. "$CONFIG_FILE"
+fi
+
+
 # -- Variables.
 
 OUTPUT_FILE=$(mktemp)
