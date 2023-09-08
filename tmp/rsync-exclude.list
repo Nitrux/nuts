@@ -27,13 +27,3 @@
 /run/
 /sys/
 /tmp/
-/var/cache/
-/var/lib/
-/var/local/
-/var/lock/
-/var/log/
-/var/mail/
-/var/opt/
-/var/run/
-/var/spool/
-/var/tmp/
