@@ -266,7 +266,7 @@ done
 			# -- Ensure that this utility runs in Nitrux and has an Internet connection.
 			# -- Exit if value is not 'nitrux'.
 
-			if [ "$CURRENT_DIST" == "$TARGET_DIST" ]; then
+			if [[ "$CURRENT_DIST" == "$TARGET_DIST" ]]; then
 				puts_success "This utility is running in ${TARGET_DIST^}. Continuing..."
 			else
 				puts_error "$TOOL_NAME is intended to work exclusively in ${TARGET_DIST^}. Using this utility in ${CURRENT_DIST^} will break it and not work at all. Quitting."
@@ -292,7 +292,7 @@ done
 			# -- Verify that the build list exists.
 			# -- Exit if it doesn't.
 
-			if [ ! -f "/installed_pkgs_end.txt" ]; then
+			if [[ ! -f "/installed_pkgs_end.txt" ]]; then
 				puts_error "Build list not found. Quitting."
 				exit 1
 			else
@@ -307,7 +307,7 @@ done
 			INFO_FILE="/tmp/nuts-query.info"
 			REMOTE_URL="https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-query.info"
 
-			if [ ! -f "$INFO_FILE" ]; then
+			if [[ ! -f "$INFO_FILE" ]]; then
 				puts_info "Can't find nuts-query.info, downloading..."
 			else
 				puts_info "Found nuts-query.info, overwriting..."
@@ -325,7 +325,7 @@ done
 			LOCAL_SUM=$(md5sum /installed_pkgs_end.txt | cut -c -32)
 			REMOTE_SUM=$(tail /tmp/nuts-query.info | grep rootlistsum= | cut -c -44 | rev | cut -c -32 | rev)
 
-			if [ "$LOCAL_SUM" == "$REMOTE_SUM" ]; then
+			if [[ "$LOCAL_SUM" == "$REMOTE_SUM" ]]; then
 				puts_info "The current installation of ${TARGET_DIST^} is up to date."
 				exit 0
 			else
@@ -391,7 +391,7 @@ done
 
 			OVERLAYROOT="/usr/sbin/overlayroot-chroot"
 
-			if [ ! -f "$OVERLAYROOT" ]; then
+			if [[ ! -f "$OVERLAYROOT" ]]; then
 				puts_error "Can't find overlayroot, quitting."
 				exit 1
 			else
@@ -480,12 +480,12 @@ done
 			XFS_BACKUP_CHECKSUM_FILE="/media/$NUTS_USER/NX_HOME/.nuts/xfs/xfs-backup.md5sum"
 			DECOMPRESSED_XFS_BACKUP="/media/$NUTS_USER/NX_HOME/.nuts/xfs/xfs-backup.xfs"
 
-			if [ ! -f "$COMPRESSED_XFS_BACKUP" ]; then
+			if [[ ! -f "$COMPRESSED_XFS_BACKUP" ]]; then
 				puts_error "XFS backup file $COMPRESSED_XFS_BACKUP not found. Quitting."
 				exit 1
 			fi
 
-			if [ ! -f "$XFS_BACKUP_CHECKSUM_FILE" ]; then
+			if [[ ! -f "$XFS_BACKUP_CHECKSUM_FILE" ]]; then
 				puts_error "XFS backup checksum file $XFS_BACKUP_CHECKSUM_FILE not found. Quitting."
 				exit 1
 			fi
@@ -500,7 +500,7 @@ done
 				exit 1
 			fi
 
-			if [ -x "/usr/bin/calamares" ]; then
+			if [[ -x "/usr/bin/calamares" ]]; then
 				puts_info "Running $TOOL_NAME from a Live session, proceed with restoration of $ROOT_PARTITION_LABEL, continuing..."
 				zstd -d "$COMPRESSED_XFS_BACKUP"
 				xfsrestore -f "$DECOMPRESSED_XFS_BACKUP" "/media/$NUTS_USER/NX_ROOT"
