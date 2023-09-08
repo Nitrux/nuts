@@ -22,8 +22,8 @@
 /etc/sudoers
 /etc/timezone
 /etc/default/grub
-/home/*
-/proc/*
+/home/
+/proc/
 /run/*
 /sys/*
 /tmp/*
