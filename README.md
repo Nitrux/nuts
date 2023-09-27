@@ -96,6 +96,8 @@ sudo cp $HOME/nuts/etc/nuts.conf /etc
 nuts -h: Displays the help of nuts.
 nuts -d: Runs nuts in verbose mode.
 nuts -v: Displays the version of nuts.
+nuts --use-main-branch: Defines the main branch of the Nitrux Update Tool System to download its components.
+nuts --use-development-branch: Defines the development branch of the Nitrux Update Tool System to download its components.
 ```
 
 # Licensing

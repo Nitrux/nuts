@@ -216,9 +216,11 @@ for cmd; do
 				"    Report bugs at: https://github.com/Nitrux/nuts/issues." \
 				"" \
 				"Flags:" \
-				"    -h or --help         Show this help." \
-				"    -v or --version      Show the version." \
-				"    -d or --debug        Enable verbose output." \
+				"    -h or --help                 Show this help." \
+				"    -v or --version              Show the version." \
+				"    -d or --debug                Enable verbose output." \
+				"    --use-main-branch            Defines the main branch of the Nitrux Update Tool System to download its components." \
+				"    --use-development-branch     Defines the development branch of the Nitrux Update Tool System to download its components." \
 				"" \
 				"Operations:" \
 				"    update            Update the currently installed root using the media specified in nuts-query and creates a backup of the current root directory." \
@@ -255,6 +257,16 @@ for cmd; do
 
 		-d | --debug)
 			set -x
+			shift
+			;;
+
+		--use-main-banch)
+			sed -i 's+NUTS_BRANCH=development+NUTS_BRANCH=main+g' /etc/nuts.conf
+			shift
+			;;
+
+		--use-development-branch)
+			sed -i 's+NUTS_BRANCH=main+NUTS_BRANCH=development+g' /etc/nuts.conf
 			shift
 			;;
 	esac
