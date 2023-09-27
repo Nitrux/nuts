@@ -207,7 +207,7 @@ for DIR in "${DIRECTORIES[@]}"; do
   if [[ ! -d "$DIR" ]]; then
     puts_error "Directory '$DIR' does not exist. Creating the directory..."
     if ! mkdir -p "$DIR"; then
-      puts_error "Failed to create directory '$DIR'. Exiting..."
+      puts_error "Failed to create directory '$DIR', quitting..."
       exit 1
     fi
     puts_info "Directory '$DIR' created successfully."
