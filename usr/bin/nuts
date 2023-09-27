@@ -636,7 +636,7 @@ done
 
 			# -- Display branch used to update.
 
-			puts_info "Using branch $NUTS_BRANCH to update $TOOL_NAME, continuing..."
+			puts_info "Using branch ""$NUTS_BRANCH"" to update $TOOL_NAME, continuing..."
 
 
 			# -- Whenever a new update to the utility is uploaded to the repository, users use this <operation> to update nuts.
