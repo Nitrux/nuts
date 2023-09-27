@@ -16,4 +16,4 @@ OTASUM=0e401ecafc585951cf874593a282b1f1
 # Define the list of mirrors to download the file.
 #
 [URL]
-MIRRORLIST=https://zenlayer.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.09.27-13.17-amd64.squashfs,https://netactuate.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.09.27-13.17-amd64.squashfs,https://versaweb.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.09.27-13.17-amd64.squashfs,https://sitsa.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.09.27-13.17-amd64.squashfs
+MIRRORLIST=https://master.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.09.27-13.17-amd64.squashfs
