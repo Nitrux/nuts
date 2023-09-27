@@ -30,8 +30,8 @@ set -eu
 
 # -- Set program name and version.
 
-TOOL_NAME="Nitrux Update System Tool"
-BKCP_VERSION="$(md5sum /usr/bin/nuts-crr | cut -c -32)"
+TOOL_NAME="Nitrux Update System Tool (restore component)"
+CRR_VERSION="$(md5sum /usr/bin/nuts-crr | cut -c -32)"
 
 
 # -- Print informative messages to stderr.
@@ -68,6 +68,11 @@ print_message() {
 		printf "%s\n" "$@" >&2
 	fi
 }
+
+
+# -- Display version of running component.
+
+print_info "$TOOL_NAME version $CRR_VERSION."
 
 
 # -- Define the path of the nuts configuration file.
@@ -127,6 +132,37 @@ unmount_directory() {
 }
 
 
+# -- Variables.
+
+CURRENT_DIST=$(awk -F'=' '/VERSION_CODENAME/{print $NF}' /etc/os-release)
+TARGET_DIST="nitrux"
+OUTPUT_FILE=$(mktemp)
+
+#   ====== START ======
+
+# -- Flag parsing.
+
+for cmd; do
+	case "$cmd" in
+		-v | --version)
+			print_message "$TOOL_NAME" \
+				"" \
+				"Version (backup component): $CRR_VERSION." \
+				"" \
+				"The license used for this file and its contents is: BSD-3-Clause." \
+				"" \
+				"Authors:" \
+				"" \
+				"    Copyright <2023> <Uri Herrera <uri_herrera@nxos.org>>" \
+				"" \
+				"(c) $FECHA Some Rights Reserved. Made by $VENDOR"
+
+			exit
+			;;
+	esac
+done
+
+
 # -- Mount the devices filesystem.
 # -- Check if /dev is already mounted.
 
@@ -152,37 +188,6 @@ fi
 
 puts_info "Mounting $HOME_PARTITION to /home..."
 mount -t auto "$HOME_PARTITION" /home
-
-
-# -- Variables.
-
-CURRENT_DIST=$(awk -F'=' '/VERSION_CODENAME/{print $NF}' /etc/os-release)
-TARGET_DIST="nitrux"
-OUTPUT_FILE=$(mktemp)
-
-#   ====== START ======
-
-# -- Flag parsing.
-
-for cmd; do
-	case "$cmd" in
-		-v | --version)
-			print_message "$TOOL_NAME" \
-				"" \
-				"Version (backup component): $BKCP_VERSION." \
-				"" \
-				"The license used for this file and its contents is: BSD-3-Clause." \
-				"" \
-				"Authors:" \
-				"" \
-				"    Copyright <2023> <Uri Herrera <uri_herrera@nxos.org>>" \
-				"" \
-				"(c) $FECHA Some Rights Reserved. Made by $VENDOR"
-
-			exit
-			;;
-	esac
-done
 
 
 # -- Create the directories for nuts.

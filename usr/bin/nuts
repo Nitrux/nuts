@@ -83,6 +83,11 @@ puts_warning() {
 }
 
 
+# -- Display version of running component.
+
+print_info "$TOOL_NAME version $TOOL_VERSION."
+
+
 # -- Check if this is running as root.
 # -- Exit if not running as root.
 
