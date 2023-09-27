@@ -287,8 +287,6 @@ else
     fi
 fi
 
-mv /tmp/ota-*-amd64.squashfs "$OTA_FILE"
-
 
 # -- Verify the checksum of the OTA file. Use the checksum from the query file.
 # -- Exit if checksum doesn't match.
