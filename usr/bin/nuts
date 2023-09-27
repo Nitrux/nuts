@@ -268,9 +268,9 @@ done
 			# -- Exit if value is not 'nitrux'.
 
 			if [[ "$CURRENT_DIST" == "$TARGET_DIST" ]]; then
-				puts_success "This utility is running in ${TARGET_DIST^}. Continuing..."
+				puts_success "This utility is running in ${TARGET_DIST^}, continuing..."
 			else
-				puts_error "$TOOL_NAME is intended to work exclusively in ${TARGET_DIST^}. Using this utility in ${CURRENT_DIST^} will break it and not work at all. Quitting."
+				puts_error "$TOOL_NAME is intended to work exclusively in ${TARGET_DIST^}. Using this utility in ${CURRENT_DIST^} will break it and not work at all, quitting."
 				exit 1
 			fi
 
@@ -280,9 +280,9 @@ done
 			# -- Exit if connection test fails.
 
 			if ping -q -c 1 -W 1 nxos.org >/dev/null && ping -q -c 1 -W 1 github.com >/dev/null || wget -q --spider https://filesamples.com/samples/document/txt/sample1.txt; then
-				puts_success "This computer can reach the Internet. Continuing..."
+				puts_success "This computer can reach the Internet, continuing..."
 			else
-				puts_error "This computer cannot reach the Internet. Quitting."
+				puts_error "This computer cannot reach the Internet, quitting."
 				exit 1
 			fi
 
@@ -294,10 +294,10 @@ done
 			# -- Exit if it doesn't.
 
 			if [[ ! -f "/installed_pkgs_end.txt" ]]; then
-				puts_error "Build list not found. Quitting."
+				puts_error "Build list not found, quitting."
 				exit 1
 			else
-				puts_info "Build list found. Continuing..."
+				puts_info "Build list found, continuing..."
 			fi
 
 
@@ -327,10 +327,10 @@ done
 			REMOTE_SUM=$(tail /tmp/nuts-query.info | grep rootlistsum= | cut -c -44 | rev | cut -c -32 | rev)
 
 			if [[ "$LOCAL_SUM" == "$REMOTE_SUM" ]]; then
-				puts_info "The current installation of ${TARGET_DIST^} is up to date."
+				puts_info "No updates were found for ${TARGET_DIST^}."
 				exit 0
 			else
-				puts_info "Preparing to update ${TARGET_DIST^}, continuing..."
+				puts_info "Checking for updates to ${TARGET_DIST^}, continuing..."
 			fi
 
 
@@ -428,9 +428,9 @@ done
 			# -- Exit if value is not 'nitrux'.
 
 			if [[ "$CURRENT_DIST" == "$TARGET_DIST" ]]; then
-				puts_success "This utility is running in ${TARGET_DIST^}. Continuing..."
+				puts_success "This utility is running in ${TARGET_DIST^}, continuing..."
 			else
-				puts_error "$TOOL_NAME is intended to work exclusively in ${TARGET_DIST^}. Using this utility in ${CURRENT_DIST^} will break it and not work at all. Quitting."
+				puts_error "$TOOL_NAME is intended to work exclusively in ${TARGET_DIST^}. Using this utility in ${CURRENT_DIST^} will break it and not work at all, quitting."
 				exit 1
 			fi
 
@@ -440,9 +440,9 @@ done
 			# -- Exit if connection test fails.
 
 			if ping -q -c 1 -W 1 nxos.org >/dev/null && ping -q -c 1 -W 1 github.com >/dev/null || wget -q --spider https://filesamples.com/samples/document/txt/sample1.txt; then
-				puts_success "This computer can reach the Internet. Continuing..."
+				puts_success "This computer can reach the Internet, continuing..."
 			else
-				puts_error "This computer cannot reach the Internet. Quitting."
+				puts_error "This computer cannot reach the Internet, quitting."
 				exit 1
 			fi
 
@@ -488,9 +488,9 @@ done
 			# -- Exit if value is not 'nitrux'.
 
 			if [[ "$CURRENT_DIST" == "$TARGET_DIST" ]]; then
-				puts_success "This utility is running in ${TARGET_DIST^}. Continuing..."
+				puts_success "This utility is running in ${TARGET_DIST^}, continuing..."
 			else
-				puts_error "$TOOL_NAME is intended to work exclusively in ${TARGET_DIST^}. Using this utility in ${CURRENT_DIST^} will break it and not work at all. Quitting."
+				puts_error "$TOOL_NAME is intended to work exclusively in ${TARGET_DIST^}. Using this utility in ${CURRENT_DIST^} will break it and not work at all, quitting."
 				exit 1
 			fi
 
@@ -532,12 +532,12 @@ done
 			DECOMPRESSED_XFS_BACKUP="/media/$NUTS_USER/NX_HOME/.nuts/xfs/xfs-backup.xfs"
 
 			if [[ ! -f "$COMPRESSED_XFS_BACKUP" ]]; then
-				puts_error "XFS backup file $COMPRESSED_XFS_BACKUP not found. Quitting."
+				puts_error "XFS backup file $COMPRESSED_XFS_BACKUP not found, quitting."
 				exit 1
 			fi
 
 			if [[ ! -f "$XFS_BACKUP_CHECKSUM_FILE" ]]; then
-				puts_error "XFS backup checksum file $XFS_BACKUP_CHECKSUM_FILE not found. Quitting."
+				puts_error "XFS backup checksum file $XFS_BACKUP_CHECKSUM_FILE not found, quitting."
 				exit 1
 			fi
 
@@ -587,9 +587,9 @@ done
 			# -- Exit if value is not 'nitrux'.
 
 			if [[ "$CURRENT_DIST" == "$TARGET_DIST" ]]; then
-				puts_success "This utility is running in ${TARGET_DIST^}. Continuing..."
+				puts_success "This utility is running in ${TARGET_DIST^}, continuing..."
 			else
-				puts_error "$TOOL_NAME is intended to work exclusively in ${TARGET_DIST^}. Using this utility in ${CURRENT_DIST^} will break it and not work at all. Quitting."
+				puts_error "$TOOL_NAME is intended to work exclusively in ${TARGET_DIST^}. Using this utility in ${CURRENT_DIST^} will break it and not work at all, quitting."
 				exit 1
 			fi
 
@@ -598,9 +598,9 @@ done
 			# -- Exit if connection test fails.
 
 			if ping -q -c 1 -W 1 nxos.org >/dev/null && ping -q -c 1 -W 1 github.com >/dev/null || wget -q --spider https://filesamples.com/samples/document/txt/sample1.txt; then
-				puts_success "This computer can reach the Internet. Continuing..."
+				puts_success "This computer can reach the Internet, continuing..."
 			else
-				puts_error "This computer cannot reach the Internet. Quitting."
+				puts_error "This computer cannot reach the Internet, quitting."
 				exit 1
 			fi
 
