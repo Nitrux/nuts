@@ -14,6 +14,7 @@ OTAFILE=ota-2023.09.27-13.17-amd64.squashfs
 OTASUM=0e401ecafc585951cf874593a282b1f1
 
 # Define the list of mirrors to download the file.
+# If multiple mirrors are available, separate them using commas, i.e., url1,url2,url3
 #
 [URL]
 MIRRORLIST=https://master.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.09.27-13.17-amd64.squashfs
