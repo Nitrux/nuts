@@ -409,6 +409,8 @@ done
 			overlay_ch axel -o /tmp -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-query.info" >"$OUTPUT_FILE" 2>&1
 			overlay_ch nuts-cru
 
+			# -- After updating ask to reboot the device.
+
 			puts_info "Time to reboot. Bye."
 
 			shift;;
@@ -465,6 +467,9 @@ done
 			overlay_ch axel -o /usr/bin -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-crr" >"$OUTPUT_FILE" 2>&1
 			overlay_ch chmod +x /usr/bin/nuts-crr >"$OUTPUT_FILE" 2>&1
 			overlay_ch nuts-crr
+
+
+			# -- After restoring the backup ask to reboot the device.
 
 			puts_info "Time to reboot. Bye."
 
@@ -621,7 +626,10 @@ done
 			overlay_ch chmod +x /usr/bin/nuts-sup >"$OUTPUT_FILE" 2>&1
 			overlay_ch nuts-sup
 
-			puts_info "Time to reboot. Bye."
+
+			# -- After updating ask to reboot the device.
+
+            puts_info "Time to reboot. Bye."
 
 			shift;;
 	esac
