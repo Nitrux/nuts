@@ -72,7 +72,7 @@ print_message() {
 
 # -- Display version of running component.
 
-print_info "$TOOL_NAME version $CRU_VERSION."
+puts_info "$TOOL_NAME version $CRU_VERSION."
 
 
 # -- Define the path of the nuts configuration file.
