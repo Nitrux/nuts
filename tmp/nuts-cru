@@ -273,7 +273,7 @@ else
     DOWNLOAD_SUCCESS=false
     for MIRROR_URL in $MIRROR_LIST; do
         puts_info "Trying mirror URL: $MIRROR_URL"
-        if axel -n 10 -o "$OTA_FILE" "$MIRROR_URL"; then
+        if axel -a -n 10 -o "$OTA_FILE" "$MIRROR_URL"; then
             puts_success "Download complete!, continuing..."
             DOWNLOAD_SUCCESS=true
             break
