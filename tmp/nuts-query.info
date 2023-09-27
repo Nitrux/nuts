@@ -1,13 +1,19 @@
 # Default values for nuts-query
-# 2023 (c) Nitrux Latinoamericana S.C.
+# nuts-query.info 2023 (c) Nitrux Latinoamericana S.C.
 #
 
+# Define the checksum of the build list.
+#
 [ROOT]
-rootlistsum=9c28d57f963d5da8aac22ca2a32bd2ee
+ROOTLISTSUM=9c28d57f963d5da8aac22ca2a32bd2ee
 
+# Define the name of the file and its checksum.
+#
 [OTA]
-otafile=ota-2023.09.26-12.46-amd64.squashfs
-otasum=34593195b8d23b7388b682e849145dae
+OTAFILE=ota-2023.09.26-12.46-amd64.squashfs
+OTASUM=34593195b8d23b7388b682e849145dae
 
-[MAGNET]
-magnetlink=magnet:?xt=urn:btih:d73d06cec679c1921efcdd8f499dfc28dccd1d7a&dn=ota-2023.09.26-12.46-amd64.squashfs&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80%2Fannounce
+# Define the list of mirrors to download the file.
+#
+[URL]
+MIRRORLIST=https://zenlayer.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.09.26-12.46-amd64.squashfs,https://netactuate.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.09.26-12.46-amd64.squashfs,https://versaweb.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.09.26-12.46-amd64.squashfs,https://sitsa.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.09.26-12.46-amd64.squashfs

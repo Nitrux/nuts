@@ -324,7 +324,7 @@ done
 			# -- If the checksum doesn't match, then continue because the root is out of date or the list differs from the value in the query file.
 
 			LOCAL_SUM=$(md5sum /installed_pkgs_end.txt | cut -c -32)
-			REMOTE_SUM=$(tail /tmp/nuts-query.info | grep rootlistsum= | cut -c -44 | rev | cut -c -32 | rev)
+			REMOTE_SUM=$(tail /tmp/nuts-query.info | grep ROOTLISTSUM= | cut -c -44 | rev | cut -c -32 | rev)
 
 			if [[ "$LOCAL_SUM" == "$REMOTE_SUM" ]]; then
 				puts_info "No updates were found for ${TARGET_DIST^}."

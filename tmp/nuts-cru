@@ -258,29 +258,6 @@ sync
 puts_success "Success! Backup has been created."
 
 
-# -- This utility targets Nitrux version 2.8.0 and newer. However, aria2c is only included by default with version 2.9.0.
-# -- To use this utility in previous versions of Nitrux, we need to download a static binary.
-# -- So, first check if aria2c is available and download it if not.
-
-ARIA2_BINARY="/usr/bin/aria2c"
-ARIA2_RELEASE_URL="https://github.com/abcfy2/aria2-static-build/releases/download/1.36.0/aria2-x86_64-linux-musl_static.zip"
-ARIA2_TEMP_DIR="/tmp/aria2-temp"
-
-if [[ -f "$ARIA2_BINARY" ]]; then
-    puts_success "Success! aria2c binary is found, skipping..."
-else
-    puts_info "Can't find aria2c binary, downloading..."
-    dl_file "$ARIA2_RELEASE_URL" >"$OUTPUT_FILE"
-
-    puts_info "Adding aria2c static binary, continuing..."
-    mkdir -p "$ARIA2_TEMP_DIR"
-    unzip /tmp/aria2-x86_64-linux-musl_static.zip -d "$ARIA2_TEMP_DIR" >"$OUTPUT_FILE"
-    cp "$ARIA2_TEMP_DIR/aria2c" "$ARIA2_BINARY"
-
-    rm -rf "$ARIA2_TEMP_DIR"
-fi
-
-
 # -- Download the OTA SquashFS with aria2c using the BitTorrent protocol.
 # -- Check if the OTA SquashFS already exists so it's not downloaded again. If an OTA file was downloaded then rename it.
 # -- However, If the OTA file found doesn't match the checksum, it will still cause the utility to exit at a later stage.
@@ -292,13 +269,16 @@ OTA_FILE="$NUTS_DIR_DLS/nuts-ota.squashfs"
 if [[ -f "$OTA_FILE" ]]; then
     puts_info "OTA file found, skipping..."
 else
-    puts_info "OTA file not found! Downloading OTA file using aria2c, continuing..."
-    MAGNET_LINK=$(tail -n 1 /tmp/nuts-query.info | sed -n 's/.*magnetlink=\(.*\)/\1/p')
-    aria2c -q -d "$NUTS_DIR_DLS" --log-level=warn --seed-time=0 "$MAGNET_LINK" | awk '/\[.*%\]/ {print $2}' | while read -r progress; do
-        echo -ne "Progress: $progress\r"
+    puts_info "OTA file not found! Downloading OTA file, continuing..."
+    MIRROR_LIST=$(grep 'MIRRORLIST=' /tmp/nuts-query.info | sed -e 's/[^=]*=//' -e 's/,/ /g')
+    for MIRROR_URL in $MIRROR_LIST; do
+        if axel -n 10 -o "$OTA_FILE" "$MIRROR_URL"; then
+            echo "Download complete!, continuing..."
+            break
+        else
+            echo "Download from $MIRROR_URL failed. Trying the next mirror..."
+        fi
     done
-    puts_info "Download complete!, continuing..."
-    mv "$NUTS_DIR_DLS"/ota-*-amd64.squashfs "$OTA_FILE"
 fi
 
 
@@ -306,7 +286,7 @@ fi
 # -- Exit if checksum doesn't match.
 
 LOCAL_OTA_SUM=$(md5sum "$NUTS_DIR_DLS"/nuts-ota.squashfs | awk '{ print $1 }')
-NQ_OTA_SUM=$(grep -oP '(?<=otasum=)[a-f0-9]{32}' /tmp/nuts-query.info)
+NQ_OTA_SUM=$(grep -oP '(?<=OTASUM=)[a-f0-9]{32}' /tmp/nuts-query.info)
 
 if [[ "$LOCAL_OTA_SUM" == "$NQ_OTA_SUM" ]]; then
     puts_info "OTA file checksum matches, continuing..."
