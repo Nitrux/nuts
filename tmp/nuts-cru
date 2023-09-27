@@ -201,7 +201,7 @@ done
 # -- Create the directories for nuts.
 # -- Create working directories in /home since this partition will likely have more space than the root partition.
 
-DIRECTORIES=("$NUTS_DIR_BAK" "$NUTS_DIR_XFS" "$NUTS_DIR_ISO" "$NUTS_DIR_DLS" "$NUTS_DIR_SQS")
+DIRECTORIES=("$NUTS_DIR_BAK" "$NUTS_DIR_XFS" "$NUTS_DIR_DLS" "$NUTS_DIR_SQS")
 
 for DIR in "${DIRECTORIES[@]}"; do
   if [[ ! -d "$DIR" ]]; then
@@ -224,7 +224,7 @@ puts_info "Cleaning older backups, continuing..."
 bak_cc
 
 
-# -- Create the backup.
+# -- Create the backup using SquashFS.
 # -- We assume that the /home partition is on an internal storage device (SATA or NVME), but one can never know, so run sync to flush the write cache.
 # -- To exclude a file specifiy the full path, i.e., /etc/shadow
 # -- To exclude a directory and its contents specify the path of the directory, i.e., /home/
@@ -281,46 +281,45 @@ else
 fi
 
 
-# -- Download the ISO with aria2c using the BitTorrent protocol.
-# -- Check if the ISO already exists so it's not downloaded again. If an ISO file was downloaded then rename it.
-# -- However, If the ISO file found doesn't match the checksum, it will still cause the utility to exit at a later stage.
+# -- Download the OTA SquashFS with aria2c using the BitTorrent protocol.
+# -- Check if the OTA SquashFS already exists so it's not downloaded again. If an OTA file was downloaded then rename it.
+# -- However, If the OTA file found doesn't match the checksum, it will still cause the utility to exit at a later stage.
 # -- Use the magnet link from the query file.
 # -- Magnet link is provided by FOSS Torrents https://fosstorrents.com/distributions/nitrux/#downloads.
 
-ISO_FILE="$NUTS_DIR_DLS/nitrux.iso"
+OTA_FILE="$NUTS_DIR_DLS/nuts-ota.squashfs"
 
-if [[ -f "$ISO_FILE" ]]; then
-    puts_info "ISO file found, skipping..."
+if [[ -f "$OTA_FILE" ]]; then
+    puts_info "OTA file found, skipping..."
 else
-    puts_info "ISO file not found! Downloading ISO using aria2c, continuing..."
+    puts_info "OTA file not found! Downloading OTA file using aria2c, continuing..."
     MAGNET_LINK=$(tail -n 1 /tmp/nuts-query.info | sed -n 's/.*magnetlink=\(.*\)/\1/p')
     aria2c -q -d "$NUTS_DIR_DLS" --log-level=warn --seed-time=0 "$MAGNET_LINK" | awk '/\[.*%\]/ {print $2}' | while read -r progress; do
         echo -ne "Progress: $progress\r"
     done
     puts_info "Download complete!, continuing..."
-    mv "$NUTS_DIR_DLS"/nitrux-nx-desktop-plasma-*-amd64.iso "$ISO_FILE"
+    mv "$NUTS_DIR_DLS"/ota-*-amd64.squashfs "$OTA_FILE"
 fi
 
 
-# -- Verify the checksum of the ISO. Use the checksum from the query file.
+# -- Verify the checksum of the OTA file. Use the checksum from the query file.
 # -- Exit if checksum doesn't match.
 
-LOCAL_ISO_SUM=$(md5sum "$NUTS_DIR_DLS"/nitrux.iso | awk '{ print $1 }')
-DL_ISO_SUM=$(grep -oP '(?<=isosum=)[a-f0-9]{32}' /tmp/nuts-query.info)
+LOCAL_OTA_SUM=$(md5sum "$NUTS_DIR_DLS"/nuts-ota.squashfs | awk '{ print $1 }')
+NQ_OTA_SUM=$(grep -oP '(?<=otasum=)[a-f0-9]{32}' /tmp/nuts-query.info)
 
-if [[ "$LOCAL_ISO_SUM" == "$DL_ISO_SUM" ]]; then
-    puts_info "ISO checksum matches, continuing..."
+if [[ "$LOCAL_OTA_SUM" == "$NQ_OTA_SUM" ]]; then
+    puts_info "OTA file checksum matches, continuing..."
 else
-    puts_error "ISO checksum does not match, quitting."
-    rm "$NUTS_DIR_DLS"/nitrux.iso
+    puts_error "OTA file checksum does not match, quitting."
+    rm "$NUTS_DIR_DLS"/nuts-ota.squashfs
     exit 1
 fi
 
 
-# -- Mount the ISO and the SquashFS.
+# -- Mount the OTA SquashFS.
 
-mount "$NUTS_DIR_DLS"/nitrux.iso "$NUTS_DIR_ISO" >"$OUTPUT_FILE" 2>&1 || { puts_error "Failed to mount ISO, quitting."; exit 1; }
-mount "$NUTS_DIR_ISO"/casper/filesystem.squashfs "$NUTS_DIR_SQS" >"$OUTPUT_FILE" || { puts_error "Failed to mount SquashFS file, quitting."; exit 1; }
+mount "$NUTS_DIR_DLS"/nuts-ota.squashfs "$NUTS_DIR_SQS" >"$OUTPUT_FILE" 2>&1 || { puts_error "Failed to mount SquashFS file, quitting."; exit 1; }
 
 
 # -- Now comes the good part; proceed with running rsync and update the current installation.
@@ -374,7 +373,7 @@ update-grub >"$OUTPUT_FILE" 2>&1
 # -- Unmount all the stuff.
 
 unmount_directory "$NUTS_DIR_SQS" >"$OUTPUT_FILE"
-unmount_directory "$NUTS_DIR_ISO" >"$OUTPUT_FILE"
+unmount_directory "$NUTS_DIR_OTA" >"$OUTPUT_FILE"
 unmount_directory "/home" >"$OUTPUT_FILE"
 unmount_directory "/dev" >"$OUTPUT_FILE"
 
