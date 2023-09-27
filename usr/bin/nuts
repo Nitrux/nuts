@@ -375,6 +375,7 @@ done
 			else
 				puts_error "Redundant backup of $ROOT_PARTITION_LABEL not found, creating it..."
 				xfsdump -l0 -L "Nitrux_Update_Tool_System-XFS_Backup" -M "NX_BAK-Vol-1" -f "$XFS_BACKUP_FILE" "$ROOT_PARTITION"
+				puts_info "Using $ZSTD_COMP_THREADS threads for backup compression, please wait..."
 				zstd -T"$ZSTD_COMP_THREADS" --ultra -19 "$XFS_BACKUP_FILE" -o "$COMPRESSED_XFS_BACKUP"
 				rm -f "$XFS_BACKUP_FILE"
 				md5sum "$COMPRESSED_XFS_BACKUP" > "$NUTS_DIR_XFS/xfs-backup.md5sum"
