@@ -214,7 +214,7 @@ for DIR in "${DIRECTORIES[@]}"; do
   fi
 done
 
-puts_info "All required directories exist. Continuing."
+puts_info "All required directories exist, continuing..."
 
 
 # -- Run the backup cleaner.
