@@ -466,7 +466,7 @@ done
 
 			overlay_ch find /usr/bin -type f -name "nuts-crr" -exec rm {} \; >"$OUTPUT_FILE" 2>&1
 			overlay_ch axel -o /usr/bin -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-crr" >"$OUTPUT_FILE" 2>&1
-			overlay_ch chmod +x /usr/bin/nuts-cru >"$OUTPUT_FILE" 2>&1
+			overlay_ch chmod +x /usr/bin/nuts-crr >"$OUTPUT_FILE" 2>&1
 			overlay_ch nuts-crr
 
 
