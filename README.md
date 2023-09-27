@@ -16,7 +16,7 @@ The Nitrux Update Tool System (`nuts`) utility is designed to update [Nitrux OS]
 `nuts` is a simple and minimalistic system update and rollback utility. It performs three steps:
 
 1. Creates a backup of the root directory using SquashFS and the XFS partition and stores them locally.
-2. Downloads an [OTA-style](https://en.wikipedia.org/wiki/Over-the-air_update) update file using the BitTorrent protocol and updates the system using `rsync`.
+2. Downloads an [OTA-style](https://en.wikipedia.org/wiki/Over-the-air_update) update file using `axel` and updates the system using `rsync`.
 3. When restoring a backup, the utility uses `rsync` and the locally generated SquashFS file or the XFS tools, depending on the situation.
 
 > _♦ Information: `nuts` is included by default, starting with Nitrux 2.9.0._
@@ -103,6 +103,7 @@ nuts -v: Displays the version of nuts.
 The repository and its contents are licensed under **BSD-3-Clause**.
 
 # Issues
+
 If any problems are encountered, users can create an issue.
 
 ©2023 Nitrux Latinoamericana S.C.
