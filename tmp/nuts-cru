@@ -373,7 +373,6 @@ update-grub >"$OUTPUT_FILE" 2>&1
 # -- Unmount all the stuff.
 
 unmount_directory "$NUTS_DIR_SQS" >"$OUTPUT_FILE"
-unmount_directory "$NUTS_DIR_OTA" >"$OUTPUT_FILE"
 unmount_directory "/home" >"$OUTPUT_FILE"
 unmount_directory "/dev" >"$OUTPUT_FILE"
 
