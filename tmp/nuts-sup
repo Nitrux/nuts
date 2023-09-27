@@ -89,8 +89,8 @@ NUTS_GIT_DIR=$(mktemp -d)
 
 mount -t devtmpfs dev /dev >"$OUTPUT_FILE"
 git clone --depth=1 --branch "$NUTS_BRANCH" https://github.com/Nitrux/nuts.git "$NUTS_GIT_DIR" >"$OUTPUT_FILE"
-cp /nuts/usr/bin/nuts /usr/bin >"$OUTPUT_FILE"
-cp /nuts/etc/nuts.conf /etc >"$OUTPUT_FILE"
+cp "$NUTS_GIT_DIR/usr/bin/nuts" /usr/bin >"$OUTPUT_FILE"
+cp "$NUTS_GIT_DIR/etc/nuts.conf" /etc >"$OUTPUT_FILE"
 umount /dev >"$OUTPUT_FILE"
 
 puts_success "Success! $TOOL_NAME has been updated."
