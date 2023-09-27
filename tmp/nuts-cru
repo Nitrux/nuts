@@ -287,7 +287,7 @@ else
     fi
 fi
 
-mv "$NUTS_DIR_DLS"/ota-*-amd64.squashfs "$OTA_FILE"
+mv /tmp/ota-*-amd64.squashfs "$OTA_FILE"
 
 
 # -- Verify the checksum of the OTA file. Use the checksum from the query file.
