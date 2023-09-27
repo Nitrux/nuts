@@ -241,7 +241,7 @@ for cmd; do
 		-v | --version)
 			print_message "$TOOL_NAME" \
 				"" \
-				"Version: $TOOL_VERSION." \
+				"Version: $TOOL_VERSION from branch ""$NUTS_BRANCH""." \
 				"" \
 				"The license used for this file and its contents is: BSD-3-Clause." \
 				"" \
