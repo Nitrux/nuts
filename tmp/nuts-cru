@@ -272,9 +272,9 @@ else
     MIRROR_LIST=$(grep 'mirrorlist=' /tmp/nuts-query.info | sed -e 's/[^=]*=//' -e 's/,/ /g')
     DOWNLOAD_SUCCESS=false
     for MIRROR_URL in $MIRROR_LIST; do
-        echo "Trying mirror URL: $MIRROR_URL"
+        puts_info "Trying mirror URL: $MIRROR_URL"
         if dl_file "$MIRROR_URL"; then
-            echo "Download complete!, continuing..."
+            puts_success "Download complete!, continuing..."
             DOWNLOAD_SUCCESS=true
             break
         else
@@ -282,7 +282,7 @@ else
         fi
     done
     if [ "$DOWNLOAD_SUCCESS" = false ]; then
-        puts_success "Download failed from all mirrors, quitting."
+        puts_error "Download failed from all mirrors, quitting."
         exit 1
     fi
 fi
