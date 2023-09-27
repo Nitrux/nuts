@@ -71,10 +71,10 @@ while IFS= read -r ITEM; do
   if [[ -e "$ITEM" ]]; then
     echo "Deleting: $ITEM"
     rm -rf "$ITEM"
-    find /usr/share/locale/ -name 'calamares-python.mo' -exec rm -f {} \;
-    find /usr/share/locale/ -name 'apt.mo' -exec rm -f {} \;
-    find /usr/share/locale/ -name 'dpkg.mo' -exec rm -f {} \;
-    find /usr/share/locale/ -name 'libapt-pkg6.0.mo' -exec rm -f {} \;
+    find /usr/share/locale/ -type f -name 'calamares-python.mo' -exec rm -f {} \;
+    find /usr/share/locale/ -type f -name 'apt.mo' -exec rm -f {} \;
+    find /usr/share/locale/ -type f -name 'dpkg.mo' -exec rm -f {} \;
+    find /usr/share/locale/ -type f -name 'libapt-pkg6.0.mo' -exec rm -f {} \;
   else
     echo "Item not found: $ITEM"
   fi

@@ -25,7 +25,7 @@
 
 # -- Exit on errors.
 
-set -xeu
+set -eu
 
 
 # -- Set program name and version.
@@ -108,7 +108,7 @@ dl_file() {
         return 1
     fi
 
-    if ! axel -a -o "/tmp" -n 10 "$FILE_URL"; then
+    if ! axel -o "/tmp" -n 10 "$FILE_URL"; then
         puts_error "Failed to download file."
         return 1
     fi
@@ -273,7 +273,7 @@ else
     DOWNLOAD_SUCCESS=false
     for MIRROR_URL in $MIRROR_LIST; do
         puts_info "Trying mirror URL: $MIRROR_URL"
-        if dl_file "$MIRROR_URL"; then
+        if axel -n 10 -o "$OTA_FILE" "$MIRROR_URL"; then
             puts_success "Download complete!, continuing..."
             DOWNLOAD_SUCCESS=true
             break
