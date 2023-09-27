@@ -269,7 +269,7 @@ if [[ -f "$OTA_FILE" ]]; then
     puts_info "OTA file found, skipping..."
 else
     puts_info "OTA file not found! Downloading OTA file, continuing..."
-    MIRROR_LIST=$(grep 'mirrorlist=' /tmp/nuts-query.info | sed -e 's/[^=]*=//' -e 's/,/ /g')
+    MIRROR_LIST=$(grep 'MIRRORLIST=' /tmp/nuts-query.info | sed -e 's/[^=]*=//' -e 's/,/ /g')
     DOWNLOAD_SUCCESS=false
     for MIRROR_URL in $MIRROR_LIST; do
         puts_info "Trying mirror URL: $MIRROR_URL"
