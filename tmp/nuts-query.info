@@ -10,11 +10,11 @@ ROOTLISTSUM=9c28d57f963d5da8aac22ca2a32bd2ee
 # Define the name of the file and its checksum.
 #
 [OTA]
-OTAFILE=ota-2023.09.27-20.20-amd64.squashfs
-OTASUM=17f9587f1ee3e136d951b5480c39edcd
+OTAFILE=ota-2023.09.28-09.36-amd64.squashfs
+OTASUM=1fff13d3818d0b840fbbc1b65c339d9b
 
 # Define the list of mirrors to download the file.
 # If multiple mirrors are available, separate them using commas, i.e., url1,url2,url3
 #
 [URL]
-MIRRORLIST=https://master.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.09.27-20.20-amd64.squashfs
+MIRRORLIST=https://master.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.09.28-09.36-amd64.squashfs
