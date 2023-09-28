@@ -205,7 +205,7 @@ OUTPUT_FILE=$(mktemp)
 
 for cmd; do
 	case "$cmd" in
-		-h | --help)
+		-h | --help )
 			print_message "$TOOL_NAME" \
 				"" \
 				"Description:" \
@@ -238,7 +238,7 @@ for cmd; do
 			exit
 			;;
 
-		-v | --version)
+		-v | --version )
 			print_message "$TOOL_NAME" \
 				"" \
 				"Version: $TOOL_VERSION from branch ""$NUTS_BRANCH""." \
@@ -255,19 +255,19 @@ for cmd; do
 			exit
 			;;
 
-		-d | --debug)
+		-d | --debug )
 			set -x
 			shift
 			;;
 
-		--use-main-banch)
+		--use-main-banch )
 			sed -i 's+NUTS_BRANCH=development+NUTS_BRANCH=main+g' /etc/nuts.conf
 			puts_success "$TOOL_NAME is using the following git branch: main"
 
 			shift
 			;;
 
-		--use-development-branch)
+		--use-development-branch )
 			sed -i 's+NUTS_BRANCH=main+NUTS_BRANCH=development+g' /etc/nuts.conf
 			puts_success "$TOOL_NAME is using the following git branch: development"
 			shift
