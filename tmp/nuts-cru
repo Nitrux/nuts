@@ -317,11 +317,11 @@ mount "$NUTS_DIR_DLS"/nuts-ota.squashfs "$NUTS_DIR_SQS" >"$OUTPUT_FILE" 2>&1 || 
 
 puts_info "Updating ${CURRENT_DIST^}, continuing..."
 
-FILE_LIST=$(mktemp)
-cd "$SOURCE_DIR" && find . -type f > "$FILE_LIST"
-
 SOURCE_DIR="$NUTS_DIR_SQS"
 DESTINATION_DIR="/"
+FILE_LIST=$(mktemp)
+
+cd "$SOURCE_DIR" && find . -type f > "$FILE_LIST"
 
 RSYNC_COMMAND="rsync -aHAXh --info=progress2 --progress --files-from=$FILE_LIST $SOURCE_DIR/ $DESTINATION_DIR"
 
