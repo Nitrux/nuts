@@ -1,7 +1,7 @@
 # List of files and directories to be excluded when using rsync.
 # rsync-exclude.list 2023 (c) Nitrux Latinoamericana S.C.
 
-# This list is used for both update and restore operations.
+# This list is used for restore.
 #
 # To exclude a file specifiy the full path, i.e., /etc/fstab
 # To exclude a directory and its contents specify the path of the directory, i.e., /home/
