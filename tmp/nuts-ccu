@@ -59,6 +59,16 @@ error() {
   exit 1
 }
 
+
+# --  Functions.
+
+create_symlink() {
+    local source="$1"
+    local destination="$2"
+
+    ln -svf "$source" "$destination"
+}
+
 #   ====== START ======
 
 # -- Remove unwanted files and directories.
@@ -105,5 +115,16 @@ find /boot -maxdepth 1 -type f -name "config-*" ! -name "config-$VERSION_PATTERN
 find /boot -maxdepth 1 -type f -name "System.map-*" ! -name "System.map-$VERSION_PATTERN_VMLINUZ" -delete
 
 puts_success "Non-linked vmlinuz-* and initrd.img-* files in /boot deleted successfully."
+
+
+# -- Create symlinks for MauiKit 3.0.1 libraries.
+
+create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/filebrowsing/libMauiKitFileBrowsing3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/filebrowsing/libMauiKitFileBrowsing3.so"
+create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/texteditor/libMauiKitTextEditor3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/texteditor/libMauiKitTextEditor3.so"
+create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/imagetools/libMauiKitImageTools3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/imagetools/libMauiKitImageTools3.so"
+create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/accounts/libMauiKitAccounts3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/accounts/libMauiKitAccounts3.so"
+create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/documents/libMauiKitDocuments3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/documents/libMauiKitDocuments3.so"
+create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/calendar/libMauiKitCalendar3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/calendar/libMauiKitCalendar3.so"
+create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/terminal/libMauiKitTerminal3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/terminal/libMauiKitTerminal3.so"
 
 #   ====== END ======
