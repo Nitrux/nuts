@@ -408,7 +408,6 @@ done
 			# -- This process is also done inside the chroot and it is the same as Calamares, except for user creation, mounts and bootloader configuration.
 			# -- After using overlay_ch, it's essential to remember that **EVERY COMMAND IS RUNNING AS ROOT AND ON THE LOWER DIRECTORY OF THE OVERLAY**.
 
-
 			OVERLAYROOT="/usr/sbin/overlayroot-chroot"
 
 			if [[ ! -f "$OVERLAYROOT" ]]; then
@@ -467,7 +466,6 @@ done
 
 			# -- This process is also done inside the chroot and it is the same as Calamares, except for user creation, mounts and bootloader configuration.
 			# -- After using overlay_ch, it's essential to remember that **EVERY COMMAND IS RUNNING AS ROOT AND ON THE LOWER DIRECTORY OF THE OVERLAY**.
-
 
 			OVERLAYROOT="/usr/sbin/overlayroot-chroot"
 
@@ -625,7 +623,6 @@ done
 
 			# -- This process is also done inside the chroot and it is the same as Calamares, except for user creation, mounts and bootloader configuration.
 			# -- After using overlay_ch, it's essential to remember that **EVERY COMMAND IS RUNNING AS ROOT AND ON THE LOWER DIRECTORY OF THE OVERLAY**.
-
 
 			OVERLAYROOT="/usr/sbin/overlayroot-chroot"
 
