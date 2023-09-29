@@ -249,7 +249,7 @@ if [[ "$LOCAL_SUM" == "$BACKUP_LIST_SUM" ]]; then
   unmount_directory "/dev" >"$OUTPUT_FILE"
   exit 0
 else
-  puts_info "Preparing to restore ${TARGET_DIST^}, continuing..."
+  puts_info "Preparing to rollback update of ${TARGET_DIST^}, continuing..."
 fi
 
 
@@ -273,7 +273,7 @@ eval "$RSYNC_COMMAND" | {
 
 sync
 
-puts_success "Success! Backup has been restored."
+puts_success "Success! ${TARGET_DIST^} update rolled back."
 
 
 # -- Do a cleanup of the synced root.
