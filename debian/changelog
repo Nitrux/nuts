@@ -1,4 +1,19 @@
-nuts (1.1.3) nitrux; urgency=medium
+nuts (2.0.0) nitrux; urgency=medium
+
+  * Add new self-update operation.
+  * Improve rescue operation by correctly resolving directory paths.
+  * Improve logic when creating XFS partition backup.
+  * Use wget to verify Internet connection when using GNOME Boxes.
+  * Fix syntax when calling xfsrestore.
+  * Delete uncompressed backup to avoid wasting storage space.
+  * Change to use OTA-style update files to improve the reliability of the updates.
+  * Use axel instead of aria2c to download update file.
+  * Improve status messages overall.
+  * Add flags to switch between branches of the utility.
+
+ -- Uri Herrera <uri_herrera@nxos.org>  Fri, 28 Sep 2023 23:38:00 -0500
+
+nuts (1.1.4) nitrux; urgency=medium
 
   * Remove kexec code.
 
@@ -12,7 +27,7 @@ nuts (1.1.3) nitrux; urgency=medium
  
 nuts (1.1.2) nitrux; urgency=medium
 
-  * Add new rescue operation to help.
+  * Add new rescue operation.
   * Fixed file paths when using rescue from Live session.
   * Create directories used during the execution of the rescue operation.
   * Remove the compressed xfs backup as we only intend to keep one.
