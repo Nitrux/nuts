@@ -50,13 +50,13 @@ The Nitrux Update Tool System (`nuts`) utility is designed to update [Nitrux OS]
 - An active Internet connection.
 - Up to 1.6 GB of available space in the root partition and more than 3.2 GB in the home partition.
 
-### Support for Previous Releases
+### Misc. Information
 
 `nuts` can technically work with previous releases that use an immutable root, such as Nitrux 2.6.0, 2.6.1, 2.7.0, and 2.7.1, as long as the partition labels match the specific values (`NX_ROOT` for the root partition and `NX_HOME` for the home partition which is standard since [Nitrux 2.8.0](https://nxos.org/changelog/release-announcement-nitrux-2-8-0/)).
 
 To see the partition label run the command `blkid`.
 
-**How to go `nuts` on Previous Releases**
+#### How to go `nuts` on Previous Releases
 
 For releases of Nitrux where `nuts` is not available by default, do the following.
 
@@ -64,6 +64,24 @@ For releases of Nitrux where `nuts` is not available by default, do the followin
 git clone --depth=1 https://github.com/Nitrux/nuts.git $HOME/nuts
 sudo cp $HOME/nuts/usr/bin/nuts /usr/bin
 sudo cp $HOME/nuts/etc/nuts.conf /etc
+```
+
+#### Updating older versions of `nuts`
+
+Do the following to update versions of `nuts` that do not have the `self-update` operation, such as those included before Nitrux 3.0.1.
+
+```
+sudo overlayroot-chroot
+mount -t devtmpfs dev /dev
+rm -f /usr/bin/{nuts,nuts-cru,nuts-crr}
+git clone --depth=1 https://github.com/Nitrux/nuts.git /nuts
+cp /nuts/usr/bin/nuts /usr/bin
+cp /nuts/etc/nuts.conf /etc
+rm -r /nuts
+sync
+umount /dev
+exit
+sudo reboot
 ```
 
 # Usage

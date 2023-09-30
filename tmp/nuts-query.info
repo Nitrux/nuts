@@ -10,11 +10,11 @@ ROOTLISTSUM=9c28d57f963d5da8aac22ca2a32bd2ee
 # Define the name of the file and its checksum.
 #
 [OTA]
-OTAFILE=ota-2023.09.28-19.39-amd64.squashfs
-OTASUM=b0a8bd0ce859f13139b980e539cd9ec3
+OTAFILE=ota-2023.09.30-01.22-amd64.squashfs
+OTASUM=369b9129038aedcd0c0718e40a414c90
 
 # Define the list of mirrors to download the file.
 # If multiple mirrors are available, separate them using commas, i.e., url1,url2,url3
 #
 [URL]
-MIRRORLIST=https://master.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.09.28-19.39-amd64.squashfs
+MIRRORLIST=https://master.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.09.30-01.22-amd64.squashfs,https://netactuate.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.09.30-01.22-amd64.squashfs,https://netix.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.09.30-01.22-amd64.squashfs,https://freefr.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.09.30-01.22-amd64.squashfs,https://phoenixnap.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.09.30-01.22-amd64.squashfs,https://ufpr.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.09.30-01.22-amd64.squashfs,https://liquidtelecom.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.09.30-01.22-amd64.squashfs,https://yer.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.09.30-01.22-amd64.squashfs,https://newcontinuum.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.09.30-01.22-amd64.squashfs,https://versaweb.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.09.30-01.22-amd64.squashfs

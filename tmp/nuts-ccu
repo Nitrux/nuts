@@ -25,14 +25,13 @@
 
 # -- Exit on errors.
 
-set -eu
+set -xeu
 
 
 # -- Set program name and version.
 
-TOOL_NAME="Nitrux Update System Tool"
-TOOL_SHRT_NAME="nuts-cc"
-
+TOOL_NAME="Nitrux Update System Tool (cleanup update component)"
+CCU_VERSION="$(md5sum /tmp/nuts-ccu | cut -c -32)"
 
 # -- Print informative messages to stderr.
 
@@ -52,12 +51,9 @@ puts_success() {
 }
 
 
-# -- Display an error when no flag is used.
+# -- Display version of running component.
 
-error() {
-  puts_error "$TOOL_SHRT_NAME: \e[31mError:\e[0m: $*" >&2
-  exit 1
-}
+puts_info "$TOOL_NAME version $CCU_VERSION."
 
 
 # --  Functions.
@@ -93,13 +89,69 @@ done < "$FILE_LIST"
 puts_success "Success! Cleanup complete, continuing..."
 
 
+# -- Create symlinks for MauiKit 3.0.1 libraries.
+
+create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/filebrowsing/libMauiKitFileBrowsing3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/filebrowsing/libMauiKitFileBrowsing3.so"
+create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/texteditor/libMauiKitTextEditor3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/texteditor/libMauiKitTextEditor3.so"
+create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/imagetools/libMauiKitImageTools3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/imagetools/libMauiKitImageTools3.so"
+create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/accounts/libMauiKitAccounts3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/accounts/libMauiKitAccounts3.so"
+create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/documents/libMauiKitDocuments3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/documents/libMauiKitDocuments3.so"
+create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/calendar/libMauiKitCalendar3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/calendar/libMauiKitCalendar3.so"
+create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/terminal/libMauiKitTerminal3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/terminal/libMauiKitTerminal3.so"
+
+create_symlink "/usr/lib/x86_64-linux-gnu/libMauiKitFileBrowsing3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/libMauiKitFileBrowsing3.so.3"
+create_symlink "/usr/lib/x86_64-linux-gnu/libMauiKitTextEditor3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/libMauiKitTextEditor3.so.3"
+create_symlink "/usr/lib/x86_64-linux-gnu/libMauiKitImageTools3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/libMauiKitImageTools3.so.3"
+create_symlink "/usr/lib/x86_64-linux-gnu/libMauiKitAccounts3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/libMauiKitAccounts3.so.3"
+create_symlink "/usr/lib/x86_64-linux-gnu/libMauiKitDocuments3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/libMauiKitDocuments3.so.3"
+create_symlink "/usr/lib/x86_64-linux-gnu/libMauiKitCalendar3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/libMauiKitCalendar3.so.3"
+create_symlink "/usr/lib/x86_64-linux-gnu/libMauiKitTerminal3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/libMauiKitTerminal3.so.3"
+
+
+# -- Update /etc stuff we use.
+# -- We do this here because otherwise, we wouldn't be able to clean up this stuff.
+# -- For some inexplicable reason /etc, we can't add it to a SquashFS archive.
+
+NX_SET_DIR=$(mktemp -d)
+NX_SET_BRANCH="legacy-plasma"
+
+rm -rf \
+  /etc/10-globally-managed-devices.conf \
+  /etc/dnsmasq.d/dns-block.conf \
+  /etc/NetworkManager/conf.d/dns.conf \
+  /etc/NetworkManager/dnsmasq.d/dnscrypt-proxy.conf \
+  /etc/security/limits.d/{10-open-file-limits.conf,11-limits-disable-core-dump.conf} \
+  /etc/skel \
+  /etc/sysctl.d/10-nx-sysctl-overrides.conf \
+  /etc/udev/rules.d/50-ioschedulers.rules \
+  /etc/xdg
+
+git clone --depth=1 --branch $NX_SET_BRANCH https://github.com/Nitrux/nx-desktop-settings.git "$NX_SET_DIR" || {
+    puts_error "Failed to clone repository."
+    exit 1
+}
+
+cp "$NX_SET_DIR/etc/10-globally-managed-devices.conf" /etc
+cp "$NX_SET_DIR/etc/dnsmasq.d/dns-block.conf" /etc/dnsmasq.d/
+cp "$NX_SET_DIR/etc/NetworkManager/conf.d/dns.conf" /etc/NetworkManager/conf.d/
+cp "$NX_SET_DIR/etc/NetworkManager/dnsmasq.d/dnscrypt-proxy.conf" /etc/NetworkManager/dnsmasq.d/
+cp "$NX_SET_DIR/etc/security/limits.d/10-open-file-limits.conf" /etc/security/limits.d/
+cp "$NX_SET_DIR/etc/security/limits.d/11-limits-disable-core-dump.conf" /etc/security/limits.d/
+cp -r "$NX_SET_DIR/etc/skel" /etc
+cp "$NX_SET_DIR/etc/sysctl.d/10-nx-sysctl-overrides.conf" /etc/sysctl.d/
+cp "$NX_SET_DIR/etc/udev/rules.d/50-ioschedulers.rules" /etc/udev/rules.d/
+cp -r "$NX_SET_DIR/etc/xdg" /etc
+
+rm -r "$NX_SET_DIR"
+
+
 # -- Link kernel image to newer kernel
 
 ln -svf "$(echo /boot/vmlinuz* | tr ' ' '\n' | tail -n 1)" /vmlinuz
 ln -svf "$(echo /boot/initrd* | tr ' ' '\n' | tail -n 1)" /initrd.img
 
 if [[ ! -L "/vmlinuz" || ! -L "/initrd.img" ]]; then
-  puts_info "Soft links '/vmlinuz' or '/initrd.img' in the root directory do not exist. Exiting..."
+  puts_info "Soft links '/vmlinuz' or '/initrd.img' in the root directory do not exist, quitting."
   exit 1
 fi
 
@@ -114,17 +166,16 @@ VERSION_PATTERN_VMLINUZ=${LINKED_VMLINUZ#*-}
 find /boot -maxdepth 1 -type f -name "config-*" ! -name "config-$VERSION_PATTERN_VMLINUZ" -delete
 find /boot -maxdepth 1 -type f -name "System.map-*" ! -name "System.map-$VERSION_PATTERN_VMLINUZ" -delete
 
-puts_success "Non-linked vmlinuz-* and initrd.img-* files in /boot deleted successfully."
+puts_success "Non-linked vmlinuz-* and initrd.img-* files in /boot deleted successfully, continuing..."
 
 
-# -- Create symlinks for MauiKit 3.0.1 libraries.
+# -- Update GRUB.
 
-create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/filebrowsing/libMauiKitFileBrowsing3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/filebrowsing/libMauiKitFileBrowsing3.so"
-create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/texteditor/libMauiKitTextEditor3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/texteditor/libMauiKitTextEditor3.so"
-create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/imagetools/libMauiKitImageTools3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/imagetools/libMauiKitImageTools3.so"
-create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/accounts/libMauiKitAccounts3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/accounts/libMauiKitAccounts3.so"
-create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/documents/libMauiKitDocuments3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/documents/libMauiKitDocuments3.so"
-create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/calendar/libMauiKitCalendar3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/calendar/libMauiKitCalendar3.so"
-create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/terminal/libMauiKitTerminal3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/terminal/libMauiKitTerminal3.so"
+if update-grub; then
+    puts_success "Success! GRUB menu was updated, continuing..."
+else
+    puts_error "Failed to update GRUB menu, quitting."
+    exit 1
+fi
 
 #   ====== END ======

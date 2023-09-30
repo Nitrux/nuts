@@ -199,7 +199,9 @@ for DIR in "${DIRECTORIES[@]}"; do
   if [[ ! -d "$DIR" ]]; then
     puts_error "Directory '$DIR' does not exist. Creating the directory..."
     if ! mkdir -p "$DIR"; then
-      puts_error "Failed to create directory '$DIR', quitting..."
+      puts_error "Failed to create directory '$DIR', quitting."
+      unmount_directory "/home" >"$OUTPUT_FILE"
+      unmount_directory "/dev" >"$OUTPUT_FILE"
       exit 1
     fi
     puts_info "Directory '$DIR' created successfully."
@@ -221,6 +223,8 @@ if [[ -f "$NUTS_DIR_BAK/nuts-backup.md5sum" ]]; then
         puts_info "Backup checksum matches, continuing..."
     else
         puts_error "Backup checksum does not match, quitting."
+        unmount_directory "/home" >"$OUTPUT_FILE"
+        unmount_directory "/dev" >"$OUTPUT_FILE"
         exit 1
     fi
 else
@@ -273,6 +277,11 @@ eval "$RSYNC_COMMAND" | {
 
 sync
 
+unmount_directory "$NUTS_DIR_SQS" >"$OUTPUT_FILE"
+unmount_directory "/home" >"$OUTPUT_FILE"
+
+rm -f "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)"
+
 puts_success "Success! ${TARGET_DIST^} update rolled back."
 
 
@@ -290,6 +299,8 @@ if chmod +x /tmp/nuts-ccr && bash /tmp/nuts-ccr >"$OUTPUT_FILE"; then
     puts_success "Cleanup script executed successfully."
 else
     puts_error "Something failed in the cleanup script, quitting."
+    unmount_directory "/home" >"$OUTPUT_FILE"
+    unmount_directory "/dev" >"$OUTPUT_FILE"
     exit 1
 fi
 
@@ -301,10 +312,8 @@ rm -f /tmp/nuts-ccr
 update-grub >"$OUTPUT_FILE" 2>&1
 
 
-# -- Unmount all the stuff.
+# -- Unmount /dev.
 
-unmount_directory "$NUTS_DIR_SQS" >"$OUTPUT_FILE"
-unmount_directory "/home" >"$OUTPUT_FILE"
 unmount_directory "/dev" >"$OUTPUT_FILE"
 
 

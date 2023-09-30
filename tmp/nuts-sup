@@ -30,8 +30,8 @@ set -eu
 
 # -- Set program name and version.
 
-TOOL_NAME="Nitrux Update System Tool"
-TOOL_SHRT_NAME="nuts-cc"
+TOOL_NAME="Nitrux Update System Tool (self-update component)"
+SUP_VERSION="$(md5sum /usr/bin/nuts-sup | cut -c -32)"
 
 
 # -- Print informative messages to stderr.
@@ -52,12 +52,9 @@ puts_success() {
 }
 
 
-# -- Display an error when no flag is used.
+# -- Display version of running component.
 
-error() {
-  puts_error "$TOOL_SHRT_NAME: \e[31mError:\e[0m: $*" >&2
-  exit 1
-}
+puts_info "$TOOL_NAME version $SUP_VERSION."
 
 
 # -- Define the path of the nuts configuration file.
@@ -85,13 +82,54 @@ NUTS_GIT_DIR=$(mktemp -d)
 
 #   ====== START ======
 
+# -- Flag parsing.
+
+for cmd; do
+	case "$cmd" in
+		-v | --version)
+			print_message "$TOOL_NAME" \
+				"" \
+				"Version (update component): $SUP_VERSION." \
+				"" \
+				"The license used for this file and its contents is: BSD-3-Clause." \
+				"" \
+				"Authors:" \
+				"" \
+				"    Copyright <2023> <Uri Herrera <uri_herrera@nxos.org>>" \
+				"" \
+				"(c) $FECHA Some Rights Reserved. Made by $VENDOR"
+
+			exit
+			;;
+	esac
+done
+
+
+# -- Save current value of NUTS_BRANCH.
+
+CURRENT_NUTS_BRANCH=$(grep -oP '^NUTS_BRANCH=\K.*' "$CONFIG_FILE")
+
+
 # -- Update utility.
 
 mount -t devtmpfs dev /dev >"$OUTPUT_FILE"
 git clone --depth=1 --branch "$NUTS_BRANCH" https://github.com/Nitrux/nuts.git "$NUTS_GIT_DIR" >"$OUTPUT_FILE"
 cp "$NUTS_GIT_DIR/usr/bin/nuts" /usr/bin >"$OUTPUT_FILE"
 cp "$NUTS_GIT_DIR/etc/nuts.conf" /etc >"$OUTPUT_FILE"
+
+
+# -- Restore the value of NUTS_BRANCH in /etc/nuts.conf.
+
+if [[ -n $CURRENT_NUTS_BRANCH ]]; then
+    sed -i "s/^NUTS_BRANCH=.*$/NUTS_BRANCH=$CURRENT_NUTS_BRANCH/" "$CONFIG_FILE"
+else
+    puts_error "Failed to restore NUTS_BRANCH."
+    exit 1
+fi
+
 umount /dev >"$OUTPUT_FILE"
+
+sync
 
 puts_success "Success! $TOOL_NAME has been updated."
 

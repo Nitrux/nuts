@@ -264,13 +264,13 @@ for cmd; do
 			sed -i 's+NUTS_BRANCH=development+NUTS_BRANCH=main+g' /etc/nuts.conf
 			puts_success "$TOOL_NAME is using the following git branch: main"
 
-			shift
+			exit
 			;;
 
 		--use-development-branch )
 			sed -i 's+NUTS_BRANCH=main+NUTS_BRANCH=development+g' /etc/nuts.conf
 			puts_success "$TOOL_NAME is using the following git branch: development"
-			shift
+			exit
 			;;
 	esac
 done
@@ -425,6 +425,7 @@ done
 			overlay_ch find /usr/bin -type f -name "nuts-cru" -exec rm {} \; >"$OUTPUT_FILE" 2>&1
 			overlay_ch axel -o /usr/bin -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-cru" >"$OUTPUT_FILE" 2>&1
 			overlay_ch chmod +x /usr/bin/nuts-cru >"$OUTPUT_FILE" 2>&1
+			overlay_ch find /tmp -type f -name "nuts-query.info" -exec rm {} \; >"$OUTPUT_FILE" 2>&1
 			overlay_ch axel -o /tmp -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-query.info" >"$OUTPUT_FILE" 2>&1
 			overlay_ch nuts-cru
 
@@ -432,7 +433,8 @@ done
 
 			puts_info "Time to reboot. Bye."
 
-			shift;;
+			exit
+			;;
 
 
 		restore )
@@ -491,7 +493,8 @@ done
 
 			puts_info "Time to reboot. Bye."
 
-			shift;;
+			exit
+			;;
 
 
 		rescue )
@@ -592,7 +595,8 @@ done
 
 			puts_info "Time to reboot. Bye."
 
-			shift;;
+			exit
+			;;
 
 
 		self-update )
@@ -653,7 +657,8 @@ done
 
             puts_info "Time to reboot. Bye."
 
-			shift;;
+			exit
+			;;
 	esac
 done ) 2>&1 | tee -a "$NUTS_LOG"
 
