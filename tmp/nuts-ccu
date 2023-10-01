@@ -124,7 +124,8 @@ rm -rf \
   /etc/skel \
   /etc/sysctl.d/10-nx-sysctl-overrides.conf \
   /etc/udev/rules.d/50-ioschedulers.rules \
-  /etc/xdg
+  /etc/xdg \
+  /usr/bin/desktop-config
 
 git clone --depth=1 --branch $NX_SET_BRANCH https://github.com/Nitrux/nx-desktop-settings.git "$NX_SET_DIR" || {
     puts_error "Failed to clone repository."
@@ -141,6 +142,7 @@ cp -r "$NX_SET_DIR/etc/skel" /etc
 cp "$NX_SET_DIR/etc/sysctl.d/10-nx-sysctl-overrides.conf" /etc/sysctl.d/
 cp "$NX_SET_DIR/etc/udev/rules.d/50-ioschedulers.rules" /etc/udev/rules.d/
 cp -r "$NX_SET_DIR/etc/xdg" /etc
+cp -r "$NX_SET_DIR/usr/bin/desktop-config" /usr/bin/
 
 rm -r "$NX_SET_DIR"
 
