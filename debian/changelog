@@ -3,7 +3,7 @@ nuts (2.0.2) nitrux; urgency=medium
   * Update stuff in /etc that we add since SquashFS does not support including sub-directories when creating an archive.
   * Run update-grub when the cleanup script runs instead of after during the update process.
   * Delete the newest backup of the root directory after using it as it is deleted anyway when the restore is executed again.
-  * Use exit insteadof shift as there are not positional arguments passed to main component.
+  * Use exit instead of shift as there are not positional arguments passed to main component.
 
  -- Uri Herrera <uri_herrera@nxos.org>  Sat, 30 Sep 2023 13:51:00 -0500
 
