@@ -110,7 +110,7 @@ create_symlink "/usr/lib/x86_64-linux-gnu/libMauiKitTerminal3.so.3.0.1" "/usr/li
 
 # -- Update /etc stuff we use.
 # -- We do this here because otherwise, we wouldn't be able to clean up this stuff.
-# -- For some inexplicable reason /etc, we can't add it to a SquashFS archive.
+# -- For some inexplicable reason we can't add /etc to an SquashFS archive.
 
 NX_SET_DIR=$(mktemp -d)
 NX_SET_BRANCH="legacy-plasma"
