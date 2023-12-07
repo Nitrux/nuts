@@ -2,19 +2,24 @@
 # nuts-query.info 2023 (c) Nitrux Latinoamericana S.C.
 #
 
-# Define the checksum of the build list.
+# Define the checksum of the build list in the update file.
 #
 [ROOT]
-ROOTLISTSUM=be565dd32ebd15b3f2fe466753d45e62
+ROOTLISTSUM=0f2cb1a6913d35a473c83781f41c531e
+
+# Define the minimum target for the update.
+#
+[RELEASE]
+MINTARGET=3.2.0
 
 # Define the name of the file and its checksum.
 #
 [OTA]
-OTAFILE=ota-2023.10.31-19.17-amd64.squashfs
-OTASUM=b66413e2411b2fd74f3ceb78c02b7812
+OTAFILE=ota-2023.12.06-23.25-amd64.squashfs
+OTASUM=1fa3984c6a2ddd010f227aa41566a5fe
 
 # Define the list of mirrors to download the file.
 # If multiple mirrors are available, separate them using commas, i.e., url1,url2,url3
 #
 [URL]
-MIRRORLIST=https://master.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.10.31-19.17-amd64.squashfs,https://netactuate.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.10.31-19.17-amd64.squashfs,https://netix.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.10.31-19.17-amd64.squashfs,https://freefr.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.10.31-19.17-amd64.squashfs,https://phoenixnap.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.10.31-19.17-amd64.squashfs,https://ufpr.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.10.31-19.17-amd64.squashfs,https://liquidtelecom.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.10.31-19.17-amd64.squashfs,https://yer.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.10.31-19.17-amd64.squashfs,https://newcontinuum.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.10.31-19.17-amd64.squashfs,https://versaweb.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.10.31-19.17-amd64.squashfs
+MIRRORLIST=https://master.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.12.06-23.25-amd64.squashfs,https://netactuate.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.12.06-23.25-amd64.squashfs,https://netix.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.12.06-23.25-amd64.squashfs,https://freefr.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.12.06-23.25-amd64.squashfs,https://phoenixnap.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.12.06-23.25-amd64.squashfs,https://ufpr.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.12.06-23.25-amd64.squashfs,https://liquidtelecom.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.12.06-23.25-amd64.squashfs,https://yer.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.12.06-23.25-amd64.squashfs,https://newcontinuum.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.12.06-23.25-amd64.squashfs,https://versaweb.dl.sourceforge.net/project/nitruxos/Updates/ota-2023.12.06-23.25-amd64.squashfs

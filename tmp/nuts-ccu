@@ -89,23 +89,26 @@ done < "$FILE_LIST"
 puts_success "Success! Cleanup complete, continuing..."
 
 
-# -- Create symlinks for MauiKit 3.0.1 libraries.
+# -- Also link the library files for cask to launch because maui-shell and cask-server used Jammy for compilation, and the frameworks used Debian.
+# -- KDE PIM libraries were renamed to different SO names because of course they were. Update the links on every new KF5 release.
 
-create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/filebrowsing/libMauiKitFileBrowsing3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/filebrowsing/libMauiKitFileBrowsing3.so"
-create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/texteditor/libMauiKitTextEditor3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/texteditor/libMauiKitTextEditor3.so"
-create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/imagetools/libMauiKitImageTools3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/imagetools/libMauiKitImageTools3.so"
-create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/accounts/libMauiKitAccounts3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/accounts/libMauiKitAccounts3.so"
-create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/documents/libMauiKitDocuments3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/documents/libMauiKitDocuments3.so"
-create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/calendar/libMauiKitCalendar3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/calendar/libMauiKitCalendar3.so"
-create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/terminal/libMauiKitTerminal3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/terminal/libMauiKitTerminal3.so"
+KDEPIM_LIB="5.24.3"
+KF5_LIB="5.113.0"
 
-create_symlink "/usr/lib/x86_64-linux-gnu/libMauiKitFileBrowsing3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/libMauiKitFileBrowsing3.so.3"
-create_symlink "/usr/lib/x86_64-linux-gnu/libMauiKitTextEditor3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/libMauiKitTextEditor3.so.3"
-create_symlink "/usr/lib/x86_64-linux-gnu/libMauiKitImageTools3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/libMauiKitImageTools3.so.3"
-create_symlink "/usr/lib/x86_64-linux-gnu/libMauiKitAccounts3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/libMauiKitAccounts3.so.3"
-create_symlink "/usr/lib/x86_64-linux-gnu/libMauiKitDocuments3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/libMauiKitDocuments3.so.3"
-create_symlink "/usr/lib/x86_64-linux-gnu/libMauiKitCalendar3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/libMauiKitCalendar3.so.3"
-create_symlink "/usr/lib/x86_64-linux-gnu/libMauiKitTerminal3.so.3.0.1" "/usr/lib/x86_64-linux-gnu/libMauiKitTerminal3.so.3"
+create_symlink /usr/lib/x86_64-linux-gnu/libKPim5EventViews.so.$KDEPIM_LIB /usr/lib/x86_64-linux-gnu/libKF5EventViews.so.5abi1
+create_symlink /usr/lib/x86_64-linux-gnu/libKPim5CalendarSupport.so.$KDEPIM_LIB /usr/lib/x86_64-linux-gnu/libKF5CalendarSupport.so.5abi1
+create_symlink /usr/lib/x86_64-linux-gnu/libKPim5AkonadiCalendar.so.$KDEPIM_LIB /usr/lib/x86_64-linux-gnu/libKF5AkonadiCalendar.so.5abi1
+create_symlink /usr/lib/x86_64-linux-gnu/libKPim5AkonadiWidgets.so.$KDEPIM_LIB /usr/lib/x86_64-linux-gnu/libKF5AkonadiWidgets.so.5abi1
+create_symlink /usr/lib/x86_64-linux-gnu/libKPim5AkonadiCore.so.$KDEPIM_LIB /usr/lib/x86_64-linux-gnu/libKF5AkonadiCore.so.5abi2
+create_symlink /usr/lib/x86_64-linux-gnu/libKF5CalendarCore.so.$KF5_LIB /usr/lib/x86_64-linux-gnu/libKF5CalendarCore.so.5abi2
+
+
+# -- Add link for applet window buttons.
+# -- NOTE: Update the link on every new release of Plasma.
+
+PLASMA_LIB="5.27.10"
+
+create_symlink /usr/lib/x86_64-linux-gnu/libkdecorations2private.so.$PLASMA_LIB /usr/lib/x86_64-linux-gnu/libkdecorations2private.so.9
 
 
 # -- Update /etc stuff we use.
@@ -147,7 +150,7 @@ cp -r "$NX_SET_DIR/usr/bin/desktop-config" /usr/bin/
 rm -r "$NX_SET_DIR"
 
 
-# -- Link kernel image to newer kernel
+# -- Link kernel image to newer kernel.
 
 ln -svf "$(echo /boot/vmlinuz* | tr ' ' '\n' | tail -n 1)" /vmlinuz
 ln -svf "$(echo /boot/initrd* | tr ' ' '\n' | tail -n 1)" /initrd.img
