@@ -341,11 +341,12 @@ done
 			# -- This way, we know that the user is running this tool on an installation that can be upgraded; thus, this tool works as intended.
 			# -- If the checksum matches, exit because the root is already current.
 			# -- If the checksum doesn't match, then continue because the root is out of date or the list differs from the value in the query file.
+			# -- Also establish a minimum version target to check.
 
 			DISTRIB_RELEASE=$(grep 'DISTRIB_RELEASE' /etc/lsb-release | cut -d'=' -f2)
 			MINTARGET=$(grep 'MINTARGET=' /tmp/nuts-query.info | cut -d'=' -f2)
 			if [[ "$DISTRIB_RELEASE" != "$MINTARGET" ]]; then
-				puts_info "Mismatch in distribution release versions, quitting..."
+				puts_info "This version of Nitrux can't be upgraded, quitting..."
 				exit 1
 			fi
 
