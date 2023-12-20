@@ -263,7 +263,7 @@ for cmd; do
 		--use-main-banch )
 			overlay_ch sed -i 's+NUTS_BRANCH=development+NUTS_BRANCH=main+g' /etc/nuts.conf
 			puts_success "$TOOL_NAME is using the following git branch: main"
-			puts_info "Reboot to load changes into overlay."
+			puts_info "Reboot to load changes into overlay. Bye."
 
 			exit
 			;;
@@ -271,7 +271,7 @@ for cmd; do
 		--use-development-branch )
 			overlay_ch sed -i 's+NUTS_BRANCH=main+NUTS_BRANCH=development+g' /etc/nuts.conf
 			puts_success "$TOOL_NAME is using the following git branch: development"
-			puts_info "Reboot to load changes into overlay."
+			puts_info "Reboot to load changes into overlay. Bye."
 
 			exit
 			;;
@@ -442,7 +442,7 @@ done
 
 			# -- After updating ask to reboot the device.
 
-			puts_info "Time to reboot. Bye."
+			puts_info "Reboot to load changes into overlay. Bye."
 
 			exit
 			;;
@@ -502,7 +502,7 @@ done
 
 			# -- After restoring the backup ask to reboot the device.
 
-			puts_info "Time to reboot. Bye."
+			puts_info "Reboot to load changes into overlay. Bye."
 
 			exit
 			;;
@@ -604,7 +604,7 @@ done
 
 			# -- After restoring the XFS backup ask to reboot the device.
 
-			puts_info "Time to reboot. Bye."
+			puts_info "Reboot to load changes into overlay. Bye."
 
 			exit
 			;;
@@ -666,7 +666,7 @@ done
 
 			# -- After updating ask to reboot the device.
 
-            puts_info "Time to reboot. Bye."
+            puts_info "Reboot to load changes into overlay. Bye."
 
 			exit
 			;;
