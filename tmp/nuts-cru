@@ -369,7 +369,6 @@ rm -f /tmp/nuts-ccu
 
 # -- Unmount directories after sync and before exiting chroot.
 
-unmount_directory "$NUTS_DIR_SQS" >"$OUTPUT_FILE" || { puts_error "Failed to mount SquashFS file, quitting."; exit 1; }
 unmount_directory "/home" >"$OUTPUT_FILE" || { puts_error "Failed to unmount /home, quitting."; exit 1; }
 unmount_directory "/dev" >"$OUTPUT_FILE" || { puts_error "Failed to unmount /dev, quitting."; exit 1; }
 
