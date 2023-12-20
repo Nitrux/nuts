@@ -67,44 +67,8 @@ create_symlink() {
 
 #   ====== START ======
 
-# -- Remove unwanted files and directories.
-
-FILE_LIST="/tmp/nuts-cc-file.list"
-
-while IFS= read -r ITEM; do
-  ITEM="$(echo "$ITEM" | awk '{$1=$1};1')"
-
-  if [[ -e "$ITEM" ]]; then
-    echo "Deleting: $ITEM"
-    rm -rf "$ITEM"
-    find /usr/share/locale/ -type f -name 'calamares-python.mo' -exec rm -f {} \;
-    find /usr/share/locale/ -type f -name 'apt.mo' -exec rm -f {} \;
-    find /usr/share/locale/ -type f -name 'dpkg.mo' -exec rm -f {} \;
-    find /usr/share/locale/ -type f -name 'libapt-pkg6.0.mo' -exec rm -f {} \;
-  else
-    echo "Item not found: $ITEM"
-  fi
-done < "$FILE_LIST"
-
-puts_success "Success! Cleanup complete, continuing..."
-
-
-# -- Also link the library files for cask to launch because maui-shell and cask-server used Jammy for compilation, and the frameworks used Debian.
-# -- KDE PIM libraries were renamed to different SO names because of course they were. Update the links on every new KF5 release.
-
-KDEPIM_LIB="5.24.3"
-KF5_LIB="5.113.0"
-
-create_symlink /usr/lib/x86_64-linux-gnu/libKPim5EventViews.so.$KDEPIM_LIB /usr/lib/x86_64-linux-gnu/libKF5EventViews.so.5abi1
-create_symlink /usr/lib/x86_64-linux-gnu/libKPim5CalendarSupport.so.$KDEPIM_LIB /usr/lib/x86_64-linux-gnu/libKF5CalendarSupport.so.5abi1
-create_symlink /usr/lib/x86_64-linux-gnu/libKPim5AkonadiCalendar.so.$KDEPIM_LIB /usr/lib/x86_64-linux-gnu/libKF5AkonadiCalendar.so.5abi1
-create_symlink /usr/lib/x86_64-linux-gnu/libKPim5AkonadiWidgets.so.$KDEPIM_LIB /usr/lib/x86_64-linux-gnu/libKF5AkonadiWidgets.so.5abi1
-create_symlink /usr/lib/x86_64-linux-gnu/libKPim5AkonadiCore.so.$KDEPIM_LIB /usr/lib/x86_64-linux-gnu/libKF5AkonadiCore.so.5abi2
-create_symlink /usr/lib/x86_64-linux-gnu/libKF5CalendarCore.so.$KF5_LIB /usr/lib/x86_64-linux-gnu/libKF5CalendarCore.so.5abi2
-
-
-# -- Add link for applet window buttons.
-# -- NOTE: Update the link on every new release of Plasma.
+#	Add link for applet window buttons.
+#	NOTE: Update the link on every new release of Plasma.
 
 PLASMA_LIB="5.27.10"
 
@@ -112,7 +76,7 @@ create_symlink /usr/lib/x86_64-linux-gnu/libkdecorations2private.so.$PLASMA_LIB 
 
 
 # -- Update /etc stuff we use.
-# -- We do this here because otherwise, we wouldn't be able to clean up this stuff.
+# -- We do this here because otherwise, we wouldn't be able to update this stuff.
 # -- For some inexplicable reason we can't add /etc to an SquashFS archive.
 
 NX_SET_DIR=$(mktemp -d)
@@ -131,7 +95,7 @@ rm -rf \
   /usr/bin/desktop-config
 
 git clone --depth=1 --branch $NX_SET_BRANCH https://github.com/Nitrux/nx-desktop-settings.git "$NX_SET_DIR" || {
-    puts_error "Failed to clone repository."
+    puts_error "Failed to clone settings repository."
     exit 1
 }
 

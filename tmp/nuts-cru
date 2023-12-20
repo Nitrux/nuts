@@ -345,7 +345,8 @@ sync
 puts_success "Success! Update has been applied."
 
 
-# -- Do a cleanup of the synced root.
+# -- Clean up the synced root after updating.
+# -- We run this to update our settings in /etc and the GRUB menu with the new kernel. Also, to update the link for applet window buttons plasmoid.
 
 puts_info "Calling the $TOOL_NAME Cleanup Crew, continuing..."
 

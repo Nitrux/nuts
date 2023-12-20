@@ -285,26 +285,9 @@ rm -f "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)"
 puts_success "Success! ${TARGET_DIST^} update rolled back."
 
 
-# -- Do a cleanup of the synced root.
+# -- Clean up the synced root after restoring.
 
-puts_info "Calling the $TOOL_NAME Cleanup Crew, continuing..."
-
-CLEANUP_SCRIPT_URL="https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-ccr"
-FILE_LIST_URL="https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-cc-file.list"
-
-dl_file "$CLEANUP_SCRIPT_URL" >"$OUTPUT_FILE" || { puts_error "Failed to download the cleanup script, quitting."; exit 1; }
-dl_file "$FILE_LIST_URL" >"$OUTPUT_FILE" || { puts_error "Failed to download the file list, quitting."; exit 1; }
-
-if chmod +x /tmp/nuts-ccr && bash /tmp/nuts-ccr >"$OUTPUT_FILE"; then
-    puts_success "Cleanup script executed successfully."
-else
-    puts_error "Something failed in the cleanup script, quitting."
-    unmount_directory "/home" >"$OUTPUT_FILE" || { puts_error "Failed to unmount /home, quitting."; exit 1; }
-    unmount_directory "/dev" >"$OUTPUT_FILE" || { puts_error "Failed to unmount /dev, quitting."; exit 1; }
-    exit 1
-fi
-
-rm -f /tmp/nuts-ccr
+#<!> -- Remove code since there's nothing to clean up during restore. -- <!>
 
 
 # -- Update GRUB.
