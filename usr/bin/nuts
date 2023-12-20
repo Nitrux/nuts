@@ -346,7 +346,7 @@ done
 			DISTRIB_RELEASE=$(grep 'DISTRIB_RELEASE' /etc/lsb-release | cut -d'=' -f2)
 			MINTARGET=$(grep 'MINTARGET=' /tmp/nuts-query.info | cut -d'=' -f2)
 			if [[ "$DISTRIB_RELEASE" != "$MINTARGET" ]]; then
-				puts_info "This version of Nitrux can't be upgraded, quitting..."
+				puts_info "This version of ${TARGET_DIST^} can't be upgraded, quitting..."
 				exit 1
 			fi
 
