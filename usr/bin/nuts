@@ -346,7 +346,7 @@ done
 			DISTRIB_RELEASE=$(grep 'DISTRIB_RELEASE' /etc/lsb-release | cut -d'=' -f2)
 			MINTARGET=$(grep 'MINTARGET=' /tmp/nuts-query.info | cut -d'=' -f2)
 			if [[ "$DISTRIB_RELEASE" != "$MINTARGET" ]]; then
-				puts_info "This version of ${TARGET_DIST^} can't be upgraded, quitting..."
+				puts_info "This version of ${TARGET_DIST^} can't be upgraded, quitting."
 				exit 1
 			fi
 
@@ -370,7 +370,7 @@ done
 			if [[ ! -d "$DIR" ]]; then
 				puts_error "Directory '$DIR' does not exist. Creating the directory..."
 				if ! mkdir -p "$DIR"; then
-				puts_error "Failed to create directory '$DIR', quitting..."
+				puts_error "Failed to create directory '$DIR', quitting."
 				exit 1
 				fi
 				puts_info "Directory '$DIR' created successfully."
@@ -587,14 +587,14 @@ done
 
 				rm -f "$DECOMPRESSED_XFS_BACKUP"
 
-				unmount_directory "/media/$NUTS_USER/NX_ROOT"
-				unmount_directory "/media/$NUTS_USER/NX_HOME"
+				unmount_directory "/media/$NUTS_USER/NX_ROOT" || { puts_error "Failed to unmount NX_ROOT, quitting."; exit 1; }
+				unmount_directory "/media/$NUTS_USER/NX_HOME" || { puts_error "Failed to unmount NX_HOME, quitting."; exit 1; }
 			else
 				puts_warning "Only use this option from a Live session and in an emergency."
 				puts_info "For a non-emergency situation, use: "$TOOL_SHRT_NAME restore"."
 
-				unmount_directory "/media/$NUTS_USER/NX_ROOT"
-				unmount_directory "/media/$NUTS_USER/NX_HOME"
+				unmount_directory "/media/$NUTS_USER/NX_ROOT" || { puts_error "Failed to unmount NX_ROOT, quitting."; exit 1; }
+				unmount_directory "/media/$NUTS_USER/NX_HOME" || { puts_error "Failed to unmount NX_HOME, quitting."; exit 1; }
 				exit 0
 			fi
 

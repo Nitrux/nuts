@@ -200,8 +200,8 @@ for DIR in "${DIRECTORIES[@]}"; do
     puts_error "Directory '$DIR' does not exist. Creating the directory..."
     if ! mkdir -p "$DIR"; then
       puts_error "Failed to create directory '$DIR', quitting."
-      unmount_directory "/home" >"$OUTPUT_FILE"
-      unmount_directory "/dev" >"$OUTPUT_FILE"
+      unmount_directory "/home" >"$OUTPUT_FILE" || { puts_error "Failed to unmount /home, quitting."; exit 1; }
+      unmount_directory "/dev" >"$OUTPUT_FILE" || { puts_error "Failed to unmount /dev, quitting."; exit 1; }
       exit 1
     fi
     puts_info "Directory '$DIR' created successfully."
@@ -223,8 +223,8 @@ if [[ -f "$NUTS_DIR_BAK/nuts-backup.md5sum" ]]; then
         puts_info "Backup checksum matches, continuing..."
     else
         puts_error "Backup checksum does not match, quitting."
-        unmount_directory "/home" >"$OUTPUT_FILE"
-        unmount_directory "/dev" >"$OUTPUT_FILE"
+        unmount_directory "/home" >"$OUTPUT_FILE" || { puts_error "Failed to unmount /home, quitting."; exit 1; }
+        unmount_directory "/dev" >"$OUTPUT_FILE" || { puts_error "Failed to unmount /dev, quitting."; exit 1; }
         exit 1
     fi
 else
@@ -248,9 +248,9 @@ BACKUP_LIST_SUM=$(md5sum "$NUTS_DIR_SQS"/installed_pkgs_end.txt | cut -c -32)
 
 if [[ "$LOCAL_SUM" == "$BACKUP_LIST_SUM" ]]; then
   puts_info "The current installation of ${TARGET_DIST^} is the same as the backup, quitting."
-  unmount_directory "$NUTS_DIR_SQS" >"$OUTPUT_FILE"
-  unmount_directory "/home" >"$OUTPUT_FILE"
-  unmount_directory "/dev" >"$OUTPUT_FILE"
+  unmount_directory "$NUTS_DIR_SQS" >"$OUTPUT_FILE" || { puts_error "Failed to mount SquashFS file, quitting."; exit 1; }
+  unmount_directory "/home" >"$OUTPUT_FILE" || { puts_error "Failed to unmount /home, quitting."; exit 1; }
+  unmount_directory "/dev" >"$OUTPUT_FILE" || { puts_error "Failed to unmount /dev, quitting."; exit 1; }
   exit 0
 else
   puts_info "Preparing to rollback update of ${TARGET_DIST^}, continuing..."
@@ -277,8 +277,8 @@ eval "$RSYNC_COMMAND" | {
 
 sync
 
-unmount_directory "$NUTS_DIR_SQS" >"$OUTPUT_FILE"
-unmount_directory "/home" >"$OUTPUT_FILE"
+unmount_directory "$NUTS_DIR_SQS" >"$OUTPUT_FILE" || { puts_error "Failed to mount SquashFS file, quitting."; exit 1; }
+unmount_directory "/home" >"$OUTPUT_FILE" || { puts_error "Failed to unmount /home, quitting."; exit 1; }
 
 rm -f "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)"
 
@@ -299,8 +299,8 @@ if chmod +x /tmp/nuts-ccr && bash /tmp/nuts-ccr >"$OUTPUT_FILE"; then
     puts_success "Cleanup script executed successfully."
 else
     puts_error "Something failed in the cleanup script, quitting."
-    unmount_directory "/home" >"$OUTPUT_FILE"
-    unmount_directory "/dev" >"$OUTPUT_FILE"
+    unmount_directory "/home" >"$OUTPUT_FILE" || { puts_error "Failed to unmount /home, quitting."; exit 1; }
+    unmount_directory "/dev" >"$OUTPUT_FILE" || { puts_error "Failed to unmount /dev, quitting."; exit 1; }
     exit 1
 fi
 
@@ -312,9 +312,11 @@ rm -f /tmp/nuts-ccr
 update-grub >"$OUTPUT_FILE" 2>&1
 
 
-# -- Unmount /dev.
+# -- Unmount directories after sync and before exiting chroot.
 
-unmount_directory "/dev" >"$OUTPUT_FILE"
+unmount_directory "$NUTS_DIR_SQS" >"$OUTPUT_FILE" || { puts_error "Failed to mount SquashFS file, quitting."; exit 1; }
+unmount_directory "/home" >"$OUTPUT_FILE" || { puts_error "Failed to unmount /home, quitting."; exit 1; }
+unmount_directory "/dev" >"$OUTPUT_FILE" || { puts_error "Failed to unmount /dev, quitting."; exit 1; }
 
 
 # -- **DO NOT PERFORM ANY FILE OPERATION AFTER THIS POINT**

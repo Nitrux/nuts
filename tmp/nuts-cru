@@ -213,8 +213,8 @@ for DIR in "${DIRECTORIES[@]}"; do
     puts_error "Directory '$DIR' does not exist. Creating the directory..."
     if ! mkdir -p "$DIR"; then
       puts_error "Failed to create directory '$DIR', quitting."
-      unmount_directory "/home" >"$OUTPUT_FILE"
-      unmount_directory "/dev" >"$OUTPUT_FILE"
+      unmount_directory "/home" >"$OUTPUT_FILE" || { puts_error "Failed to unmount /home, quitting."; exit 1; }
+      unmount_directory "/dev" >"$OUTPUT_FILE" || { puts_error "Failed to unmount /dev, quitting."; exit 1; }
       exit 1
     fi
     puts_info "Directory '$DIR' created successfully."
@@ -290,8 +290,8 @@ else
     done
     if [ "$DOWNLOAD_SUCCESS" = false ]; then
         puts_error "Download failed from all mirrors, quitting."
-        unmount_directory "/home" >"$OUTPUT_FILE"
-        unmount_directory "/dev" >"$OUTPUT_FILE"
+        unmount_directory "/home" >"$OUTPUT_FILE" || { puts_error "Failed to unmount /home, quitting."; exit 1; }
+        unmount_directory "/dev" >"$OUTPUT_FILE" || { puts_error "Failed to unmount /dev, quitting."; exit 1; }
         exit 1
     fi
 fi
@@ -308,8 +308,8 @@ if [[ "$LOCAL_OTA_SUM" == "$NQ_OTA_SUM" ]]; then
 else
     puts_error "OTA file checksum does not match, quitting."
     rm "$NUTS_DIR_DLS"/nuts-ota.squashfs
-    unmount_directory "/home" >"$OUTPUT_FILE"
-    unmount_directory "/dev" >"$OUTPUT_FILE"
+    unmount_directory "/home" >"$OUTPUT_FILE" || { puts_error "Failed to unmount /home, quitting."; exit 1; }
+    unmount_directory "/dev" >"$OUTPUT_FILE" || { puts_error "Failed to unmount /dev, quitting."; exit 1; }
     exit 1
 fi
 
@@ -342,9 +342,6 @@ rm -f "$FILE_LIST"
 
 sync
 
-unmount_directory "$NUTS_DIR_SQS" >"$OUTPUT_FILE"
-unmount_directory "/home" >"$OUTPUT_FILE"
-
 puts_success "Success! Update has been applied."
 
 
@@ -362,17 +359,19 @@ if chmod +x /tmp/nuts-ccu && bash /tmp/nuts-ccu >"$OUTPUT_FILE"; then
     puts_success "Cleanup script executed successfully."
 else
     puts_error "Something failed in the cleanup script, quitting."
-    unmount_directory "/home" >"$OUTPUT_FILE"
-    unmount_directory "/dev" >"$OUTPUT_FILE"
+    unmount_directory "/home" >"$OUTPUT_FILE" || { puts_error "Failed to unmount /home, quitting."; exit 1; }
+    unmount_directory "/dev" >"$OUTPUT_FILE" || { puts_error "Failed to unmount /dev, quitting."; exit 1; }
     exit 1
 fi
 
 rm -f /tmp/nuts-ccu
 
 
-# -- Unmount /dev.
+# -- Unmount directories after sync and before exiting chroot.
 
-unmount_directory "/dev" >"$OUTPUT_FILE"
+unmount_directory "$NUTS_DIR_SQS" >"$OUTPUT_FILE" || { puts_error "Failed to mount SquashFS file, quitting."; exit 1; }
+unmount_directory "/home" >"$OUTPUT_FILE" || { puts_error "Failed to unmount /home, quitting."; exit 1; }
+unmount_directory "/dev" >"$OUTPUT_FILE" || { puts_error "Failed to unmount /dev, quitting."; exit 1; }
 
 
 # -- **DO NOT PERFORM ANY FILE OPERATION AFTER THIS POINT**
