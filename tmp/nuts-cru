@@ -351,10 +351,8 @@ puts_success "Success! Update has been applied."
 puts_info "Calling the $TOOL_NAME Cleanup Crew, continuing..."
 
 CLEANUP_SCRIPT_URL="https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-ccu"
-FILE_LIST_URL="https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-cc-file.list"
 
 dl_file "$CLEANUP_SCRIPT_URL" >"$OUTPUT_FILE" || { puts_error "Failed to download the cleanup script, quitting."; exit 1; }
-dl_file "$FILE_LIST_URL" >"$OUTPUT_FILE" || { puts_error "Failed to download the file list, quitting."; exit 1; }
 
 if chmod +x /tmp/nuts-ccu && bash /tmp/nuts-ccu >"$OUTPUT_FILE"; then
     puts_success "Cleanup script executed successfully."
