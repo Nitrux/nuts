@@ -319,7 +319,7 @@ fi
 mount "$NUTS_DIR_DLS"/nuts-ota.squashfs "$NUTS_DIR_SQS" >"$OUTPUT_FILE" 2>&1 || { puts_error "Failed to mount SquashFS file, quitting."; exit 1; }
 
 
-# -- Now comes the good part; proceed with running rsync and update the current installation.
+# -- Now comes the good part; update the current installation.
 
 puts_info "Updating ${CURRENT_DIST^}, continuing..."
 
