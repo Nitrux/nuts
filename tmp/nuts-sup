@@ -30,7 +30,8 @@ set -eu
 
 # -- Set program name and version.
 
-TOOL_NAME="Nitrux Update System Tool (self-update component)"
+TOOL_NAME="Nitrux Update Tool System"
+COMP_NAME="(Self-Update Component)"
 SUP_VERSION="$(md5sum /usr/bin/nuts-sup | cut -c -32)"
 
 
@@ -54,7 +55,7 @@ puts_success() {
 
 # -- Display version of running component.
 
-puts_info "$TOOL_NAME version $SUP_VERSION."
+puts_info "$TOOL_NAME $COMP_NAME version $SUP_VERSION."
 
 
 # -- Define the path of the nuts configuration file.
@@ -75,9 +76,22 @@ else
 fi
 
 
+# -- Functions.
+
+unmount_directory() {
+  local DIRECTORY="$1"
+
+  if mountpoint -q "$DIRECTORY"; then
+    puts_info "Unmounting: $DIRECTORY"
+    umount "$DIRECTORY"
+  else
+    puts_info "Directory is not mounted: $DIRECTORY"
+  fi
+}
+
+
 # -- Variables.
 
-OUTPUT_FILE=$(mktemp)
 NUTS_GIT_DIR=$(mktemp -d)
 
 #   ====== START ======
@@ -89,7 +103,7 @@ for cmd; do
 		-v | --version)
 			print_message "$TOOL_NAME" \
 				"" \
-				"Version (update component): $SUP_VERSION." \
+				"Version $COMP_NAME: $SUP_VERSION." \
 				"" \
 				"The license used for this file and its contents is: BSD-3-Clause." \
 				"" \
@@ -110,12 +124,32 @@ done
 CURRENT_NUTS_BRANCH=$(grep -oP '^NUTS_BRANCH=\K.*' "$CONFIG_FILE")
 
 
+# -- Mount the devices filesystem.
+# -- Check if /dev is already mounted.
+
+if mountpoint -q /dev; then
+    puts_info "/dev is already mounted. Unmounting..."
+    umount /dev
+fi
+
+puts_info "Mounting /dev..."
+mount -t devtmpfs dev /dev
+
+
 # -- Update utility.
 
-mount -t devtmpfs dev /dev >"$OUTPUT_FILE"
-git clone --depth=1 --branch "$NUTS_BRANCH" https://github.com/Nitrux/nuts.git "$NUTS_GIT_DIR" >"$OUTPUT_FILE"
-cp "$NUTS_GIT_DIR/usr/bin/nuts" /usr/bin >"$OUTPUT_FILE"
-cp "$NUTS_GIT_DIR/etc/nuts.conf" /etc >"$OUTPUT_FILE"
+puts_info "Updating $TOOL_NAME to the latest version, continuing..."
+
+git clone --depth=1 --branch "$NUTS_BRANCH" https://github.com/Nitrux/nuts.git "$NUTS_GIT_DIR" > /dev/null 2>&1
+if [ ! -f /usr/bin/nuts ] || [ "$(md5sum "$NUTS_GIT_DIR/usr/bin/nuts" | cut -d " " -f 1)" != "$(md5sum /usr/bin/nuts | cut -d " " -f 1)" ]; then
+    puts_info "$TOOL_NAME is being updated, continuing..."
+    cp "$NUTS_GIT_DIR/usr/bin/nuts" /usr/bin
+    cp "$NUTS_GIT_DIR/etc/nuts.conf" /etc
+else
+    unmount_directory "/dev"
+    puts_info "$TOOL_NAME is already at the latest version. Bye."
+    exit 0
+fi
 
 
 # -- Restore the value of NUTS_BRANCH in /etc/nuts.conf.
@@ -123,14 +157,35 @@ cp "$NUTS_GIT_DIR/etc/nuts.conf" /etc >"$OUTPUT_FILE"
 if [[ -n $CURRENT_NUTS_BRANCH ]]; then
     sed -i "s/^NUTS_BRANCH=.*$/NUTS_BRANCH=$CURRENT_NUTS_BRANCH/" "$CONFIG_FILE"
 else
-    puts_error "Failed to restore NUTS_BRANCH."
+    puts_error "Failed to restore $TOOL_NAME branch." 
     exit 1
 fi
 
-umount /dev >"$OUTPUT_FILE"
+
+# -- Unmount directories after update and before exiting chroot.
+
+unmount_directory "$NUTS_DIR_SQS"
+unmount_directory "/home"
+unmount_directory "/dev"
+
+
+# -- **DO NOT PERFORM ANY FILE OPERATION AFTER THIS POINT**
 
 sync
 
 puts_success "Success! $TOOL_NAME has been updated."
+
+
+# -- Finalizing.
+# -- Leave the Matri... I mean, the overlay.
+
+REBOOT_SECONDS=5
+
+puts_info "Rebooting to load changes into overlay in $REBOOT_SECONDS seconds. Bye."
+
+sleep $REBOOT_SECONDS
+
+reboot
+
 
 #   ====== END ======

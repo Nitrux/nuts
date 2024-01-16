@@ -1,3 +1,14 @@
+nuts (2.1.0) nitrux; urgency=medium
+
+  * Refactor nuts-cru (update component).
+  * Remove code to manage kernel from nuts-ccu, diver users to use Kernel Boot to add new kernels.
+  * Add to toggle removing or keeping backups during updates.
+  * Improve status messages.
+  * When using self-update, display a message when there's no updates to apply.
+  * nuts-ccu also updates the system appimages and static binaries.
+
+ -- Uri Herrera <uri_herrera@nxos.org>  Mon, 15 Jan 2023 19:00:00 -0500
+
 nuts (2.0.2) nitrux; urgency=medium
 
   * Update stuff in /etc that we add since SquashFS does not support including sub-directories when creating an archive.

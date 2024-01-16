@@ -30,7 +30,8 @@ set -eu
 
 # -- Set program name and version.
 
-TOOL_NAME="Nitrux Update System Tool (restore component)"
+TOOL_NAME="Nitrux Update Tool System"
+COMP_NAME="(Restore Component)"
 CRR_VERSION="$(md5sum /usr/bin/nuts-crr | cut -c -32)"
 
 
@@ -72,7 +73,7 @@ print_message() {
 
 # -- Display version of running component.
 
-puts_info "$TOOL_NAME version $CRR_VERSION."
+puts_info "$TOOL_NAME $COMP_NAME version $CRR_VERSION."
 
 
 # -- Define the path of the nuts configuration file.
@@ -119,7 +120,6 @@ dl_file() {
     fi
 }
 
-
 unmount_directory() {
   local DIRECTORY="$1"
 
@@ -131,12 +131,17 @@ unmount_directory() {
   fi
 }
 
+unmount_on_failure() {
+    unmount_directory "/home" || { puts_error "Failed to unmount /home."; }
+    unmount_directory "/dev" || { puts_error "Failed to unmount /dev."; }
+    exit 1
+}
+
 
 # -- Variables.
 
 CURRENT_DIST=$(awk -F'=' '/VERSION_CODENAME/{print $NF}' /etc/os-release)
 TARGET_DIST="nitrux"
-OUTPUT_FILE=$(mktemp)
 
 #   ====== START ======
 
@@ -147,7 +152,7 @@ for cmd; do
 		-v | --version)
 			print_message "$TOOL_NAME" \
 				"" \
-				"Version (backup component): $CRR_VERSION." \
+				"Version $COMP_NAME: $CRR_VERSION." \
 				"" \
 				"The license used for this file and its contents is: BSD-3-Clause." \
 				"" \
@@ -200,9 +205,7 @@ for DIR in "${DIRECTORIES[@]}"; do
     puts_error "Directory '$DIR' does not exist. Creating the directory..."
     if ! mkdir -p "$DIR"; then
       puts_error "Failed to create directory '$DIR', quitting."
-      unmount_directory "/home" >"$OUTPUT_FILE"
-      unmount_directory "/dev" >"$OUTPUT_FILE"
-      exit 1
+      unmount_on_failure
     fi
     puts_info "Directory '$DIR' created successfully."
   fi
@@ -223,9 +226,7 @@ if [[ -f "$NUTS_DIR_BAK/nuts-backup.md5sum" ]]; then
         puts_info "Backup checksum matches, continuing..."
     else
         puts_error "Backup checksum does not match, quitting."
-        unmount_directory "/home" >"$OUTPUT_FILE"
-        unmount_directory "/dev" >"$OUTPUT_FILE"
-        exit 1
+        unmount_on_failure
     fi
 else
     puts_error "Backup checksum does not exist, quitting."
@@ -236,7 +237,7 @@ fi
 # -- Mount the SquashFS.
 # -- **ALWAYS** use the newest SquashFS in the directory. The user can't select which backup to restore.
 
-mount "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)" "$NUTS_DIR_SQS" >"$OUTPUT_FILE" || { puts_error "Failed to mount SquashFS file, quitting."; exit 1; }
+mount "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)" "$NUTS_DIR_SQS"
 
 
 # -- Check that the backup is not the same as the current installation.
@@ -248,9 +249,9 @@ BACKUP_LIST_SUM=$(md5sum "$NUTS_DIR_SQS"/installed_pkgs_end.txt | cut -c -32)
 
 if [[ "$LOCAL_SUM" == "$BACKUP_LIST_SUM" ]]; then
   puts_info "The current installation of ${TARGET_DIST^} is the same as the backup, quitting."
-  unmount_directory "$NUTS_DIR_SQS" >"$OUTPUT_FILE"
-  unmount_directory "/home" >"$OUTPUT_FILE"
-  unmount_directory "/dev" >"$OUTPUT_FILE"
+  unmount_directory "$NUTS_DIR_SQS"
+  unmount_directory "/home"
+  unmount_directory "/dev"
   exit 0
 else
   puts_info "Preparing to rollback update of ${TARGET_DIST^}, continuing..."
@@ -261,7 +262,7 @@ fi
 
 puts_info "Restoring backup of ${CURRENT_DIST^}, continuing..."
 
-dl_file "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/rsync-exclude.list" >"$OUTPUT_FILE"
+dl_file "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/rsync-exclude.list"
 
 SOURCE_DIR="$NUTS_DIR_SQS"
 DESTINATION_DIR="/"
@@ -277,44 +278,26 @@ eval "$RSYNC_COMMAND" | {
 
 sync
 
-unmount_directory "$NUTS_DIR_SQS" >"$OUTPUT_FILE"
-unmount_directory "/home" >"$OUTPUT_FILE"
-
 rm -f "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)"
 
 puts_success "Success! ${TARGET_DIST^} update rolled back."
 
 
-# -- Do a cleanup of the synced root.
+# -- Clean up the root after restoring.
 
-puts_info "Calling the $TOOL_NAME Cleanup Crew, continuing..."
-
-CLEANUP_SCRIPT_URL="https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-ccr"
-FILE_LIST_URL="https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-cc-file.list"
-
-dl_file "$CLEANUP_SCRIPT_URL" >"$OUTPUT_FILE" || { puts_error "Failed to download the cleanup script, quitting."; exit 1; }
-dl_file "$FILE_LIST_URL" >"$OUTPUT_FILE" || { puts_error "Failed to download the file list, quitting."; exit 1; }
-
-if chmod +x /tmp/nuts-ccr && bash /tmp/nuts-ccr >"$OUTPUT_FILE"; then
-    puts_success "Cleanup script executed successfully."
-else
-    puts_error "Something failed in the cleanup script, quitting."
-    unmount_directory "/home" >"$OUTPUT_FILE"
-    unmount_directory "/dev" >"$OUTPUT_FILE"
-    exit 1
-fi
-
-rm -f /tmp/nuts-ccr
+#<!> -- Remove code since there's nothing to clean up after a restoration. -- <!>
 
 
 # -- Update GRUB.
 
-update-grub >"$OUTPUT_FILE" 2>&1
+update-grub
 
 
-# -- Unmount /dev.
+# -- Unmount directories after restore and before exiting chroot.
 
-unmount_directory "/dev" >"$OUTPUT_FILE"
+unmount_directory "$NUTS_DIR_SQS"
+unmount_directory "/home"
+unmount_directory "/dev"
 
 
 # -- **DO NOT PERFORM ANY FILE OPERATION AFTER THIS POINT**
@@ -325,6 +308,12 @@ sync
 # -- Finalizing.
 # -- Leave the Matri... I mean, the overlay.
 
-exit
+REBOOT_SECONDS=5
+
+puts_info "Rebooting to load changes into overlay in $REBOOT_SECONDS seconds. Bye."
+
+sleep $REBOOT_SECONDS
+
+reboot
 
 #   ====== END ======

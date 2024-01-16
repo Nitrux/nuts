@@ -30,7 +30,8 @@ set -eu
 
 # -- Set program name and version.
 
-TOOL_NAME="Nitrux Update System Tool (update component)"
+TOOL_NAME="Nitrux Update Tool System"
+COMP_NAME="(Update Component)"
 CRU_VERSION="$(md5sum /usr/bin/nuts-cru | cut -c -32)"
 
 
@@ -72,7 +73,7 @@ print_message() {
 
 # -- Display version of running component.
 
-puts_info "$TOOL_NAME version $CRU_VERSION."
+puts_info "$TOOL_NAME $COMP_NAME version $CRU_VERSION."
 
 
 # -- Define the path of the nuts configuration file.
@@ -119,8 +120,13 @@ dl_file() {
     fi
 }
 
-
 bak_cc() {
+    UPDATE_DELETES_BACKUPS=$(grep '^UPDATE_DELETES_BACKUPS=' /etc/nuts.conf | cut -d'=' -f2)
+
+    if [ "$UPDATE_DELETES_BACKUPS" != "yes" ]; then
+        return 0
+    fi
+
     if [ ! -d "$NUTS_DIR_BAK" ]; then
         return 1
     fi
@@ -133,7 +139,6 @@ bak_cc() {
     find "$NUTS_DIR_BAK" -maxdepth 1 -type f | sort -r | tail -n +$((BACKUPS_TO_KEEP + 1)) | xargs --no-run-if-empty rm
 }
 
-
 unmount_directory() {
   local DIRECTORY="$1"
 
@@ -145,11 +150,33 @@ unmount_directory() {
   fi
 }
 
+unmount_on_failure() {
+    unmount_directory "/home" || { puts_error "Failed to unmount /home."; }
+    unmount_directory "/dev" || { puts_error "Failed to unmount /dev."; }
+    exit 1
+}
+
+spinner() {
+    local pid=$!
+    local delay=0.1
+    local spinstr='|/-\'
+    local elapsed=0
+
+    while ps a | awk '{print $1}' | grep -q "$pid"; do
+        local temp=${spinstr#?}
+        printf " [%c]  Elapsed time: %s seconds" "$spinstr" "$elapsed"
+        local spinstr=$temp${spinstr%"$temp"}
+        sleep $delay
+        elapsed=$(echo "$elapsed + $delay" | bc)
+        printf "\r"
+    done
+    printf "\n"
+}
+
 
 # -- Variables.
 
 CURRENT_DIST=$(awk -F'=' '/VERSION_CODENAME/{print $NF}' /etc/os-release)
-OUTPUT_FILE=$(mktemp)
 
 #   ====== START ======
 
@@ -160,7 +187,7 @@ for cmd; do
 		-v | --version)
 			print_message "$TOOL_NAME" \
 				"" \
-				"Version (update component): $CRU_VERSION." \
+				"Version $COMP_NAME: $CRU_VERSION." \
 				"" \
 				"The license used for this file and its contents is: BSD-3-Clause." \
 				"" \
@@ -213,9 +240,7 @@ for DIR in "${DIRECTORIES[@]}"; do
     puts_error "Directory '$DIR' does not exist. Creating the directory..."
     if ! mkdir -p "$DIR"; then
       puts_error "Failed to create directory '$DIR', quitting."
-      unmount_directory "/home" >"$OUTPUT_FILE"
-      unmount_directory "/dev" >"$OUTPUT_FILE"
-      exit 1
+      unmount_on_failure
     fi
     puts_info "Directory '$DIR' created successfully."
   fi
@@ -268,7 +293,7 @@ puts_success "Success! Backup has been created."
 # -- Download the OTA SquashFS with axel.
 # -- Check if the OTA SquashFS already exists so it's not downloaded again. If an OTA file was downloaded then rename it.
 # -- However, If the OTA file found doesn't match the checksum in nuts-query.info, it will still cause the utility to exit at a later stage.
-# -- Use the list of mirrors from the query file.
+# -- Use the list of mirrors from the query file, or exit if downloading the file from all mirrors fails.
 
 OTA_FILE="$NUTS_DIR_DLS/nuts-ota.squashfs"
 
@@ -280,19 +305,22 @@ else
     DOWNLOAD_SUCCESS=false
     for MIRROR_URL in $MIRROR_LIST; do
         puts_info "Trying mirror URL: $MIRROR_URL"
-        if axel -q -n 10 -o "$OTA_FILE" "$MIRROR_URL"; then
-            puts_success "Download complete!, continuing..."
+        axel -q -n 10 -o "$OTA_FILE" "$MIRROR_URL" &
+        spinner
+        wait $!
+
+        if ! wait $!; then
+            puts_error "Download from $MIRROR_URL failed. Trying the next mirror..."
+        else
+            puts_success "Success! OTA update download completed, continuing..."
             DOWNLOAD_SUCCESS=true
             break
-        else
-            puts_error "Download from $MIRROR_URL failed. Trying the next mirror..."
         fi
     done
+
     if [ "$DOWNLOAD_SUCCESS" = false ]; then
         puts_error "Download failed from all mirrors, quitting."
-        unmount_directory "/home" >"$OUTPUT_FILE"
-        unmount_directory "/dev" >"$OUTPUT_FILE"
-        exit 1
+        unmount_on_failure
     fi
 fi
 
@@ -308,71 +336,81 @@ if [[ "$LOCAL_OTA_SUM" == "$NQ_OTA_SUM" ]]; then
 else
     puts_error "OTA file checksum does not match, quitting."
     rm "$NUTS_DIR_DLS"/nuts-ota.squashfs
-    unmount_directory "/home" >"$OUTPUT_FILE"
-    unmount_directory "/dev" >"$OUTPUT_FILE"
-    exit 1
+    unmount_on_failure
 fi
 
 
 # -- Mount the OTA SquashFS.
 
-mount "$NUTS_DIR_DLS"/nuts-ota.squashfs "$NUTS_DIR_SQS" >"$OUTPUT_FILE" 2>&1 || { puts_error "Failed to mount SquashFS file, quitting."; exit 1; }
+mount "$NUTS_DIR_DLS"/nuts-ota.squashfs "$NUTS_DIR_SQS"
 
 
-# -- Now comes the good part; proceed with running rsync and update the current installation.
+# -- Now comes the good part; update the current installation.
 
 puts_info "Updating ${CURRENT_DIST^}, continuing..."
 
-SOURCE_DIR="$NUTS_DIR_SQS"
-DESTINATION_DIR="/"
-FILE_LIST=$(mktemp)
+APPIMAGE_URL="https://github.com/UriHerrera/storage/raw/master/AppImages/dpkg-1.19.7-x86_64.AppImage"
+AIFILE_DL_PATH="/tmp/dpkg-1.19.7-x86_64.AppImage"
+AIPKG_MANAGER="/tmp/pkgman"
+VAR_DATA_URL="https://raw.githubusercontent.com/Nitrux/storage/development/Other/var-lib-dpkg-3-2-0.tar.xz"
+TARFILE_DL_PATH="/tmp/var-lib-dpkg-3-2-0.tar.xz"
 
-cd "$SOURCE_DIR" && find . -type f > "$FILE_LIST"
+if dl_file "$APPIMAGE_URL" > "$AIFILE_DL_PATH" && \
+   [[ $(file --mime-type -b "$AIFILE_DL_PATH") == "application/x-executable" ]] && \
+   mv "$AIFILE_DL_PATH" "$AIPKG_MANAGER" && chmod +x "$AIPKG_MANAGER" && ln -sv "$AIPKG_MANAGER" /usr/bin/dpkg > /dev/null 2>&1; then
+    puts_info "Preparing to apply OTA update, continuing..."
+else
+    puts_error "Failed to download or process the AppImage, quitting."
+    unmount_on_failure
+fi
 
-RSYNC_COMMAND="rsync -aHAXh --info=progress2 --progress --files-from=$FILE_LIST $SOURCE_DIR/ $DESTINATION_DIR"
+if dl_file "$VAR_DATA_URL" > "$TARFILE_DL_PATH" && \
+   mkdir -p /var/lib/dpkg && \
+   (cd / && tar -xf "$TARFILE_DL_PATH") && \
+   [ -f /var/lib/dpkg/status ]; then
+    puts_success "Success! Data archive downloaded and extracted successfully, continuing..."
+else
+    puts_error "Failed to download or extract the data archive, quitting."
+    unmount_on_failure
+fi
 
-eval "$RSYNC_COMMAND" | {
-  while IFS= read -r line; do
-    echo -ne "\rProgress: $line\033[K"
-  done
-  echo -e "\n"
-}
+puts_info "Proceeding to apply updates, continuing..."
 
-rm -f "$FILE_LIST"
+find "${NUTS_DIR_SQS}/ota/updates/" -name '*.deb' -exec sh -c "DEBIAN_FRONTEND=noninteractive $AIPKG_MANAGER --force-all -i \"\$0\"" {} \; > /dev/null 2>&1 &
+spinner
+wait $!
 
-sync
+if ! wait $!; then
+    puts_error "Failed to apply updates, quitting."
+    unmount_on_failure
+fi
 
-unmount_directory "$NUTS_DIR_SQS" >"$OUTPUT_FILE"
-unmount_directory "/home" >"$OUTPUT_FILE"
-
-puts_success "Success! Update has been applied."
+puts_success "Success! Update process completed successfully, continuing..."
 
 
-# -- Do a cleanup of the synced root.
+# -- Clean up the updated root after updating.
 
-puts_info "Calling the $TOOL_NAME Cleanup Crew, continuing..."
+puts_info "Calling the $TOOL_NAME $COMP_NAME Cleanup Crew, continuing..."
 
 CLEANUP_SCRIPT_URL="https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-ccu"
-FILE_LIST_URL="https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-cc-file.list"
 
-dl_file "$CLEANUP_SCRIPT_URL" >"$OUTPUT_FILE" || { puts_error "Failed to download the cleanup script, quitting."; exit 1; }
-dl_file "$FILE_LIST_URL" >"$OUTPUT_FILE" || { puts_error "Failed to download the file list, quitting."; exit 1; }
+dl_file "$CLEANUP_SCRIPT_URL" >/tmp/nuts-ccu || { puts_error "Failed to download the cleanup script, quitting." ; exit 1; }
 
-if chmod +x /tmp/nuts-ccu && bash /tmp/nuts-ccu >"$OUTPUT_FILE"; then
-    puts_success "Cleanup script executed successfully."
+if chmod +x /tmp/nuts-ccu && bash /tmp/nuts-ccu ; then
+    puts_success "Success! Cleanup script executed without problems, continuing..."
 else
-    puts_error "Something failed in the cleanup script, quitting."
-    unmount_directory "/home" >"$OUTPUT_FILE"
-    unmount_directory "/dev" >"$OUTPUT_FILE"
-    exit 1
+    puts_error "Something failed in the cleanup script, quitting." 
+    unmount_on_failure
 fi
 
 rm -f /tmp/nuts-ccu
 
 
-# -- Unmount /dev.
+# -- Unmount directories after update and before exiting chroot.
 
-unmount_directory "/dev" >"$OUTPUT_FILE"
+unmount_directory "$NUTS_DIR_SQS"
+unmount_directory "/home"
+unmount_directory "/dev"
 
 
 # -- **DO NOT PERFORM ANY FILE OPERATION AFTER THIS POINT**
@@ -383,6 +421,12 @@ sync
 # -- Finalizing.
 # -- Leave the Matri... I mean, the overlay.
 
-exit
+REBOOT_SECONDS=5
+
+puts_info "Rebooting to load changes into overlay in $REBOOT_SECONDS seconds. Bye."
+
+sleep $REBOOT_SECONDS
+
+reboot
 
 #   ====== END ======
