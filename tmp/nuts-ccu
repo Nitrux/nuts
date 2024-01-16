@@ -286,12 +286,12 @@ puts_success "System AppImages and static binaries have been updated, continuing
 
 # -- Link kernel image to newer kernel.
 
-#<!> -- Remove code since we're not including the kernel in the archive, and we expect users to use Kernel Boot to use other kenels. -- <!>
+#<!> -- Remove code since we're not including the kernel in the archive, and we expect users to use Kernel Boot to add other kenels. -- <!>
 
 
 # -- Update GRUB.
 
-if update-grub; then
+if update-grub > /dev/null 2>&1; then
     puts_success "Success! GRUB menu was updated, continuing..."
 else
     puts_error "Failed to update GRUB menu, quitting."

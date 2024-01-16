@@ -137,6 +137,22 @@ unmount_on_failure() {
     exit 1
 }
 
+spinner() {
+    local pid=$!
+    local delay=0.1
+    local spinstr='|/-\'
+    local elapsed=0
+
+    while ps a | awk '{print $1}' | grep -q "$pid"; do
+        local temp=${spinstr#?}
+        printf " [%c]  Elapsed time: %s seconds" "$spinstr" "$elapsed"
+        local spinstr=$temp${spinstr%"$temp"}
+        sleep $delay
+        elapsed=$(echo "$elapsed + $delay" | bc)
+        printf "\r"
+    done
+    printf "\n"
+}
 
 # -- Variables.
 
@@ -262,19 +278,14 @@ fi
 
 puts_info "Restoring backup of ${CURRENT_DIST^}, continuing..."
 
-dl_file "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/rsync-exclude.list"
+dl_file "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/rsync-exclude.list" > /dev/null 2>&1
 
 SOURCE_DIR="$NUTS_DIR_SQS"
 DESTINATION_DIR="/"
 EXCLUDES_FILE="/tmp/rsync-exclude.list"
 
-RSYNC_COMMAND="stdbuf -oL rsync -aHAXh --info=progress2 --progress --exclude-from=$EXCLUDES_FILE $SOURCE_DIR/ $DESTINATION_DIR"
-eval "$RSYNC_COMMAND" | {
-  while IFS= read -r line; do
-    echo -ne "\rProgress: $line\033[K"
-  done
-  echo -e "\n"
-}
+rsync -aHAXh --exclude-from="$EXCLUDES_FILE" "$SOURCE_DIR/" "$DESTINATION_DIR" > /dev/null 2>&1 &
+spinner
 
 sync
 
@@ -290,7 +301,12 @@ puts_success "Success! ${TARGET_DIST^} update rolled back."
 
 # -- Update GRUB.
 
-update-grub
+if update-grub > /dev/null 2>&1; then
+    puts_success "Success! GRUB menu was updated, continuing..."
+else
+    puts_error "Failed to update GRUB menu, quitting."
+    exit 1
+fi
 
 
 # -- Unmount directories after restore and before exiting chroot.
