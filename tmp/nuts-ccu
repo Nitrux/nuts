@@ -280,7 +280,7 @@ spinner
 puts_success "System AppImages and static binaries have been updated, continuing..."
 
 ####################################################
-#   Enf of update AppImages and static binaries    #
+#   End of update AppImages and static binaries    #
 ####################################################
 
 
