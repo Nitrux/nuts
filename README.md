@@ -13,11 +13,11 @@ The Nitrux Update Tool System (`nuts`) utility is designed to update [Nitrux OS]
 
 # Overview
 
-The Nitrux Update Tool System (`nuts`) is a simple and minimalistic system update and rollback utility. It performs three steps:
+The Nitrux Update Tool System (`nuts`) is a simple, minimalistic system update and rollback utility. It performs three steps:
 
-1. Creates a backup of the root directory using SquashFS and the XFS partition and stores them locally.
-2. Downloads an [OTA-style](https://en.wikipedia.org/wiki/Over-the-air_update) update file and updates the system using a custom AppImage.
-3. Depending on the situation, the utility uses 'rsync', the locally generated SquashFS file, or the XFS tools when restoring a backup.
+1. It creates a backup of the root directory using SquashFS and the XFS partition using the XFS tools and stores them locally.
+2. Then, it downloads an [OTA-style](https://en.wikipedia.org/wiki/Over-the-air_update) update file and updates the system using a custom AppImage.
+3. Depending on the situation, the utility uses 'rsync' and the locally generated SquashFS file or the XFS tools when restoring a backup.
 
 > _♦ Information: The Nitrux Update Tool System (`nuts`) is included by default, starting with Nitrux 2.9.0._
 
@@ -46,7 +46,7 @@ The Nitrux Update Tool System (`nuts`) is a simple and minimalistic system updat
 ### Requirements
 
 - Nitrux 2.8.0+.
-> _♦ Information: The utility will work out of the box starting with the distribution's release; however, the update files can set a minimum version._
+> _♦ Information: The utility will work out of the box starting with the mentioned release; however, the update files can set a minimum version._
 - An active Internet connection.
 > _⚠️ Important: The update process requires mandatory active internet connectivity via wired or wireless connections. Please connect to a functional network before starting the installer. Additionally, your computer should be capable of reaching GitHub and the domain raw.githubusercontent.com._
 - Depending on the update file size, up to 1 GB is available in the home and root partitions.
@@ -82,7 +82,7 @@ sudo cp $HOME/nuts/etc/nuts.conf /etc
 
 **Rescue**: `nuts rescue`
 - Restores the backup of the XFS root partition in case of an interrupted update.
-   - _♦ Information: This operation is a special handling of an unforeseen event. If the update process were to be interrupted, the root would be inconsistent. That means the root is unusable, i.e., the user can't access the GUI or, worse, a TTY, so the user can't restore the SquashFS. This operation will allow the user to restore the root partition from a Live session. This operation does not replace `restore`; it exists if using `restore` is impossible. The user can only use this operation from a Live session._
+   - _♦ Information: This operation is a special handling of an unforeseen event. If the update process were interrupted, the root would be inconsistent. That means the root is unusable, i.e., the user can't access the GUI or, worse, a TTY, so the user can't restore the SquashFS. This operation will allow the user to restore the root partition from a Live session. This operation does not replace `restore`; it exists if using `restore` is impossible. The user can only use this operation from a Live session._
 
 **Self-update**: `nuts self-update`
 - Updates `nuts` and its configuration file using the default branch set in the configuration file.
