@@ -1,10 +1,16 @@
+nuts (2.1.2) nitrux; urgency=medium
+
+  * Deprecate using the build list to check for updates.
+
+ -- Uri Herrera <uri_herrera@nxos.org>  Tue, 30 Jan 2024 17:17:00 -0500
+
 nuts (2.1.1) nitrux; urgency=medium
 
   * Fix URL of var data.
   * Use spinner in nuts-crr
   * Silence update-grub.
 
- -- Uri Herrera <uri_herrera@nxos.org>  Tue, 16 Jan 2023 11:47:00 -0500
+ -- Uri Herrera <uri_herrera@nxos.org>  Tue, 16 Jan 2024 11:47:00 -0500
 
 nuts (2.1.0) nitrux; urgency=medium
 
@@ -15,7 +21,7 @@ nuts (2.1.0) nitrux; urgency=medium
   * When using self-update, display a message when there's no updates to apply.
   * nuts-ccu also updates the system appimages and static binaries.
 
- -- Uri Herrera <uri_herrera@nxos.org>  Mon, 15 Jan 2023 19:00:00 -0500
+ -- Uri Herrera <uri_herrera@nxos.org>  Mon, 15 Jan 2024 19:00:00 -0500
 
 nuts (2.0.2) nitrux; urgency=medium
 
