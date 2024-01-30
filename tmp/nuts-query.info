@@ -2,11 +2,6 @@
 # nuts-query.info 2023 (c) Nitrux Latinoamericana S.C.
 #
 
-# Define the checksum of the build list in the update file.
-#
-[ROOT]
-ROOTLISTSUM=2a1787a3835514d17bf8d7a00337afc9
-
 # Define the minimum target for the update.
 #
 [RELEASE]

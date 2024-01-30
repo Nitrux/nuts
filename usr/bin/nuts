@@ -373,27 +373,20 @@ done
 				dl_file "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-query.info" > /dev/null 2>&1
 
 
-				# -- Make the comparison of the build lists.
-				# -- This way, we know that the user is running this tool on an installation that can be upgraded; thus, this tool works as intended.
-				# -- If the checksum matches, exit because the root is already current.
-				# -- If the checksum doesn't match, then continue because the root is out of date or the list differs from the value in the query file.
-				# -- Also establish a minimum version target to check.
+                # -- Make a comparison of the current installation version against the minimum target for upgrade.
+                # -- This way, we know that the user is running this tool on an installation that we can upgrade; thus, this tool works as intended.
+                # -- If the check matches, it means there's an update.
+				# -- if the check doesn't match, it means there's no update.
+				# -- Comparing the checksum of /installed_pkgs_end.txt to verify versions is now deprecated.
 
 				DISTRIB_RELEASE=$(grep 'DISTRIB_RELEASE' /etc/lsb-release | cut -d'=' -f2)
 				MINTARGET=$(grep 'MINTARGET=' /tmp/nuts-query.info | cut -d'=' -f2)
+
 				if [[ "$DISTRIB_RELEASE" != "$MINTARGET" ]]; then
-					puts_info "This version of ${TARGET_DIST^} can't be upgraded, quitting."
-					exit 1
-				fi
-
-				LOCAL_SUM=$(md5sum /installed_pkgs_end.txt | cut -c -32)
-				REMOTE_SUM=$(tail /tmp/nuts-query.info | grep 'ROOTLISTSUM=' | cut -c -44 | rev | cut -c -32 | rev)
-
-				if [[ "$LOCAL_SUM" == "$REMOTE_SUM" ]]; then
-					puts_info "No updates were found for ${TARGET_DIST^}. Bye."
+					puts_info "System is up-to-date. No updates were found for ${TARGET_DIST^} $DISTRIB_RELEASE. Bye."
 					exit 0
 				else
-					puts_info "Checking for updates to ${TARGET_DIST^}, continuing..."
+					puts_info "An update was found for ${TARGET_DIST^} $DISTRIB_RELEASE, continuing..."
 				fi
 
 
@@ -451,7 +444,7 @@ done
 
 				# -- Step 2: Actual Update sub-process
 
-				# -- This process is also done inside the chroot and it is the same as Calamares, except for user creation, mounts and bootloader configuration.
+				# -- This process is also done inside the chroot.
 				# -- After using overlay_ch, it's essential to remember that **EVERY COMMAND IS RUNNING AS ROOT AND ON THE LOWER DIRECTORY OF THE OVERLAY**.
 
 				OVERLAYROOT="/usr/sbin/overlayroot-chroot"

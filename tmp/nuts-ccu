@@ -206,9 +206,6 @@ declare -A FILES_TO_DOWNLOAD=(
     ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/common-password"]="/etc/pam.d/common-password"
     #	Add pwquality.conf (which is missing for some reason!).
     ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/conf/pwquality.conf"]="/etc/security/pwquality.conf"
-    #   Replace build list.
-    #   Ensure it is the build list for the target update. It should match the checksum of ROOTLISTSUM in nuts.conf.
-    ["https://raw.githubusercontent.com/Nitrux/storage/master/Lists/3.2.1/nitrux-nx-desktop-plasma-2bcfb28b-amd64.buildlist"]="/installed_pkgs_end.txt"
 )
 
 for URL in "${!FILES_TO_DOWNLOAD[@]}"; do
