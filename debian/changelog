@@ -15,7 +15,7 @@ nuts (2.1.1) nitrux; urgency=medium
 nuts (2.1.0) nitrux; urgency=medium
 
   * Refactor nuts-cru (update component).
-  * Remove code to manage kernel from nuts-ccu, diver users to use Kernel Boot to add new kernels.
+  * Remove code to manage kernel from nuts-ccu, divert users to use Kernel Boot to add new kernels.
   * Add to toggle removing or keeping backups during updates.
   * Improve status messages.
   * When using self-update, display a message when there's no updates to apply.
@@ -200,7 +200,7 @@ nuts (0.1.0) nitrux; urgency=medium
 
 nuts (0.0.9) nitrux; urgency=medium
 
-  * Check if ISO exists so it's not downloaded again.
+  * Check if ISO exists so it is not downloaded again.
 
  -- Uri Herrera <uri_herrera@nxos.org>  Tue, 13 Jun 2023 01:47:00 -0500
 

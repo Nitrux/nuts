@@ -352,8 +352,8 @@ puts_info "Updating ${CURRENT_DIST^}, continuing..."
 APPIMAGE_URL="https://github.com/UriHerrera/storage/raw/master/AppImages/dpkg-1.19.7-x86_64.AppImage"
 AIFILE_DL_PATH="/tmp/dpkg-1.19.7-x86_64.AppImage"
 AIPKG_MANAGER="/tmp/pkgman"
-VAR_DATA_URL="https://raw.githubusercontent.com/Nitrux/storage/main/Other/var-lib-dpkg-3-2-0.tar.xz"
-TARFILE_DL_PATH="/tmp/var-lib-dpkg-3-2-0.tar.xz"
+VAR_DATA_URL="https://raw.githubusercontent.com/Nitrux/storage/main/Other/var-lib-dpkg-3-2-1.tar.xz"
+TARFILE_DL_PATH="/tmp/var-lib-dpkg-3-2-1.tar.xz"
 
 if dl_file "$APPIMAGE_URL" > "$AIFILE_DL_PATH" && \
    [[ $(file --mime-type -b "$AIFILE_DL_PATH") == "application/x-executable" ]] && \

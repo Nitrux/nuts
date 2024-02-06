@@ -199,6 +199,10 @@ spinner() {
     printf "\n"
 }
 
+get_gpu_manufacturer() {
+    nvidia-smi -L | awk -F ' ' '$3=="NVIDIA"{print $3; exit}'
+}
+
 
 # -- Use a log file.
 # -- Everything below will go to the file nuts.log.
@@ -218,6 +222,12 @@ TARGET_DIST="nitrux"
 #   ====== START ======
 
 # -- Flag parsing.
+
+if [ "$(get_gpu_manufacturer)" == "NVIDIA" ]; then
+    puts_warning "NVIDIA hardware detected!. Due to how the NVIDIA proprietary driver works with the Linux kernel, OTA archives will not include updates to the proprietary driver."
+	puts_warning "NVIDIA users, please follow the alternative method described at https://nxos.org/tutorial/how-to-upgrade-nitrux/#upgrade-using-live-iso to update the distribution."
+fi
+
 
 for cmd; do
 	case "$cmd" in
@@ -240,10 +250,10 @@ for cmd; do
 				"    --keep-backups-on-update       Defines whether the $TOOL_NAME deletes backups during the update process." \
 				"" \
 				"Operations:" \
-				"    update            Update the currently installed root using the media specified in nuts-query and creates a backup of the current root directory." \
+				"    update            Update the currently installed root using the archive specified in nuts-query and creates a backup of the current root directory." \
 				"    restore           Restore the backup of the root directory generated during the update." \
 				"    rescue            Restore the backup of the root partition in case of an interrupted update." \
-				"    self-update       Update $TOOL_NAME and its configuration file using the default branch set in the configuration file." \
+				"    self-update       Update the $TOOL_NAME and its configuration file using the branch set in the configuration file." \
 				"" \
 				"Usage:" \
 				"    sudo nuts <flag> (operation)" \
