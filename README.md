@@ -70,19 +70,19 @@ sudo cp $HOME/nuts/etc/nuts.conf /etc
 # Usage
 
 `nuts` is designed to be highly autonomous.
-   - _♦ Information: The use of this utility requires `sudo`_
+> _♦ Information: The use of this utility requires `sudo`_
 
 ### Commands:
 
 **Update**: `nuts update`
-- Updates the currently installed root using the specified media in `nuts-query` and backs up the current root directory and partition.
+- Updates the currently installed root using the specified archive in `nuts-query` and backs up the current root directory and partition.
 
 **Restore**: `nuts restore`
 - Restores the backup of the root directory generated during the update.
 
 **Rescue**: `nuts rescue`
 - Restores the backup of the XFS root partition in case of an interrupted update.
-   - _♦ Information: This operation is a special handling of an unforeseen event. If the update process were interrupted, the root would be inconsistent. That means the root is unusable, i.e., the user can't access the GUI or, worse, a TTY, so the user can't restore the SquashFS. This operation will allow the user to restore the root partition from a Live session. This operation does not replace `restore`; it exists if using `restore` is impossible. The user can only use this operation from a Live session._
+>_♦ Information: This operation is a special handling of an unforeseen event. If the update process were interrupted, the root would be inconsistent. That means the root is unusable, i.e., the user can't access the GUI or, worse, a TTY, so the user can't restore the SquashFS. This operation will allow the user to restore the root partition from a Live session. This operation does not replace `restore`; it exists if using `restore` is impossible. The user can only use this operation from a Live session._
 
 **Self-update**: `nuts self-update`
 - Updates `nuts` and its configuration file using the default branch set in the configuration file.

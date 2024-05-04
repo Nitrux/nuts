@@ -346,14 +346,17 @@ mount "$NUTS_DIR_DLS"/nuts-ota.squashfs "$NUTS_DIR_SQS"
 
 
 # -- Now comes the good part; update the current installation.
+# -- Specify data archive when upgrading using the same version set as the minimum target in nuts-query.
 
 puts_info "Updating ${CURRENT_DIST^}, continuing..."
 
-APPIMAGE_URL="https://github.com/UriHerrera/storage/raw/master/AppImages/dpkg-1.19.7-x86_64.AppImage"
+APPIMAGE_URL="https://raw.githubusercontent.com/UriHerrera/storage/master/AppImages/dpkg-1.19.7-x86_64.AppImage"
 AIFILE_DL_PATH="/tmp/dpkg-1.19.7-x86_64.AppImage"
 AIPKG_MANAGER="/tmp/pkgman"
-VAR_DATA_URL="https://raw.githubusercontent.com/Nitrux/storage/main/Other/var-lib-dpkg-3-2-1.tar.xz"
-TARFILE_DL_PATH="/tmp/var-lib-dpkg-3-2-1.tar.xz"
+
+VAR_DATA_TARGET="3.4.0"
+VAR_DATA_URL="https://raw.githubusercontent.com/Nitrux/storage/master/Other/var-lib-dpkg-$VAR_DATA_TARGET.tar.xz"
+TARFILE_DL_PATH="/tmp/var-lib-dpkg-$VAR_DATA_TARGET.tar.xz"
 
 if dl_file "$APPIMAGE_URL" > "$AIFILE_DL_PATH" && \
    [[ $(file --mime-type -b "$AIFILE_DL_PATH") == "application/x-executable" ]] && \

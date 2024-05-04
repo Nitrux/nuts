@@ -3,7 +3,7 @@
 #############################################################################################################################################################################
 #   The license used for this file and its contents is: BSD-3-Clause                                                                                                        #
 #                                                                                                                                                                           #
-#   Copyright <2023> <Uri Herrera <uri_herrera@nxos.org>>                                                                                                                   #
+#   Copyright <2023-2024> <Uri Herrera <uri_herrera@nxos.org>>                                                                                                                   #
 #   Copyright <2023> <Luis Lavaire <luis_lavaire@nxos.org>>                                                                                                                 #
 #                                                                                                                                                                           #
 #   Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:                          #
@@ -274,7 +274,7 @@ for cmd; do
 				"" \
 				"Authors:" \
 				"" \
-				"    Copyright <2023> <Uri Herrera <uri_herrera@nxos.org>>" \
+				"    Copyright <2023-2024> <Uri Herrera <uri_herrera@nxos.org>>" \
 				"    Copyright <2023> <Luis Lavaire <luis_lavaire@nxos.org>>" \
 				"" \
 				"(c) $FECHA Some Rights Reserved. Made by $VENDOR"
@@ -383,9 +383,9 @@ done
 				dl_file "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-query.info" > /dev/null 2>&1
 
 
-                # -- Make a comparison of the current installation version against the minimum target for upgrade.
-                # -- This way, we know that the user is running this tool on an installation that we can upgrade; thus, this tool works as intended.
-                # -- If the check matches, it means there's an update.
+				# -- Make a comparison of the current installation version against the minimum target for upgrade.
+				# -- This way, we know that the user is running this tool on an installation that we can upgrade; thus, this tool works as intended.
+				# -- If the check matches, it means there's an update.
 				# -- if the check doesn't match, it means there's no update.
 				# -- Comparing the checksum of /installed_pkgs_end.txt to verify versions is now deprecated.
 
@@ -472,6 +472,7 @@ done
 				# -- Always download the latest component. The component will remain in the filesystem after using it; however, once the user executes this <operation> again, it will be deleted and re-downloaded.
 				# -- Download nuts-query.info to the chroot because we initially downloaded it to the overlay.
 
+				overlay_ch mount -t devtmpfs dev /dev
 				overlay_ch find /usr/bin -type f -name "nuts-cru" -exec rm {} \;
 				overlay_ch axel -o /usr/bin -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-cru" > /dev/null 2>&1
 				overlay_ch chmod +x /usr/bin/nuts-cru
@@ -532,6 +533,7 @@ done
 				# -- Run nuts-crr to perform the restore actions inside the chroot.
 				# -- Always download the latest component. The component will remain in the filesystem after using it; however, once the user executes this <operation> again, it will be deleted and re-downloaded.
 
+				overlay_ch mount -t devtmpfs dev /dev
 				overlay_ch find /usr/bin -type f -name "nuts-crr" -exec rm {} \;
 				overlay_ch axel -o /usr/bin -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-crr" > /dev/null 2>&1
 				overlay_ch chmod +x /usr/bin/nuts-crr
@@ -691,6 +693,7 @@ done
 				# -- This also updates the configuration file.
 				# -- Always download the latest component. The component will remain in the filesystem after using it; however, once the user executes this <operation> again, it will be deleted and re-downloaded.
 
+				overlay_ch mount -t devtmpfs dev /dev
 				overlay_ch find /usr/bin -type f -name "nuts-sup" -exec rm {} \;
 				overlay_ch axel -o /usr/bin -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-sup" > /dev/null 2>&1
 				overlay_ch chmod +x /usr/bin/nuts-sup
