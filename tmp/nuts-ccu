@@ -300,11 +300,6 @@ puts_success "System AppImages and static binaries have been updated, continuing
 #<!> -- Remove code since we're not including the kernel in the archive, and we expect users to use Kernel Boot to add other kenels. -- <!>
 
 
-# -- Generate initram, because apparently we also have to do this manually.
-
-update-initramfs -c -k all
-
-
 # -- Update GRUB.
 
 if update-grub > /dev/null 2>&1; then
