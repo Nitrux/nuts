@@ -354,7 +354,7 @@ APPIMAGE_URL="https://raw.githubusercontent.com/UriHerrera/storage/master/AppIma
 AIFILE_DL_PATH="/tmp/dpkg-1.19.7-x86_64.AppImage"
 AIPKG_MANAGER="/tmp/pkgman"
 
-VAR_DATA_TARGET="3.4.0"
+VAR_DATA_TARGET="3.4.1"
 VAR_DATA_URL="https://raw.githubusercontent.com/Nitrux/storage/master/Other/var-lib-dpkg-$VAR_DATA_TARGET.tar.xz"
 TARFILE_DL_PATH="/tmp/var-lib-dpkg-$VAR_DATA_TARGET.tar.xz"
 

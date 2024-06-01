@@ -134,24 +134,36 @@ spinner() {
 #   When updating packages the stuff below will be overwritten, thus we must apply changes from iso-tool   #
 ############################################################################################################
 
-#	Also link the library files for cask to launch because maui-shell and cask-server used Jammy for compilation, and the frameworks used Debian.
-#	KDE PIM libraries were renamed to different SO names because of course they were. Update the links on every new KF5 release.
+#   Create symlinks for MauiKit.
 
-# KDEPIM_LIB="5.24.5"
-# KF5_LIB="5.114.0"
+MAUIKIT_VERSION="3.1.0"
 
-# create_symlink /usr/lib/x86_64-linux-gnu/libKPim5EventViews.so.$KDEPIM_LIB /usr/lib/x86_64-linux-gnu/libKF5EventViews.so.5abi1
-# create_symlink /usr/lib/x86_64-linux-gnu/libKPim5CalendarSupport.so.$KDEPIM_LIB /usr/lib/x86_64-linux-gnu/libKF5CalendarSupport.so.5abi1
-# create_symlink /usr/lib/x86_64-linux-gnu/libKPim5AkonadiCalendar.so.$KDEPIM_LIB /usr/lib/x86_64-linux-gnu/libKF5AkonadiCalendar.so.5abi1
-# create_symlink /usr/lib/x86_64-linux-gnu/libKPim5AkonadiWidgets.so.$KDEPIM_LIB /usr/lib/x86_64-linux-gnu/libKF5AkonadiWidgets.so.5abi1
-# create_symlink /usr/lib/x86_64-linux-gnu/libKPim5AkonadiCore.so.$KDEPIM_LIB /usr/lib/x86_64-linux-gnu/libKF5AkonadiCore.so.5abi2
-# create_symlink /usr/lib/x86_64-linux-gnu/libKF5CalendarCore.so.$KF5_LIB /usr/lib/x86_64-linux-gnu/libKF5CalendarCore.so.5abi2
+create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/controls/libMauiKit3.so.$MAUIKIT_VERSION" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/controls/libMauiKit3.so"
+create_symlink "/usr/lib/x86_64-linux-gnu/libMauiKit3.so.$MAUIKIT_VERSION" "/usr/lib/x86_64-linux-gnu/libMauiKit3.so"
 
 
-#	Add link for applet window buttons.
-#	NOTE: Update the link on every new release of Plasma.
+#   Create symlinks for MauiKit FileBrowsing.
 
-PLASMA_LIB="5.27.10"
+create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/filebrowsing/libMauiKitFileBrowsing3.so.$MAUIKIT_VERSION" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/filebrowsing/libMauiKitFileBrowsing3.so"
+create_symlink "/usr/lib/x86_64-linux-gnu/libMauiKitFileBrowsing3.so.$MAUIKIT_VERSION" "/usr/lib/x86_64-linux-gnu/libMauiKitFileBrowsing3.so"
+
+
+#   Create symlinks for MauiKit TextEditor.
+
+create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/texteditor/libMauiKitTextEditor3.so.$MAUIKIT_VERSION" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/texteditor/libMauiKitTextEditor3.so"
+create_symlink "/usr/lib/x86_64-linux-gnu/libMauiKitTextEditor3.so.$MAUIKIT_VERSION" "/usr/lib/x86_64-linux-gnu/libMauiKitTextEditor3.so"
+
+
+#   Create symlinks for MauiKit Terminal.
+
+create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/terminal/libMauiKitTerminal3.so.$MAUIKIT_VERSION" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/terminal/libMauiKitTerminal3.so"
+create_symlink "/usr/lib/x86_64-linux-gnu/libMauiKitTerminal3.so.$MAUIKIT_VERSION" "/usr/lib/x86_64-linux-gnu/libMauiKitTerminal3.so"
+
+
+# -- Add link for applet window buttons.
+# -- NOTE: Update the link on every new release of Plasma.
+
+PLASMA_LIB="5.27.11"
 
 create_symlink /usr/lib/x86_64-linux-gnu/libkdecorations2private.so.$PLASMA_LIB /usr/lib/x86_64-linux-gnu/libkdecorations2private.so.9
 
@@ -169,17 +181,19 @@ else
 fi
 
 
-#   Replace this line in mkinitramfs so it shuts up about dpkg.
+# -- Replace this line in mkinitramfs so it shuts up about dpkg.
 
 sed -i "s+DPKG_ARCH=\$(dpkg --print-architecture)+DPKG_ARCH=\$(uname -m | sed \"s/x86_64/amd64/\")+g" /usr/sbin/mkinitramfs
 
 
-#   Change path where NetworkManager saves wireless connections.
+# -- Change path where NetworkManager saves wireless connections.
+# -- We replace this line here because the package from upstream will put it back to its default value.
 
 echo -e "\n[keyfile]\npath=/var/lib/NetworkManager" | tee -a /etc/NetworkManager/NetworkManager.conf > /dev/null 2>&1
 
 
-#	Add variable to PAM for Firefox to work with touchscreens in Wayland.
+# -- Add variable to PAM for Firefox to work with touchscreens in Wayland.
+# -- We replace this line here because the package from upstream will put it back to its default value.
 
 sed -i "$ a \  " /etc/security/pam_env.conf
 sed -i "$ a #  Make Firefox work with touchscreens in Wayland" /etc/security/pam_env.conf
@@ -191,20 +205,20 @@ sed -i "$ a MOZ_ENABLE_WAYLAND DEFAULT=0 OVERRIDE=1" /etc/security/pam_env.conf
 puts_info "Updating misc. and configuration files, continuing..."
 
 declare -A FILES_TO_DOWNLOAD=(
-    #   Replace user-setup-apply so that it shuts up about dpkg.
+    # Replace user-setup-apply so that it shuts up about dpkg.
     ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/scripts/others/user-setup-apply"]="/usr/lib/user-setup/user-setup-apply"
-    #   Replace update-grub with our version that doesn't break OUR stuff.
+    # Replace update-grub with our version that doesn't break OUR stuff.
     ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/scripts/others/update-grub"]="/usr/sbin/update-grub"
-    #   Replace /usr/lib/grub/grub-sort-version with a version that doesn't use apt.pkg do it can generate a usable boot menu.
+    #  Replace /usr/lib/grub/grub-sort-version with a version that doesn't use apt.pkg do it can generate a usable boot menu.
     ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/grub_files/grub-sort-version"]="/usr/lib/grub/grub-sort-version"
-    #	Replace dnscrypt-proxy default configuration.
+    # Replace dnscrypt-proxy default configuration.
     ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/dnscrypt-proxy-settings/dnscrypt-proxy.toml"]="/etc/dnscrypt-proxy/dnscrypt-proxy.toml"
     ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/dnscrypt-proxy-settings/public-resolvers.md"]="/var/cache/dnscrypt-proxy/public-resolvers.md"
     ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/dnscrypt-proxy-settings/public-resolvers.md.minisig"]="/var/cache/dnscrypt-proxy/public-resolvers.md.minisig"
-    #	Replace common-password.
-    #	Increase size of hashing rounds in /etc/pam.d/common-password. See https://cisofy.com/lynis/controls/AUTH-9230/
+    # Replace common-password.
+    # Increase size of hashing rounds in /etc/pam.d/common-password. See https://cisofy.com/lynis/controls/AUTH-9230/
     ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/common-password"]="/etc/pam.d/common-password"
-    #	Add pwquality.conf (which is missing for some reason!).
+    # Add pwquality.conf (which is missing for some reason!).
     ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/conf/pwquality.conf"]="/etc/security/pwquality.conf"
 )
 
@@ -239,17 +253,42 @@ done
 puts_success "Success! misc. and configuration files have been updated, continuing..."
 
 
-# -- Create directory for os-prober.
+# -- Edit NVIDIA X Settings launcher.
 
-mkdir -p /var/lib/os-prober/mount
+sed -i 's+Categories=System;Settings;+Categories=Settings;+g' /usr/share/applications/nvidia-settings.desktop
 
 
-# -- Remove uneeded services from OpenRC runlevels.
+# -- Edit CoreCtrl launcher.
 
-rc-update del plymouth default
-rc-update del tor default
+sed -i 's+Categories=System;Settings;Utility;+Categories=Utility;+g' /usr/share/applications/org.corectrl.CoreCtrl.desktop
 
-rc-update -u
+
+# -- Create link for gamescope to work.
+
+create_symlink /usr/lib/x86_64-linux-gnu/libwlroots.so.12 /usr/lib/x86_64-linux-gnu/libwlroots.so.11
+
+
+# -- Install xpadneo and xone drivers using their installer scripts.
+# -- FIXME: There are no Debian packages available, if and when they are, switch to use them instead.
+
+ORIGINAL_DIR=$(pwd)
+
+TEMP_DIR1=$(mktemp -d)
+git clone https://github.com/medusalix/xone "$TEMP_DIR1"
+cd "$TEMP_DIR1"
+sh install.sh
+cd "$ORIGINAL_DIR"
+
+TEMP_DIR2=$(mktemp -d)
+git clone https://github.com/atar-axis/xpadneo "$TEMP_DIR2"
+cd "$TEMP_DIR2"
+bash install.sh
+cd "$ORIGINAL_DIR"
+
+
+# -- Remove Maui Apps that were replaced by AppImages.
+
+rm -f /usr/bin/{bonsai,buho,clip,nota,pix,shelf,strike,vvave,nx-software-center}
 
 
 ######################################################
@@ -286,6 +325,32 @@ spinner
 mv /Applications/appimaged /etc/skel/.local/bin
 
 download_binary "zap" "https://github.com/srevinsaju/zap/releases/download/continuous/zap-amd64" &
+spinner
+
+download_appimage "bonsai" "https://download.kde.org/stable/maui/bonsai/1.1.3/bonsai-stable-v1.1.3-git+2cfadec-amd64.AppImage"
+spinner
+
+download_appimage "buho" "https://download.kde.org/stable/maui/buho/3.1.0/buho-stable-v3.1.0-git+d1a4550-amd64.AppImage"
+spinner
+
+download_appimage "clip" "https://download.kde.org/stable/maui/clip/3.1.0/clip-stable-v3.1.0-git+fdb401c-amd64.AppImage"
+spinner
+
+download_appimage "nx-software-center" "https://github.com/Nitrux/nx-software-center/releases/download/latest/nx-software-center-latest-x86_64.AppImage"
+
+download_appimage "nota" "https://download.kde.org/stable/maui/nota/3.1.0/nota-stable-v3.1.0-git+019f694-amd64.AppImage"
+spinner
+
+download_appimage "pix" "https://download.kde.org/stable/maui/pix/3.1.0/pix-stable-v3.1.0-git+33c6c86-amd64.AppImage"
+spinner
+
+download_appimage "shelf" "https://download.kde.org/stable/maui/shelf/3.1.0/shelf-stable-v3.1.0-git+e153041-amd64.AppImage"
+spinner
+
+download_appimage "strike" "https://download.kde.org/stable/maui/strike/1.1.3/strike-stable-v1.1.3-git+c05b1dc-amd64.AppImage"
+spinner
+
+download_appimage "vvave" "https://download.kde.org/stable/maui/vvave/3.1.0/vvave-stable-v3.1.0-git+8147565-amd64.AppImage"
 spinner
 
 puts_success "System AppImages and static binaries have been updated, continuing..."

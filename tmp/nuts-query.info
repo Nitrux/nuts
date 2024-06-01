@@ -5,16 +5,16 @@
 # Define the minimum target for the update.
 #
 [RELEASE]
-MINTARGET=3.4.0
+MINTARGET=3.4.1
 
 # Define the name of the file and its checksum.
 #
 [OTA]
-OTAFILE=ota-2024.05.03-15.18-amd64.squashfs
+OTAFILE=ota-2024.05.31-18.31-amd64.squashfs
 OTASUM=b0d5d81ddacd377fe2343ae07abb780f
 
 # Define the list of mirrors to download the file.
 # If multiple mirrors are available, separate them using commas, i.e., url1,url2,url3
 #
 [URL]
-MIRRORLIST=https://master.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.05.03-15.18-amd64.squashfs,https://netactuate.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.05.03-15.18-amd64.squashfs,https://netix.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.05.03-15.18-amd64.squashfs,https://freefr.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.05.03-15.18-amd64.squashfs,https://phoenixnap.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.05.03-15.18-amd64.squashfs,https://ufpr.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.05.03-15.18-amd64.squashfs,https://liquidtelecom.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.05.03-15.18-amd64.squashfs,https://yer.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.05.03-15.18-amd64.squashfs,https://newcontinuum.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.05.03-15.18-amd64.squashfs,https://versaweb.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.05.03-15.18-amd64.squashfs
+MIRRORLIST=https://master.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.05.31-18.31-amd64.squashfs,https://netactuate.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.05.31-18.31-amd64.squashfs,https://netix.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.05.31-18.31-amd64.squashfs,https://freefr.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.05.31-18.31-amd64.squashfs,https://phoenixnap.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.05.31-18.31-amd64.squashfs,https://ufpr.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.05.31-18.31-amd64.squashfs,https://liquidtelecom.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.05.31-18.31-amd64.squashfs,https://yer.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.05.31-18.31-amd64.squashfs,https://newcontinuum.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.05.31-18.31-amd64.squashfs,https://versaweb.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.05.31-18.31-amd64.squashfs
