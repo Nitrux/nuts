@@ -286,11 +286,6 @@ bash install.sh
 cd "$ORIGINAL_DIR"
 
 
-# -- Remove Maui Apps that were replaced by AppImages.
-
-rm -f /usr/bin/{bonsai,buho,clip,nota,pix,shelf,strike,vvave,nx-software-center}
-
-
 ######################################################
 #   End of misc-fixes and edit-conf from iso-tool    #
 ######################################################
@@ -325,33 +320,6 @@ spinner
 mv /Applications/appimaged /etc/skel/.local/bin
 
 download_binary "zap" "https://github.com/srevinsaju/zap/releases/download/continuous/zap-amd64" &
-spinner
-
-download_appimage "bonsai" "https://download.kde.org/stable/maui/bonsai/1.1.3/bonsai-stable-v1.1.3-git+2cfadec-amd64.AppImage"
-spinner
-
-download_appimage "buho" "https://download.kde.org/stable/maui/buho/3.1.0/buho-stable-v3.1.0-git+d1a4550-amd64.AppImage"
-spinner
-
-download_appimage "clip" "https://download.kde.org/stable/maui/clip/3.1.0/clip-stable-v3.1.0-git+fdb401c-amd64.AppImage"
-spinner
-
-download_appimage "nx-software-center" "https://github.com/Nitrux/nx-software-center/releases/download/latest/nx-software-center-latest-x86_64.AppImage"
-spinner
-
-download_appimage "nota" "https://download.kde.org/stable/maui/nota/3.1.0/nota-stable-v3.1.0-git+019f694-amd64.AppImage"
-spinner
-
-download_appimage "pix" "https://download.kde.org/stable/maui/pix/3.1.0/pix-stable-v3.1.0-git+33c6c86-amd64.AppImage"
-spinner
-
-download_appimage "shelf" "https://download.kde.org/stable/maui/shelf/3.1.0/shelf-stable-v3.1.0-git+e153041-amd64.AppImage"
-spinner
-
-download_appimage "strike" "https://download.kde.org/stable/maui/strike/1.1.3/strike-stable-v1.1.3-git+c05b1dc-amd64.AppImage"
-spinner
-
-download_appimage "vvave" "https://download.kde.org/stable/maui/vvave/3.1.0/vvave-stable-v3.1.0-git+8147565-amd64.AppImage"
 spinner
 
 puts_success "System AppImages and static binaries have been updated, continuing..."
