@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 #############################################################################################################################################################################
 #   The license used for this file and its contents is: BSD-3-Clause                                                                                                        #
@@ -25,7 +25,7 @@
 
 # -- Exit on errors.
 
-set -eu
+set -xeu
 
 
 # -- Set program name and version.
