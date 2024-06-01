@@ -334,8 +334,9 @@ NQ_OTA_SUM=$(grep -oP '(?<=OTASUM=)[a-f0-9]{32}' /tmp/nuts-query.info)
 if [[ "$LOCAL_OTA_SUM" == "$NQ_OTA_SUM" ]]; then
     puts_info "OTA file checksum matches, continuing..."
 else
-    puts_error "OTA file checksum does not match, quitting."
+    puts_error "OTA file checksum does not match, deleting file..."
     rm "$NUTS_DIR_DLS"/nuts-ota.squashfs
+    puts_error "Mismatched OTA file deleted; reboot and try to update again. Quitting."
     unmount_on_failure
 fi
 
