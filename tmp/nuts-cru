@@ -373,6 +373,8 @@ else
     fi
 fi
 
+[[ -f "$TARFILE_DL_PATH" ]] && rm "$TARFILE_DL_PATH"
+
 if dl_file "$VAR_DATA_URL" > "$TARFILE_DL_PATH" && \
    mkdir -p /var/lib/dpkg && \
    (cd / && tar -xf "$TARFILE_DL_PATH") && \
@@ -380,6 +382,7 @@ if dl_file "$VAR_DATA_URL" > "$TARFILE_DL_PATH" && \
     puts_success "Success! Data archive downloaded and extracted successfully, continuing..."
 else
     puts_error "Failed to download or extract the data archive, quitting."
+    [[ -f "$TARFILE_DL_PATH" ]] && rm "$TARFILE_DL_PATH"
     unmount_on_failure
 fi
 
