@@ -359,13 +359,18 @@ VAR_DATA_TARGET=$(grep 'MINTARGET=' /tmp/nuts-query.info | cut -d'=' -f2)
 VAR_DATA_URL="https://raw.githubusercontent.com/Nitrux/storage/master/Other/var-lib-dpkg-$VAR_DATA_TARGET.tar.xz"
 TARFILE_DL_PATH="/tmp/var-lib-dpkg-$VAR_DATA_TARGET.tar.xz"
 
-if dl_file "$APPIMAGE_URL" > "$AIFILE_DL_PATH" && \
-   [[ $(file --mime-type -b "$AIFILE_DL_PATH") == "application/x-executable" ]] && \
-   mv "$AIFILE_DL_PATH" "$AIPKG_MANAGER" && chmod +x "$AIPKG_MANAGER" && ln -sv "$AIPKG_MANAGER" /usr/bin/dpkg > /dev/null 2>&1; then
-    puts_info "Preparing to apply OTA update, continuing..."
+if [[ -f "$AIPKG_MANAGER" ]]; then
+    puts_info "$AIPKG_MANAGER already exists, skipping download."
 else
-    puts_error "Failed to download or process the AppImage, quitting."
-    unmount_on_failure
+    if dl_file "$APPIMAGE_URL" > "$AIFILE_DL_PATH" && \
+       [[ $(file --mime-type -b "$AIFILE_DL_PATH") == "application/x-executable" ]] && \
+       mv "$AIFILE_DL_PATH" "$AIPKG_MANAGER" && chmod +x "$AIPKG_MANAGER" && ln -sv "$AIPKG_MANAGER" /usr/bin/dpkg > /dev/null 2>&1; then
+        puts_info "Preparing to apply OTA update, continuing..."
+    else
+        puts_error "Failed to download or process the AppImage, quitting."
+        [[ -f "$AIPKG_MANAGER" ]] && rm "$AIPKG_MANAGER"
+        unmount_on_failure
+    fi
 fi
 
 if dl_file "$VAR_DATA_URL" > "$TARFILE_DL_PATH" && \
