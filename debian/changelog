@@ -1,3 +1,9 @@
+nuts (2.1.4.1) nitrux; urgency=medium
+
+  * Rebuild this package.
+
+ -- Uri Herrera <uri_herrera@nxos.org>  Sat, 01 Jun 2024 01:00:00 -0500
+
 nuts (2.1.4) nitrux; urgency=medium
 
   * Mount devtmpfs before running the components in the overlay.
