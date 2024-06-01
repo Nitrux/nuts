@@ -364,7 +364,7 @@ if [[ -f "$AIPKG_MANAGER" ]]; then
 else
     if dl_file "$APPIMAGE_URL" > "$AIFILE_DL_PATH" && \
        [[ $(file --mime-type -b "$AIFILE_DL_PATH") == "application/x-executable" ]] && \
-       mv "$AIFILE_DL_PATH" "$AIPKG_MANAGER" && chmod +x "$AIPKG_MANAGER" && ln -sv "$AIPKG_MANAGER" /usr/bin/dpkg > /dev/null 2>&1; then
+       mv "$AIFILE_DL_PATH" "$AIPKG_MANAGER" && chmod +x "$AIPKG_MANAGER" && ln -svf "$AIPKG_MANAGER" /usr/bin/dpkg > /dev/null 2>&1; then
         puts_info "Preparing to apply OTA update, continuing..."
     else
         puts_error "Failed to download or process the AppImage, quitting."
