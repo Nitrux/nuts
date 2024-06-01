@@ -347,6 +347,7 @@ mount "$NUTS_DIR_DLS"/nuts-ota.squashfs "$NUTS_DIR_SQS"
 
 # -- Now comes the good part; update the current installation.
 # -- Specify data archive when upgrading using the same version set as the minimum target in nuts-query.
+# -- We assume that VAR_DATA_TARGET will match MINTARGET in nuts-query.conf since we've already done a test in the main component.
 
 puts_info "Updating ${CURRENT_DIST^}, continuing..."
 
@@ -354,7 +355,7 @@ APPIMAGE_URL="https://raw.githubusercontent.com/UriHerrera/storage/master/AppIma
 AIFILE_DL_PATH="/tmp/dpkg-1.19.7-x86_64.AppImage"
 AIPKG_MANAGER="/tmp/pkgman"
 
-VAR_DATA_TARGET="3.4.1"
+VAR_DATA_TARGET=$(grep 'MINTARGET=' /tmp/nuts-query.info | cut -d'=' -f2)
 VAR_DATA_URL="https://raw.githubusercontent.com/Nitrux/storage/master/Other/var-lib-dpkg-$VAR_DATA_TARGET.tar.xz"
 TARFILE_DL_PATH="/tmp/var-lib-dpkg-$VAR_DATA_TARGET.tar.xz"
 
