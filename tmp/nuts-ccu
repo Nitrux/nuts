@@ -337,6 +337,7 @@ download_appimage "clip" "https://download.kde.org/stable/maui/clip/3.1.0/clip-s
 spinner
 
 download_appimage "nx-software-center" "https://github.com/Nitrux/nx-software-center/releases/download/latest/nx-software-center-latest-x86_64.AppImage"
+spinner
 
 download_appimage "nota" "https://download.kde.org/stable/maui/nota/3.1.0/nota-stable-v3.1.0-git+019f694-amd64.AppImage"
 spinner
@@ -363,6 +364,8 @@ puts_success "System AppImages and static binaries have been updated, continuing
 # -- Link kernel image to newer kernel.
 
 #<!> -- Remove code since we're not including the kernel in the archive, and we expect users to use Kernel Boot to add other kenels. -- <!>
+
+update-initramfs -c -k all
 
 
 # -- Update GRUB.
