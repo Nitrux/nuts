@@ -364,14 +364,18 @@ if [[ -f "$AIPKG_MANAGER" ]]; then
 else
     if dl_file "$APPIMAGE_URL" > "$AIFILE_DL_PATH" && \
        [[ $(file --mime-type -b "$AIFILE_DL_PATH") == "application/x-executable" ]] && \
-       mv "$AIFILE_DL_PATH" "$AIPKG_MANAGER" && chmod +x "$AIPKG_MANAGER" && ln -svf "$AIPKG_MANAGER" /usr/bin/dpkg > /dev/null 2>&1; then
-        puts_info "Preparing to apply OTA update, continuing..."
+       mv "$AIFILE_DL_PATH" "$AIPKG_MANAGER" && chmod +x "$AIPKG_MANAGER"; then
+        puts_info "AppImage downloaded and processed successfully, continuing..."
     else
         puts_error "Failed to download or process the AppImage, quitting."
         [[ -f "$AIPKG_MANAGER" ]] && rm "$AIPKG_MANAGER"
         unmount_on_failure
     fi
 fi
+
+ln -svf "$AIPKG_MANAGER" /usr/bin/dpkg > /dev/null 2>&1
+
+puts_info "Fetching system data archive, continuing..."
 
 [[ -f "$TARFILE_DL_PATH" ]] && rm "$TARFILE_DL_PATH"
 
@@ -386,18 +390,20 @@ else
     unmount_on_failure
 fi
 
-puts_info "Proceeding to apply updates, continuing..."
+puts_info "Proceed to apply OTA update, continuing..."
 
 find "${NUTS_DIR_SQS}/ota/updates/" -name '*.deb' -exec sh -c "DEBIAN_FRONTEND=noninteractive $AIPKG_MANAGER --force-all -i \"\$0\"" {} \; > /dev/null 2>&1 &
 spinner
 wait $!
 
 if ! wait $!; then
-    puts_error "Failed to apply updates, quitting."
+    puts_error "Failed to apply OTA update, quitting."
     unmount_on_failure
 fi
 
-puts_success "Success! Update process completed successfully, continuing..."
+puts_success "Success! OTA update process completed successfully, continuing..."
+
+[[ -f "$AIPKG_MANAGER" ]] && rm -f "$AIPKG_MANAGER"
 
 
 # -- Clean up the updated root after updating.
