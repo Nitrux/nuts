@@ -134,32 +134,6 @@ spinner() {
 #   When updating packages the stuff below will be overwritten, thus we must apply changes from iso-tool   #
 ############################################################################################################
 
-#   Create symlinks for MauiKit.
-
-MAUIKIT_VERSION="3.1.0"
-
-create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/controls/libMauiKit3.so.$MAUIKIT_VERSION" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/controls/libMauiKit3.so"
-create_symlink "/usr/lib/x86_64-linux-gnu/libMauiKit3.so.$MAUIKIT_VERSION" "/usr/lib/x86_64-linux-gnu/libMauiKit3.so"
-
-
-#   Create symlinks for MauiKit FileBrowsing.
-
-create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/filebrowsing/libMauiKitFileBrowsing3.so.$MAUIKIT_VERSION" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/filebrowsing/libMauiKitFileBrowsing3.so"
-create_symlink "/usr/lib/x86_64-linux-gnu/libMauiKitFileBrowsing3.so.$MAUIKIT_VERSION" "/usr/lib/x86_64-linux-gnu/libMauiKitFileBrowsing3.so"
-
-
-#   Create symlinks for MauiKit TextEditor.
-
-create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/texteditor/libMauiKitTextEditor3.so.$MAUIKIT_VERSION" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/texteditor/libMauiKitTextEditor3.so"
-create_symlink "/usr/lib/x86_64-linux-gnu/libMauiKitTextEditor3.so.$MAUIKIT_VERSION" "/usr/lib/x86_64-linux-gnu/libMauiKitTextEditor3.so"
-
-
-#   Create symlinks for MauiKit Terminal.
-
-create_symlink "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/terminal/libMauiKitTerminal3.so.$MAUIKIT_VERSION" "/usr/lib/x86_64-linux-gnu/qt5/qml/org/mauikit/terminal/libMauiKitTerminal3.so"
-create_symlink "/usr/lib/x86_64-linux-gnu/libMauiKitTerminal3.so.$MAUIKIT_VERSION" "/usr/lib/x86_64-linux-gnu/libMauiKitTerminal3.so"
-
-
 # -- Add link for applet window buttons.
 # -- NOTE: Update the link on every new release of Plasma.
 
