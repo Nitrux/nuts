@@ -403,7 +403,7 @@ fi
 
 puts_success "Success! OTA update process completed successfully, continuing..."
 
-[[ -f "$AIPKG_MANAGER" ]] && rm -f "$AIPKG_MANAGER"
+[[ -f "$AIPKG_MANAGER" ]] && rm "$AIPKG_MANAGER"
 
 
 # -- Clean up the updated root after updating.
