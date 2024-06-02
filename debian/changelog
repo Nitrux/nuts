@@ -1,3 +1,19 @@
+nuts (2.1.5) nitrux; urgency=medium
+
+  * Improve fetching of var data.
+  * Use more portable shebang for scripts.
+  * Check if custom AppImage exists, download it if it does and remove it when there's an error.
+  * Check if var data exists, download it if it does and remove it when there's an error.
+  * Ensure that the software center is replaced by its Appimage.
+  * Verify that the the cru component creates the link for the custom Appimage and delete when it's no longer necessary.
+  * Improve messages for readability.
+  * Change the spinner animation displayed to avoid using a non-escapable character.
+  * Ensure the removal of unused services in default runlevel.
+  * Update the initramfs during the update.
+  * Don't unmount dev to avoid the main component from not completing all the steps after completing the update process.
+
+ -- Uri Herrera <uri_herrera@nxos.org>  Sun, 02 Jun 2024 01:36:00 -0500
+
 nuts (2.1.4.1) nitrux; urgency=medium
 
   * Rebuild this package.
