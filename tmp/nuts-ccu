@@ -198,6 +198,9 @@ declare -A FILES_TO_DOWNLOAD=(
     ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/common-password"]="/etc/pam.d/common-password"
     # Add pwquality.conf (which is missing for some reason!).
     ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/conf/pwquality.conf"]="/etc/security/pwquality.conf"
+    # Add hook scripts for initramfs.
+    ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/initramfs-tools/hooks/amd64_microcode"]="/usr/share/initramfs-tools/hooks/amd64_microcode"
+    ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/initramfs-tools/hooks/intel_microcode"]="/usr/share/initramfs-tools/hooks/intel_microcode"
 )
 
 for URL in "${!FILES_TO_DOWNLOAD[@]}"; do
@@ -275,7 +278,7 @@ SERVICES=("rc.local" "ntpsec" "plymouth" "dnsmasq")
 
 for SERVICE in "${SERVICES[@]}"; do
     puts_info "Stopping and disabling $SERVICE... from OpenRC, continuing..."
-    rc-service "$SERVICE" stop || puts_error "Failed to stop $SERVICE."
+    # rc-service "$SERVICE" stop || puts_error "Failed to stop $SERVICE."
     rc-update del "$SERVICE" || puts_error "Failed to disable $SERVICE."
 done
 

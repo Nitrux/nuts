@@ -432,7 +432,7 @@ rm -f /tmp/nuts-ccu
 
 unmount_directory "$NUTS_DIR_SQS"
 unmount_directory "/home"
-unmount_directory "/dev"
+# unmount_directory "/dev"
 
 
 # -- **DO NOT PERFORM ANY FILE OPERATION AFTER THIS POINT**
