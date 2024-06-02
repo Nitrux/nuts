@@ -119,7 +119,7 @@ spinner() {
     while ps a | awk '{print $1}' | grep -q "$pid"; do
         local temp=${spinstr#?}
         printf " [%c]  Elapsed time: %s seconds" "$spinstr" "$elapsed"
-        local spinstr=$temp${spinstr%"$temp"}
+        spinstr=$temp${spinstr%"$temp"}
         sleep $delay
         elapsed=$(echo "$elapsed + $delay" | bc)
         printf "\r"
