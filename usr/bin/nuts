@@ -185,7 +185,7 @@ unmount_directory() {
 spinner() {
     local pid=$!
     local delay=0.1
-    local spinstr='|/-\'
+    local spinstr='▖▘▝▗'
     local elapsed=0
 
     while ps a | awk '{print $1}' | grep -q "$pid"; do
