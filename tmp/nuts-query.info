@@ -10,11 +10,11 @@ MINTARGET=3.4.1
 # Define the name of the file and its checksum.
 #
 [OTA]
-OTAFILE=ota-2024.06.01-16.48-amd64.squashfs
-OTASUM=879637b6c50a4dd96008e546a2d9e530
+OTAFILE=ota-2024.06.01-19.47-amd64.squashfs
+OTASUM=ca74da0c2ff946bc57faa791120bff08
 
 # Define the list of mirrors to download the file.
 # If multiple mirrors are available, separate them using commas, i.e., url1,url2,url3
 #
 [URL]
-MIRRORLIST=https://master.dl.sourceforge.net/project/nitruxos/Testing/ota-2024.06.01-16.48-amd64.squashfs,https://netactuate.dl.sourceforge.net/project/nitruxos/Testing/ota-2024.06.01-16.48-amd64.squashfs,https://netix.dl.sourceforge.net/project/nitruxos/Testing/ota-2024.06.01-16.48-amd64.squashfs,https://freefr.dl.sourceforge.net/project/nitruxos/Testing/ota-2024.06.01-16.48-amd64.squashfs,https://phoenixnap.dl.sourceforge.net/project/nitruxos/Testing/ota-2024.06.01-16.48-amd64.squashfs,https://ufpr.dl.sourceforge.net/project/nitruxos/Testing/ota-2024.06.01-16.48-amd64.squashfs,https://liquidtelecom.dl.sourceforge.net/project/nitruxos/Testing/ota-2024.06.01-16.48-amd64.squashfs,https://yer.dl.sourceforge.net/project/nitruxos/Testing/ota-2024.06.01-16.48-amd64.squashfs,https://newcontinuum.dl.sourceforge.net/project/nitruxos/Testing/ota-2024.06.01-16.48-amd64.squashfs,https://versaweb.dl.sourceforge.net/project/nitruxos/Testing/ota-2024.06.01-16.48-amd64.squashfs
+MIRRORLIST=https://master.dl.sourceforge.net/project/nitruxos/Testing/ota-2024.06.01-19.47-amd64.squashfs,https://netactuate.dl.sourceforge.net/project/nitruxos/Testing/ota-2024.06.01-19.47-amd64.squashfs,https://netix.dl.sourceforge.net/project/nitruxos/Testing/ota-2024.06.01-19.47-amd64.squashfs,https://freefr.dl.sourceforge.net/project/nitruxos/Testing/ota-2024.06.01-19.47-amd64.squashfs,https://phoenixnap.dl.sourceforge.net/project/nitruxos/Testing/ota-2024.06.01-19.47-amd64.squashfs,https://ufpr.dl.sourceforge.net/project/nitruxos/Testing/ota-2024.06.01-19.47-amd64.squashfs,https://liquidtelecom.dl.sourceforge.net/project/nitruxos/Testing/ota-2024.06.01-19.47-amd64.squashfs,https://yer.dl.sourceforge.net/project/nitruxos/Testing/ota-2024.06.01-19.47-amd64.squashfs,https://newcontinuum.dl.sourceforge.net/project/nitruxos/Testing/ota-2024.06.01-19.47-amd64.squashfs,https://versaweb.dl.sourceforge.net/project/nitruxos/Testing/ota-2024.06.01-19.47-amd64.squashfs
