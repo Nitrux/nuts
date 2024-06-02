@@ -185,13 +185,16 @@ unmount_directory() {
 spinner() {
     local pid=$!
     local delay=0.1
-    local spinstr='▖▘▝▗'
     local elapsed=0
+    local dots=0
 
-    while ps a | awk '{print $1}' | grep -q "$pid"; do
-        local temp=${spinstr#?}
-        printf " [%c]  Elapsed time: %s seconds" "$spinstr" "$elapsed"
-        spinstr=$temp${spinstr%"$temp"}
+    while ps -p "$pid" > /dev/null; do
+        if [ $dots -lt 3 ]; then
+            dots=$((dots + 1))
+        else
+            dots=1
+        fi
+        printf " [%-3s] Elapsed time: %.1f seconds" "$(printf '%*s' $dots | tr ' ' '.')" "$elapsed"
         sleep $delay
         elapsed=$(echo "$elapsed + $delay" | bc)
         printf "\r"
