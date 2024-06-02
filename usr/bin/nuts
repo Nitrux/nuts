@@ -566,8 +566,7 @@ done
 				fi
 
 
-				# -- We do this because if, during the Actual Update sub-process with rsync, rsync is interrupted, the root will be in an inconsistent state.
-				# -- That means the root is unusable, i.e., the user can't access the GUI or, worse, a TTY, so the user can't restore the SquashFS.
+				# -- We do this because if the root is unusable, i.e., the user can't access the GUI or, worse, a TTY, the user can't restore the SquashFS.
 				# -- With that being the case, this <operation> allows the user to restore the root partition from a Live session.
 
 				# -- Automatically check if this utility is running in a Live session. Calamares is an easy check as it's only available in a Live session.
