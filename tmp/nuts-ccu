@@ -329,6 +329,9 @@ puts_success "System AppImages and static binaries have been updated, continuing
 
 #<!> -- Remove code since we're not including the kernel in the archive, and we expect users to use Kernel Boot to add other kenels. -- <!>
 
+
+# -- Update the initramfs.
+
 update-initramfs -c -k all
 
 
