@@ -473,10 +473,10 @@ done
 				# -- Download nuts-query.info to the chroot because we initially downloaded it to the overlay.
 
 				overlay_ch mount -t devtmpfs dev /dev
-				overlay_ch find /usr/bin -type f -name "nuts-cru" -exec rm {} \;
+				overlay_ch find /usr/bin -type f -name "nuts-cru" -exec rm -v {} \;
 				overlay_ch axel -o /usr/bin -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-cru" > /dev/null 2>&1
 				overlay_ch chmod +x /usr/bin/nuts-cru
-				overlay_ch find /tmp -type f -name "nuts-query.info" -exec rm {} \;
+				overlay_ch find /tmp -type f -name "nuts-query.info" -exec rm -v {} \;
 				overlay_ch axel -o /tmp -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-query.info" > /dev/null 2>&1
 				overlay_ch nuts-cru
 
@@ -534,7 +534,7 @@ done
 				# -- Always download the latest component. The component will remain in the filesystem after using it; however, once the user executes this <operation> again, it will be deleted and re-downloaded.
 
 				overlay_ch mount -t devtmpfs dev /dev
-				overlay_ch find /usr/bin -type f -name "nuts-crr" -exec rm {} \;
+				overlay_ch find /usr/bin -type f -name "nuts-crr" -exec rm -v {} \;
 				overlay_ch axel -o /usr/bin -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-crr" > /dev/null 2>&1
 				overlay_ch chmod +x /usr/bin/nuts-crr
 				overlay_ch nuts-crr
@@ -694,7 +694,7 @@ done
 				# -- Always download the latest component. The component will remain in the filesystem after using it; however, once the user executes this <operation> again, it will be deleted and re-downloaded.
 
 				overlay_ch mount -t devtmpfs dev /dev
-				overlay_ch find /usr/bin -type f -name "nuts-sup" -exec rm {} \;
+				overlay_ch find /usr/bin -type f -name "nuts-sup" -exec rm -v {} \;
 				overlay_ch axel -o /usr/bin -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-sup" > /dev/null 2>&1
 				overlay_ch chmod +x /usr/bin/nuts-sup
 				overlay_ch nuts-sup
