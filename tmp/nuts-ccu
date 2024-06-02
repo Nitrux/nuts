@@ -269,6 +269,16 @@ cd "$ORIGINAL_DIR"
 rm -f /usr/bin/nx-software-center
 
 
+# -- Remove services from default runlevel.
+
+SERVICES=("rc.local" "ntpsec" "plymouth" "dnsmasq")
+
+for SERVICE in "${SERVICES[@]}"; do
+    puts_info "Stopping and disabling $SERVICE... from OpenRC, continuing..."
+    rc-service "$SERVICE" stop || puts_error "Failed to stop $SERVICE."
+    rc-update del "$SERVICE" || puts_error "Failed to disable $SERVICE."
+done
+
 ######################################################
 #   End of misc-fixes and edit-conf from iso-tool    #
 ######################################################
