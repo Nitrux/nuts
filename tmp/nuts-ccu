@@ -187,7 +187,7 @@ declare -A FILES_TO_DOWNLOAD=(
     ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/scripts/others/user-setup-apply"]="/usr/lib/user-setup/user-setup-apply"
     # Replace update-grub with our version that doesn't break OUR stuff.
     ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/scripts/others/update-grub"]="/usr/sbin/update-grub"
-    #  Replace /usr/lib/grub/grub-sort-version with a version that doesn't use apt.pkg do it can generate a usable boot menu.
+    # Replace /usr/lib/grub/grub-sort-version with a version that doesn't use apt.pkg do it can generate a usable boot menu.
     ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/grub_files/grub-sort-version"]="/usr/lib/grub/grub-sort-version"
     # Replace dnscrypt-proxy default configuration.
     ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/dnscrypt-proxy-settings/dnscrypt-proxy.toml"]="/etc/dnscrypt-proxy/dnscrypt-proxy.toml"
