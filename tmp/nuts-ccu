@@ -246,6 +246,7 @@ files=(
     "/etc/NetworkManager/dnsmasq.d/02-dnscrypt-proxy.conf"
     "/etc/NetworkManager/dnsmasq.d/03-dnssec.conf"
     "/etc/dnsmasq.d/dns-block.conf"
+    "/etc/resolvconf.conf"
 )
 
 for file in "${files[@]}"; do

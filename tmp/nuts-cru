@@ -294,7 +294,6 @@ puts_success "Success! Backup has been created."
 
 
 # -- Download the OTA SquashFS with axel if it doesn't exist. Use the list of mirrors from the query file, or exit if downloading the file from all mirrors fails.
-# -- If the OTA file exist but it doesn't match the checksum in nuts-query.info, delete it and exit.
 
 OTA_FILE="$NUTS_DIR_DLS/nuts-ota.squashfs"
 
@@ -327,7 +326,7 @@ fi
 
 
 # -- Verify the checksum of the OTA file. Use the checksum from the query file.
-# -- Exit if checksum doesn't match.
+# -- If the OTA file exist but it doesn't match the checksum in nuts-query.info, delete it and exit.
 
 LOCAL_OTA_SUM=$(md5sum "$NUTS_DIR_DLS"/nuts-ota.squashfs | awk '{ print $1 }')
 NQ_OTA_SUM=$(grep -oP '(?<=OTASUM=)[a-f0-9]{32}' /tmp/nuts-query.info)
@@ -362,7 +361,7 @@ VAR_DATA_URL="https://raw.githubusercontent.com/Nitrux/storage/master/Other/var-
 TARFILE_DL_PATH="/tmp/var-lib-dpkg-$VAR_DATA_TARGET.tar.xz"
 
 if [[ -f "$AIPKG_MANAGER" ]]; then
-    puts_info "$AIPKG_MANAGER already exists, skipping download."
+    puts_info "AppImage already exists, skipping download."
 else
     if dl_file "$APPIMAGE_URL" > "$AIFILE_DL_PATH" && \
        [[ $(file --mime-type -b "$AIFILE_DL_PATH") == "application/x-executable" ]] && \
@@ -405,7 +404,7 @@ fi
 
 puts_success "Success! OTA update process completed successfully, continuing..."
 
-[[ -f "$AIPKG_MANAGER" ]] && rm "$AIPKG_MANAGER"
+[[ -f "$AIPKG_MANAGER" ]] && rm "$AIPKG_MANAGER" && /usr/bin/dpkg
 
 
 # -- Clean up the updated root after updating.
