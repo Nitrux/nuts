@@ -1,5 +1,5 @@
 # List of files and directories to be excluded when using rsync.
-# rsync-exclude.list 2023 (c) Nitrux Latinoamericana S.C.
+# rsync-exclude.list 2023-2024 (c) Nitrux Latinoamericana S.C.
 
 # This list is used for restore.
 #

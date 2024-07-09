@@ -348,7 +348,7 @@ done
 				# -- For some reason, ping fails in GNOME Boxes even though ping works literally everywhere else. Use wget as an alternative to verify a connection.
 				# -- Exit if connection test fails.
 
-				if ping -q -c 1 -W 1 nxos.org >/dev/null && ping -q -c 1 -W 1 github.com >/dev/null || wget -q --spider https://filesamples.com/samples/document/txt/sample1.txt; then
+				if ping -q -c 1 -W 1 nxos.org >/dev/null && ping -q -c 1 -W 1 raw.githubusercontent.com >/dev/null || wget -q --spider https://filesamples.com/samples/document/txt/sample1.txt; then
 					puts_success "This computer can reach the Internet, continuing..."
 				else
 					puts_error "This computer cannot reach the Internet, quitting."
@@ -396,10 +396,10 @@ done
 				MINTARGET=$(grep 'MINTARGET=' /tmp/nuts-query.info | cut -d'=' -f2)
 
 				if [[ "$DISTRIB_RELEASE" != "$MINTARGET" ]]; then
-					puts_info "System is up-to-date. No updates were found for ${TARGET_DIST^} $DISTRIB_RELEASE. Bye."
+					puts_info "No update is available for ${TARGET_DIST^} $DISTRIB_RELEASE. Bye."
 					exit 0
 				else
-					puts_info "An update was found for ${TARGET_DIST^} $DISTRIB_RELEASE, continuing..."
+					puts_info "An update is available for ${TARGET_DIST^} $DISTRIB_RELEASE, continuing..."
 				fi
 
 
@@ -511,7 +511,7 @@ done
 				# -- For some reason, ping fails in GNOME Boxes even though ping works literally everywhere else. Use wget as an alternative to verify a connection.
 				# -- Exit if connection test fails.
 
-				if ping -q -c 1 -W 1 nxos.org >/dev/null && ping -q -c 1 -W 1 github.com >/dev/null || wget -q --spider https://filesamples.com/samples/document/txt/sample1.txt; then
+				if ping -q -c 1 -W 1 nxos.org >/dev/null && ping -q -c 1 -W 1 raw.githubusercontent.com >/dev/null || wget -q --spider https://filesamples.com/samples/document/txt/sample1.txt; then
 					puts_success "This computer can reach the Internet, continuing..."
 				else
 					puts_error "This computer cannot reach the Internet, quitting."
@@ -666,7 +666,7 @@ done
 				# -- For some reason, ping fails in GNOME Boxes even though ping works literally everywhere else. Use wget as an alternative to verify a connection.
 				# -- Exit if connection test fails.
 
-				if ping -q -c 1 -W 1 nxos.org >/dev/null && ping -q -c 1 -W 1 github.com >/dev/null || wget -q --spider https://filesamples.com/samples/document/txt/sample1.txt; then
+				if ping -q -c 1 -W 1 nxos.org >/dev/null && ping -q -c 1 -W 1 raw.githubusercontent.com >/dev/null || wget -q --spider https://filesamples.com/samples/document/txt/sample1.txt; then
 					puts_success "This computer can reach the Internet, continuing..."
 				else
 					puts_error "This computer cannot reach the Internet, quitting."
