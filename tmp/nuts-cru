@@ -404,7 +404,7 @@ fi
 
 puts_success "Success! OTA update process completed successfully, continuing..."
 
-[[ -f "$AIPKG_MANAGER" ]] && rm "$AIPKG_MANAGER" && /usr/bin/dpkg
+[[ -f "$AIPKG_MANAGER" ]] && rm "$AIPKG_MANAGER" /usr/bin/dpkg > /dev/null 2>&1 &
 
 
 # -- Clean up the updated root after updating.

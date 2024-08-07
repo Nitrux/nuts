@@ -359,17 +359,6 @@ done
 				# -- Update process begins.
 				# -- The update process is divided into two sub-processes, the first is backup, and the second is the actual update.
 
-				# -- Verify that the build list exists.
-				# -- Exit if it doesn't.
-
-				if [[ ! -f "/installed_pkgs_end.txt" ]]; then
-					puts_error "Build list not found, quitting."
-					exit 1
-				else
-					puts_info "Build list found, continuing..."
-				fi
-
-
 				# -- Download the nuts-query file from our repository and then use the checksum listed in the file to compare their values.
 				# -- This file is always downloaded to a temporary directory, as there's no reason to keep it.
 				# -- Overwrite the file if it already exists.
@@ -390,7 +379,6 @@ done
 				# -- This way, we know that the user is running this tool on an installation that we can upgrade; thus, this tool works as intended.
 				# -- If the check matches, it means there's an update.
 				# -- if the check doesn't match, it means there's no update.
-				# -- Comparing the checksum of /installed_pkgs_end.txt to verify versions is now deprecated.
 
 				DISTRIB_RELEASE=$(grep 'DISTRIB_RELEASE' /etc/lsb-release | cut -d'=' -f2)
 				MINTARGET=$(grep 'MINTARGET=' /tmp/nuts-query.info | cut -d'=' -f2)

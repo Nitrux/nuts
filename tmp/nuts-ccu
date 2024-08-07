@@ -52,6 +52,15 @@ puts_success() {
 }
 
 
+# -- Print warning messages to stderr.
+
+puts_warning() {
+    if [ -n "$1" ]; then
+        printf "%s: \e[33mWarning:\e[0m %s\n" "$TOOL_NAME" "$*" >&2
+    fi
+}
+
+
 # -- Display version of running component.
 
 puts_info "$TOOL_NAME $COMP_NAME version $CCU_VERSION."
@@ -161,6 +170,10 @@ declare -A FILES_TO_DOWNLOAD=(
     # Add hook scripts for initramfs.
     ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/initramfs-tools/hooks/amd64_microcode"]="/usr/share/initramfs-tools/hooks/amd64_microcode"
     ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/initramfs-tools/hooks/intel_microcode"]="/usr/share/initramfs-tools/hooks/intel_microcode"
+    # Replace elogind files.
+    ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/elogind/logind.conf"]="/etc/elogind/logind.conf"
+    ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/elogind/sleep.conf"]="/etc/elogind/sleep.conf"
+    ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/elogind/sleep.conf.d/10-elogind.conf"]="/etc/elogind/sleep.conf.d/10-elogind.conf"
 )
 
 for URL in "${!FILES_TO_DOWNLOAD[@]}"; do
@@ -235,48 +248,114 @@ else
 fi
 
 
+# -- Sort OpenRC services.
+
+puts_info "Updating OpenRC services, continuing..."
+
+$(which rm) -f /etc/runlevels/{default,nonetwork,off,recovery,sysinit,boot}/*
+
+mkdir -p /etc/runlevels/async && rc-update add -s async default
+
+$(which cp) /etc/init.d/{acpi-support,acpid,console-setup.sh,dbus,debugfs-mount-openrc,elogind,fprintd-openrc,mountbinds,network-manager,nohang-desktop-openrc,ntpsec-openrc,plymouth-openrc,powertop-openrc,rmnologin,sddm,sudo,tlp,uuidd} /etc/runlevels/default/ || true
+
+$(which cp) /etc/init.d/{avahi-daemon-openrc,bluez-meshd-openrc,bluez-obexd-openrc,bluez-openrc,cron,cups,irqbalance,nmbd,preload,rsyslog-openrc,smbd,thp-settings,usbmuxd-openrc} /etc/runlevels/async/ || true
+
+# $(which cp) /etc/init.d/rc.local /etc/runlevels/nonetwork/local || true
+
+$(which cp) /etc/init.d/{savecache,sendsigs,umountfs,umountnfs.sh,umountroot} /etc/runlevels/off || true
+
+# $(which cp) /etc/init.d/{bootlogs,killprocs,single} /etc/runlevels/recovery || true
+
+$(which cp) /etc/init.d/{apparmor,bootmisc.sh,brightness,cgroups,checkroot-bootclean.sh,checkroot.sh,eudev,hostname.sh,hwclock.sh,keyboard-setup.sh,kmod,mount-configfs,mountall-bootclean.sh,mountall.sh,mountdevsubfs.sh,mountkernfs.sh,mountnfs.sh,networking,plymouth-log,procps,selinux-autorelabel,ufw,urandom,x11-common} /etc/runlevels/sysinit || true
+
+$(which cp) /etc/init.d/{cryptdisks,cryptdisks-early,cryptmount-openrc,device-mapper-openrc,dmcrypt-openrc,dmeventd-openrc} /etc/runlevels/boot || true
+
+
 #######################################################
 #   These are changes introduced in the new release.  #
 #######################################################
 
-# -- Cleanup the prev. NetworkManager configuration.
+# -- Remove the contents of packages using the shell. At this point, we're not keeping or using data in /var/lib/dpkg anyway, so it doesn't matter how these files and directories are removed.
 
 files=(
-    "/etc/NetworkManager/dnsmasq.d/01-dns_cache.conf"
-    "/etc/NetworkManager/dnsmasq.d/02-dnscrypt-proxy.conf"
-    "/etc/NetworkManager/dnsmasq.d/03-dnssec.conf"
-    "/etc/dnsmasq.d/dns-block.conf"
-    "/etc/resolvconf.conf"
+    "/usr/sbin/bpftool"
+    "/usr/share/bash-completion/completions/bpftool"
+    "/usr/share/doc/bpftool/changelog.Debian.gz"
+    "/usr/share/doc/bpftool/copyright"
+    "/usr/share/man/man8/bpftool-btf.8.gz"
+    "/usr/share/man/man8/bpftool-cgroup.8.gz"
+    "/usr/share/man/man8/bpftool-feature.8.gz"
+    "/usr/share/man/man8/bpftool-gen.8.gz"
+    "/usr/share/man/man8/bpftool-iter.8.gz"
+    "/usr/share/man/man8/bpftool-link.8.gz"
+    "/usr/share/man/man8/bpftool-map.8.gz"
+    "/usr/share/man/man8/bpftool-net.8.gz"
+    "/usr/share/man/man8/bpftool-perf.8.gz"
+    "/usr/share/man/man8/bpftool-prog.8.gz"
+    "/usr/share/man/man8/bpftool-struct_ops.8.gz"
+    "/usr/share/man/man8/bpftool.8.gz"
+    "/etc/udev/rules.d/40-ioschedulers.rules"
+)
+
+directories=(
+    "/usr/share/plasma/plasmoids/org.nx.networkmanagement"
 )
 
 for file in "${files[@]}"; do
-    if [ -e "$file" ]; then
-        rm "$file"
-        puts_info "Updating NetworkManager configuration, continuing..."
+    if [ -f "$file" ]; then
+        puts_info "Deleting $file, continuing..."
+        rm -f "$file"
     else
-        puts_error "NetworkManager conf. file: $file does not exist, skipping..."
+        puts_warning "$file does not exist, skipping..."
+    fi
+done
+
+for dir in "${directories[@]}"; do
+    if [ -d "$dir" ]; then
+        puts_info "Deleting directory $dir, continuing..."
+        rm -rf "$dir"
+    else
+        puts_warning "Directory $dir does not exist, skipping..."
     fi
 done
 
 
-# -- Install the firmware that the xone script downloads.
+# -- Remove AppArmor profile that causes Flatpak not to work.
 
-DRIVER_URL='http://download.windowsupdate.com/c/msdownload/update/driver/drvs/2017/07/1cd6a87c-623f-4407-a52d-c31be49e925c_e19f60808bdcbfbd3c3df6be3e71ffc52e43261e.cab'
-FIRMWARE_HASH='48084d9fa53b9bb04358f3bb127b7495dc8f7bb0b3ca1437bd24ef2b6eabdf66'
+src="/etc/apparmor.d/bwrap-userns-restrict"
+target="/etc/apparmor.d/disable/bwrap-userns-restrict"
 
-TEMP_DIR=$(mktemp -d)
-
-curl -L -o "$TEMP_DIR/driver.cab" "$DRIVER_URL" > /dev/null 2>&1
-cabextract -F FW_ACC_00U.bin -d "$TEMP_DIR" "$TEMP_DIR/driver.cab" > /dev/null 2>&1
-echo "$FIRMWARE_HASH  $TEMP_DIR/FW_ACC_00U.bin" | sha256sum -c > /dev/null 2>&1
-mv "$TEMP_DIR/FW_ACC_00U.bin" /lib/firmware/xow_dongle.bin
+if [ ! -e "$target" ]; then
+    create_symlink "$src" "$target"
+fi
 
 
-# -- Create links for dbab lists in /etc/NetworkManager/dnsmasq.d.
+# -- Disable DrKonqi.
 
-create_symlink /etc/dnsmasq.d/dbab-map.adblock.conf /etc/NetworkManager/dnsmasq.d/dbab-map.adblock.conf
-create_symlink /etc/dnsmasq.d/dbab-map.trashsites.conf /etc/NetworkManager/dnsmasq.d/dbab-map.trashsites.conf
+chmod a-x /usr/lib/x86_64-linux-gnu/libexec/drkonqi 
 
+
+# -- Add tutorials to /etc/skel so they're added to the Desktop directory.
+
+ORIGINAL_DIR=$(pwd)
+
+TEMP_DIR1=$(mktemp -d)
+git clone --depth=1 https://github.com/Nitrux/storage.git "$TEMP_DIR1"
+cd "$TEMP_DIR1"
+cp -R Other/Documentation /etc/skel/Desktop
+cd "$ORIGINAL_DIR"
+
+
+# -- Add nvidia_oc binary to overclock NVIDIA GPUs on Wayland.
+
+FILE_URL="https://github.com/Dreaming-Codes/nvidia_oc/releases/download/0.1.11/nvidia_oc"
+DEST_DIR="/usr/bin"
+DEST_FILE="$DEST_DIR/nvidia-oc"
+if curl -L -o "$DEST_FILE" "$FILE_URL"; then
+    chmod +x "$DEST_FILE"
+else
+    exit 1
+fi
 
 puts_success "Success! misc. and configuration files have been updated, continuing..."
 
