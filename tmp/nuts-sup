@@ -96,29 +96,6 @@ NUTS_GIT_DIR=$(mktemp -d)
 
 #   ====== START ======
 
-# -- Flag parsing.
-
-for cmd; do
-	case "$cmd" in
-		-v | --version)
-			print_message "$TOOL_NAME" \
-				"" \
-				"Version $COMP_NAME: $SUP_VERSION." \
-				"" \
-				"The license used for this file and its contents is: BSD-3-Clause." \
-				"" \
-				"Authors:" \
-				"" \
-				"    Copyright <2023> <Uri Herrera <uri_herrera@nxos.org>>" \
-				"" \
-				"(c) $FECHA Some Rights Reserved. Made by $VENDOR"
-
-			exit
-			;;
-	esac
-done
-
-
 # -- Save current value of NUTS_BRANCH.
 
 CURRENT_NUTS_BRANCH=$(grep -oP '^NUTS_BRANCH=\K.*' "$CONFIG_FILE")
