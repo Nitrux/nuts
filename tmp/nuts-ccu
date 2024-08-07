@@ -275,7 +275,7 @@ $(which cp) /etc/init.d/{cryptdisks,cryptdisks-early,cryptmount-openrc,device-ma
 #   These are changes introduced in the new release.  #
 #######################################################
 
-# -- Remove the contents of packages using the shell. At this point, we're not keeping or using data in /var/lib/dpkg anyway, so it doesn't matter how these files and directories are removed.
+# -- Remove the contents of packages using the shell. We're not keeping or using data in /var/lib/dpkg anyway, so it doesn't matter how we remove these files and directories.
 
 files=(
     "/usr/sbin/bpftool"
