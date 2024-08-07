@@ -1,6 +1,15 @@
+nuts (2.1.6) nitrux; urgency=medium
+
+  * Actually remove leftovers after applying the upgrade.
+  * Remove code for build list check.
+  * Correctly sort the the OpenRC services.
+  * Add sections to nuts-ccu to mark files and directories for removal.
+
+ -- Uri Herrera <uri_herrera@nxos.org>  Wed, 07 Aug 2024 01:45:00 -0500
+
 nuts (2.1.5-2) nitrux; urgency=medium
 
-  * Rmeove leftovers after applying the upgrade.
+  * Remove leftovers after applying the upgrade.
 
  -- Uri Herrera <uri_herrera@nxos.org>  Tue, 09 Jul 2024 01:45:00 -0500
 
