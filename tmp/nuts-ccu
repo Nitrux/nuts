@@ -271,55 +271,6 @@ $(which cp) /etc/init.d/{apparmor,bootmisc.sh,brightness,cgroups,checkroot-bootc
 $(which cp) /etc/init.d/{cryptdisks,cryptdisks-early,cryptmount-openrc,device-mapper-openrc,dmcrypt-openrc,dmeventd-openrc} /etc/runlevels/boot || true
 
 
-#######################################################
-#   These are changes introduced in the new release.  #
-#######################################################
-
-# -- Remove the contents of packages using the shell. We're not keeping or using data in /var/lib/dpkg anyway, so it doesn't matter how we remove these files and directories.
-
-files=(
-    "/usr/sbin/bpftool"
-    "/usr/share/bash-completion/completions/bpftool"
-    "/usr/share/doc/bpftool/changelog.Debian.gz"
-    "/usr/share/doc/bpftool/copyright"
-    "/usr/share/man/man8/bpftool-btf.8.gz"
-    "/usr/share/man/man8/bpftool-cgroup.8.gz"
-    "/usr/share/man/man8/bpftool-feature.8.gz"
-    "/usr/share/man/man8/bpftool-gen.8.gz"
-    "/usr/share/man/man8/bpftool-iter.8.gz"
-    "/usr/share/man/man8/bpftool-link.8.gz"
-    "/usr/share/man/man8/bpftool-map.8.gz"
-    "/usr/share/man/man8/bpftool-net.8.gz"
-    "/usr/share/man/man8/bpftool-perf.8.gz"
-    "/usr/share/man/man8/bpftool-prog.8.gz"
-    "/usr/share/man/man8/bpftool-struct_ops.8.gz"
-    "/usr/share/man/man8/bpftool.8.gz"
-    "/etc/udev/rules.d/40-ioschedulers.rules"
-)
-
-directories=(
-    "/usr/share/plasma/plasmoids/org.nx.networkmanagement"
-)
-
-for file in "${files[@]}"; do
-    if [ -f "$file" ]; then
-        puts_info "Deleting $file, continuing..."
-        rm -f "$file"
-    else
-        puts_warning "$file does not exist, skipping..."
-    fi
-done
-
-for dir in "${directories[@]}"; do
-    if [ -d "$dir" ]; then
-        puts_info "Deleting directory $dir, continuing..."
-        rm -rf "$dir"
-    else
-        puts_warning "Directory $dir does not exist, skipping..."
-    fi
-done
-
-
 # -- Remove AppArmor profile that causes Flatpak not to work.
 
 src="/etc/apparmor.d/bwrap-userns-restrict"
@@ -356,6 +307,11 @@ if curl -L -o "$DEST_FILE" "$FILE_URL"; then
 else
     exit 1
 fi
+
+
+#######################################################
+#   These are changes introduced in the new release.  #
+#######################################################
 
 puts_success "Success! misc. and configuration files have been updated, continuing..."
 
