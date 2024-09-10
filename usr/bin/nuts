@@ -290,7 +290,7 @@ for cmd; do
 			shift
 			;;
 
-		--use-main-banch )
+		--use-main-branch )
 			overlay_ch sed -i 's+NUTS_BRANCH=development+NUTS_BRANCH=main+g' /etc/nuts.conf
 			puts_success "$TOOL_NAME is using the following git branch: main"
 			puts_info "Reboot to load changes into overlay. Bye."
