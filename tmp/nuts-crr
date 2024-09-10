@@ -165,29 +165,6 @@ TARGET_DIST="nitrux"
 
 #   ====== START ======
 
-# -- Flag parsing.
-
-for cmd; do
-	case "$cmd" in
-		-v | --version)
-			print_message "$TOOL_NAME" \
-				"" \
-				"Version $COMP_NAME: $CRR_VERSION." \
-				"" \
-				"The license used for this file and its contents is: BSD-3-Clause." \
-				"" \
-				"Authors:" \
-				"" \
-				"    Copyright <2023> <Uri Herrera <uri_herrera@nxos.org>>" \
-				"" \
-				"(c) $FECHA Some Rights Reserved. Made by $VENDOR"
-
-			exit
-			;;
-	esac
-done
-
-
 # -- Mount the devices filesystem.
 # -- Check if /dev is already mounted.
 
