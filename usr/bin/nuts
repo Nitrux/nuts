@@ -445,7 +445,6 @@ done
 
 				# -- Step 2: Actual Update sub-process
 
-				# -- This process is also done inside the chroot.
 				# -- After using overlay_ch, it's essential to remember that **EVERY COMMAND IS RUNNING AS ROOT AND ON THE LOWER DIRECTORY OF THE OVERLAY**.
 
 				OVERLAYROOT="/usr/sbin/overlayroot-chroot"

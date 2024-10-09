@@ -34,6 +34,7 @@ TOOL_NAME="Nitrux Update Tool System"
 COMP_NAME="(Cleanup Component)"
 CCU_VERSION="$(md5sum /tmp/nuts-ccu | cut -c -32)"
 
+
 # -- Print informative messages to stderr.
 
 puts_info() {
@@ -309,16 +310,16 @@ else
 fi
 
 
+######################################################
+#   End of misc-fixes and edit-conf from iso-tool    #
+######################################################
+
+
 #######################################################
 #   These are changes introduced in the new release.  #
 #######################################################
 
 puts_success "Success! misc. and configuration files have been updated, continuing..."
-
-
-######################################################
-#   End of misc-fixes and edit-conf from iso-tool    #
-######################################################
 
 
 ######################################################
