@@ -310,7 +310,7 @@ else
 fi
 
 
-# -- Ensure that xone and xpadneon are built with dkms when a new kernel is added.
+# -- Ensure that xone and xpadneo are built with dkms when a new kernel is added.
 
 ORIGINAL_DIR=$(pwd)
 
