@@ -35,7 +35,7 @@ The Nitrux Update Tool System (`nuts`) is a simple, minimalistic system update a
   - `nuts` does not interact with any software "repository".
   - `nuts` does not manage packages directly. It has no "knowledge" about filesystem contents, cache, etc.
 - An installer.
-  - `nuts` is inspired by the functional workflow of most Linux installers, that is, extracting a SquashFS file. However, `nuts` does not handle in any way locale configuration, user creation, user management (including updating user settings, i.e., updating Latte Dock, Plasma, or ZSH configuration files), partition configuration (such as modifying `/etc/fstab`), or bootloader configuration (such as modifying `/etc/default/grub`), etc.
+  - `nuts` is inspired by the functional workflow of most Linux installers, that is, extracting a SquashFS file. However, `nuts` does not handle in any way locale configuration, user creation, user management (including updating user settings, i.e., updating Latte Dock, Plasma, or ZSH configuration files), or partition configuration (such as modifying `/etc/fstab`), etc.
 - Solely a backup utility.
   - `nuts` is not designed exclusively as a backup utility in the way that other utilities like _restic_, _bup_ or filesystem-level tools like _xfsdump_ and _xfsrestore_, _btrfs-snapshot_ or _lvmcreate_ were. To backup user data in Nitrux [use Kup](https://nxos.org/tutorial/how-to-create-backups-using-kup/).
 - A container, virtual machine, Live USB creator, Linux distribution, desktop environment, or "proprietary software."
