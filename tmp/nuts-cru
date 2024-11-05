@@ -210,6 +210,20 @@ puts_info "Mounting $HOME_PARTITION to /home..."
 mount -t auto "$HOME_PARTITION" /home
 
 
+# -- Mount NX_VAR_LIB partition.
+# -- We need to mount this partition so that when nuts-ccu runs update-grub, the GRUB menu is correctly updated.
+
+VAR_LIB_PARTITION=$(findfs LABEL=NX_VAR_LIB)
+
+if mountpoint -q /var/lib; then
+    puts_info "/var/lib is already mounted. Unmounting..."
+    umount /var/lib
+fi
+
+puts_info "Mounting $VAR_LIB_PARTITION to /var/lib..."
+mount -t auto "$VAR_LIB_PARTITION" /var/lib
+
+
 # -- Create the directories for nuts.
 # -- Create working directories in /home since this partition will likely have more space than the root partition.
 
@@ -329,7 +343,7 @@ mount "$NUTS_DIR_DLS"/nuts-ota.squashfs "$NUTS_DIR_SQS"
 
 puts_info "Updating ${CURRENT_DIST^}, continuing..."
 
-APPIMAGE_URL="https://raw.githubusercontent.com/UriHerrera/storage/master/AppImages/dpkg-1.19.7-x86_64.AppImage"
+APPIMAGE_URL="https://raw.githubusercontent.com/Nitrux/storage/master/Other/AppImages/dpkg-1.19.7-x86_64.AppImage"
 AIFILE_DL_PATH="/tmp/dpkg-1.19.7-x86_64.AppImage"
 AIPKG_MANAGER="/tmp/pkgman"
 
@@ -406,6 +420,7 @@ rm -f /tmp/nuts-ccu
 
 unmount_directory "$NUTS_DIR_SQS"
 unmount_directory "/home"
+unmount_directory "/var/lib"
 # unmount_directory "/dev"
 
 

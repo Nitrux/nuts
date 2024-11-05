@@ -1,3 +1,13 @@
+nuts (2.1.8) nitrux; urgency=medium
+
+  * Ensure dkms builds xone for the newer kernel.
+  * Ensure new kernel parameters are added to the GRUB menu.
+  * Ensure the newest kernel is used for the defaul boot entry.
+  * Mount /var/lib in chroot for update-grub to work correctly.
+  * Fix problem when restoring due to checking for a non-existen file.
+
+ -- Uri Herrera <uri_herrera@nxos.org>  Mon, 04 Nov 2024 19:54:00 -0500
+
 nuts (2.1.7) nitrux; urgency=medium
 
   * Fix typo in branch flag.

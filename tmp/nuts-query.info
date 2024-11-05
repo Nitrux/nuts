@@ -5,16 +5,16 @@
 # Define the minimum target for the update.
 #
 [RELEASE]
-MINTARGET=3.6.1
+MINTARGET=3.7.0
 
 # Define the name of the file and its checksum.
 #
 [OTA]
-OTAFILE=ota-2024.10.09-08.22-amd64.squashfs
-OTASUM=9bca6d7ac98b9ac3fc810335473f6348
+OTAFILE=ota-2024.10.31-17.42-amd64.squashfs
+OTASUM=75a5dd93e4d78639c4d90f8ead777bc2
 
 # Define the list of mirrors to download the file.
 # If multiple mirrors are available, separate them using commas, i.e., url1,url2,url3
 #
 [URL]
-MIRRORLIST=https://master.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.10.09-08.22-amd64.squashfs,https://netactuate.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.10.09-08.22-amd64.squashfs,https://netix.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.10.09-08.22-amd64.squashfs,https://freefr.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.10.09-08.22-amd64.squashfs,https://phoenixnap.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.10.09-08.22-amd64.squashfs,https://ufpr.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.10.09-08.22-amd64.squashfs,https://liquidtelecom.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.10.09-08.22-amd64.squashfs,https://yer.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.10.09-08.22-amd64.squashfs,https://newcontinuum.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.10.09-08.22-amd64.squashfs,https://versaweb.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.10.09-08.22-amd64.squashfs
+MIRRORLIST=https://master.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.10.31-17.42-amd64.squashfs,https://netactuate.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.10.31-17.42-amd64.squashfs,https://netix.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.10.31-17.42-amd64.squashfs,https://freefr.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.10.31-17.42-amd64.squashfs,https://phoenixnap.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.10.31-17.42-amd64.squashfs,https://ufpr.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.10.31-17.42-amd64.squashfs,https://liquidtelecom.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.10.31-17.42-amd64.squashfs,https://yer.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.10.31-17.42-amd64.squashfs,https://newcontinuum.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.10.31-17.42-amd64.squashfs,https://versaweb.dl.sourceforge.net/project/nitruxos/Updates/ota-2024.10.31-17.42-amd64.squashfs

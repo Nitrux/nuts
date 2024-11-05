@@ -241,8 +241,8 @@ mount "$(echo "$NUTS_DIR_BAK"/nuts-backup-*.squashfs | tr ' ' '\n' | tail -n 1)"
 # -- If the checksum matches, exit because the root had been restored in a previous run. There's no point in restoring the *same* root.
 # -- If the checksum doesn't match, continue because the root differs from the backup's contents and is potentially newer.
 
-LOCAL_SUM=$(md5sum /installed_pkgs_end.txt | cut -c -32)
-BACKUP_LIST_SUM=$(md5sum "$NUTS_DIR_SQS"/installed_pkgs_end.txt | cut -c -32)
+LOCAL_SUM=$(md5sum /usr/lib/os-release  | cut -c -32)
+BACKUP_LIST_SUM=$(md5sum "$NUTS_DIR_SQS"/usr/lib/os-release  | cut -c -32)
 
 if [[ "$LOCAL_SUM" == "$BACKUP_LIST_SUM" ]]; then
   puts_info "The current installation of ${TARGET_DIST^} is the same as the backup, quitting."

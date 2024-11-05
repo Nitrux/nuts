@@ -259,7 +259,7 @@ mkdir -p /etc/runlevels/async && rc-update add -s async default
 
 $(which cp) /etc/init.d/{acpi-support,acpid,console-setup.sh,dbus,debugfs-mount-openrc,elogind,fprintd-openrc,mountbinds,network-manager,nohang-desktop-openrc,ntpsec-openrc,plymouth-openrc,powertop-openrc,rmnologin,sddm,sudo,tlp,uuidd} /etc/runlevels/default/ || true
 
-$(which cp) /etc/init.d/{avahi-daemon-openrc,bluez-meshd-openrc,bluez-obexd-openrc,bluez-openrc,cron,cups,irqbalance,nmbd,preload,rsyslog-openrc,smbd,thp-settings,usbmuxd-openrc} /etc/runlevels/async/ || true
+$(which cp) /etc/init.d/{avahi-daemon-openrc,bcm-drv,bluez-meshd-openrc,bluez-obexd-openrc,bluez-openrc,cron,cups,irqbalance,nmbd,preload,rsyslog-openrc,smbd,thp-settings,usbmuxd-openrc} /etc/runlevels/async/ || true
 
 # $(which cp) /etc/init.d/rc.local /etc/runlevels/nonetwork/local || true
 
@@ -310,6 +310,13 @@ else
 fi
 
 
+# -- FIX upstream's BUG in 10_linux!.
+
+sed -i "s/reverse_sorted_list=.*/reverse_sorted_list=\$(echo \"\$list\" | tr ' ' '\\n' | sort -Vr)/" /etc/grub.d/10_linux
+
+
+puts_success "Success! misc. and configuration files have been updated, continuing..."
+
 ######################################################
 #   End of misc-fixes and edit-conf from iso-tool    #
 ######################################################
@@ -319,7 +326,41 @@ fi
 #   These are changes introduced in the new release.  #
 #######################################################
 
-puts_success "Success! misc. and configuration files have been updated, continuing..."
+puts_info "Applying changes introduced in the new release, continuing..."
+
+# -- Ensure that xone is built with DKMS with kernels newer than 6.11.
+# -- The driver version from upstream builds up to kernel 6.10, so we need to remove that and download the fork.
+
+VERSION="unknown"
+SOURCE_DIR="/usr/src/xone-$VERSION"
+LOG_FILE="/var/lib/dkms/xone/$VERSION/build/make.log"
+REPO_URL="https://github.com/tskaar/xone.git"
+BRANCH="fix-6.12"
+
+LATEST_KERNEL=$(find /boot -name 'vmlinuz-*' -exec basename {} \; | cut -d- -f2- | sort -V | tail -n 1)
+
+rm -rf "$SOURCE_DIR"
+
+git clone -b "$BRANCH" --single-branch "$REPO_URL" "$SOURCE_DIR" || {
+    echo "Failed to clone repository." >&2
+    exit 1
+}
+
+if dkms install -m xone -v "$VERSION" -k "$LATEST_KERNEL"; then
+    [ ! -f /etc/modprobe.d/xone-blacklist.conf ] && install -D -m 644 "$SOURCE_DIR/install/modprobe.conf" /etc/modprobe.d/xone-blacklist.conf
+    [ ! -f /usr/local/bin/xone-get-firmware.sh ] && install -D -m 755 "$SOURCE_DIR/install/firmware.sh" /usr/local/bin/xone-get-firmware.sh
+
+    for MODULE in xpad mt76x2u; do
+        if lsmod | grep -q "^$MODULE"; then
+            modprobe -r "$MODULE"
+        fi
+    done
+else
+    [ -r "$LOG_FILE" ] && cat "$LOG_FILE" >&2
+    exit 1
+fi
+
+puts_success "Success! new changes applied to the system, continuing..."
 
 
 ######################################################
@@ -362,20 +403,190 @@ puts_success "System AppImages and static binaries have been updated, continuing
 #   End of update AppImages and static binaries    #
 ####################################################
 
-
-# -- Link kernel image to newer kernel.
-
-#<!> -- Remove code since we're not including the kernel in the archive, and we expect users to use Kernel Boot to add other kenels. -- <!>
-
-
 # -- Update the initramfs.
 
 update-initramfs -c -k all
 
 
 # -- Update GRUB.
+# -- Whenever we add new parameters, ensure that these are added to existing installations.
 
-if update-grub > /dev/null 2>&1; then
+GRUB_FILE="/etc/default/grub"
+BACKUP_FILE="/etc/default/grub.bak"
+
+REQUIRED_PARAMS=(
+  "amdgpu.cik_support=1"
+  "amdgpu.ppfeaturemask=0xffffffff"
+  "amdgpu.si_support=1"
+  "amdgpu.vm_update_mode=3"
+  "apparmor=1"
+  "cfi=kcfi"
+  "hardened_usercopy=1"
+  "hpet=disable"
+  "init_on_free=1"
+  "intel_pstate=enable"
+  "libahci.ignore_sss=1"
+  "modprobe.blacklist=iTCO_wdt"
+  "modprobe.blacklist=sp5100_tco"
+  "nosgx"
+  "nvidia_drm.modeset=1"
+  "nvme_core.multipath=Y"
+  "overlayroot=tmpfs:swap=1,recurse=0"
+  "page_alloc.shuffle=1"
+  "quiet"
+  "radeon.cik_support=0"
+  "radeon.si_support=0"
+  "randomize_kstack_offset=on"
+  "rcu_nocbs=all"
+  "rcupdate.rcu_expedited=1"
+  "rcutree.enable_rcu_lazy=1"
+  "security=apparmor"
+  "slab_nomerge"
+  "slub_debug=FZ"
+  "usbcore.autosuspend=-1"
+  "vdso32=0"
+  "vsyscall=none"
+  "zswap.compressor=zstd"
+  "zswap.enabled=1"
+  "zswap.max_pool_percent=20"
+  "zswap.zpool=zsmalloc"
+  "splash"
+)
+
+param_exists() {
+    local target_lower
+    target_lower=$(echo "$1" | tr '[:upper:]' '[:lower:]')
+    local existing_lower
+    for existing_param in "${unique_params[@]}"; do
+        existing_lower=$(echo "$existing_param" | tr '[:upper:]' '[:lower:]')
+        if [[ "$existing_lower" == "$target_lower" ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+handle_modprobe_blacklist() {
+    local required_param="$1"
+    local key="modprobe.blacklist="
+    if [[ "$required_param" == $key* ]]; then
+        local module
+        module=$(echo "$required_param" | cut -d'=' -f2)
+        local existing_entry=""
+        for i in "${!unique_params[@]}"; do
+            if [[ "${unique_params[i],,}" == modprobe.blacklist=* ]]; then
+                existing_entry="${unique_params[i]}"
+                break
+            fi
+        done
+        if [ -n "$existing_entry" ]; then
+            local modules
+            modules=$(echo "$existing_entry" | cut -d'=' -f2)
+            IFS=',' read -r -a existing_modules <<< "$modules"
+            local module_found=false
+            for em in "${existing_modules[@]}"; do
+                if [[ "${em,,}" == "${module,,}" ]]; then
+                    module_found=true
+                    break
+                fi
+            done
+            if [ "$module_found" = false ]; then
+                existing_modules+=("$module")
+                unique_params=("${unique_params[@]/$existing_entry/}")
+                unique_params+=("modprobe.blacklist=$(IFS=, ; echo "${existing_modules[*]}")")
+            fi
+        else
+            unique_params+=("$required_param")
+        fi
+    else
+        if ! param_exists "$required_param"; then
+            unique_params+=("$required_param")
+        fi
+    fi
+}
+
+if [ ! -f "$GRUB_FILE" ]; then
+    puts_error "$GRUB_FILE not found, quitting."
+    exit 1
+fi
+
+cp "$GRUB_FILE" "$BACKUP_FILE"
+
+current_line=$(grep '^GRUB_CMDLINE_LINUX_DEFAULT=' "$GRUB_FILE" || true)
+
+if [ -n "$current_line" ]; then
+    current_params=$(echo "$current_line" | sed -E 's/GRUB_CMDLINE_LINUX_DEFAULT="(.*)"/\1/')
+    read -r -a param_array <<< "$current_params"
+
+    unique_params=()
+    for param in "${param_array[@]}"; do
+        param_lower=$(echo "$param" | tr '[:upper:]' '[:lower:]')
+        found=false
+        for up in "${unique_params[@]}"; do
+            up_lower=$(echo "$up" | tr '[:upper:]' '[:lower:]')
+            if [[ "$up_lower" == "$param_lower" ]]; then
+                found=true
+                break
+            fi
+        done
+        if [ "$found" = false ]; then
+            unique_params+=("$param")
+        fi
+    done
+
+    modprobe_blacklist_modules=()
+    for param in "${unique_params[@]}"; do
+        if [[ "${param,,}" == modprobe.blacklist=* ]]; then
+            IFS=',' read -r -a modules <<< "${param#*=}"
+            for m in "${modules[@]}"; do
+                modprobe_blacklist_modules+=("$m")
+            done
+        fi
+    done
+
+    mapfile -t unique_params < <(printf '%s\n' "${unique_params[@]//modprobe.blacklist=*/}" | grep -v '^$')
+
+    for req_param in "${REQUIRED_PARAMS[@]}"; do
+        if [[ "$req_param" == modprobe.blacklist=* ]]; then
+            module=$(echo "$req_param" | cut -d'=' -f2)
+            modprobe_blacklist_modules+=("$module")
+        fi
+    done
+
+    mapfile -t unique_modprobe_blacklist_modules < <(printf '%s\n' "${modprobe_blacklist_modules[@]}" | awk '!a[$0]++')
+    mapfile -t sorted_modprobe_blacklist_modules < <(printf '%s\n' "${unique_modprobe_blacklist_modules[@]}" | sort -f)
+
+    if [ ${#sorted_modprobe_blacklist_modules[@]} -gt 0 ]; then
+        unique_params+=("modprobe.blacklist=$(IFS=, ; echo "${sorted_modprobe_blacklist_modules[*]}")")
+    fi
+
+    for req_param in "${REQUIRED_PARAMS[@]}"; do
+        if [[ "$req_param" != modprobe.blacklist=* ]]; then
+            handle_modprobe_blacklist "$req_param"
+        fi
+    done
+
+    mapfile -t sorted_params < <(printf '%s\n' "${unique_params[@]}" | sort -f)
+
+    updated_params="${sorted_params[*]}"
+else
+    updated_params="${REQUIRED_PARAMS[*]}"
+fi
+
+new_line="GRUB_CMDLINE_LINUX_DEFAULT=\"${updated_params}\""
+
+if grep -q '^GRUB_CMDLINE_LINUX_DEFAULT=' "$GRUB_FILE"; then
+    sed -i "s|^GRUB_CMDLINE_LINUX_DEFAULT=.*|$new_line|" "$GRUB_FILE"
+    puts_success "Updated GRUB_CMDLINE_LINUX_DEFAULT in $GRUB_FILE."
+else
+    echo "$new_line" >> "$GRUB_FILE"
+    puts_success "Added GRUB_CMDLINE_LINUX_DEFAULT to $GRUB_FILE."
+fi
+
+puts_success "Kernel parameters have been successfully added to $GRUB_FILE, continuing..."
+
+if command -v update-grub >/dev/null 2>&1; then
+    update-grub
     puts_success "Success! GRUB menu was updated, continuing..."
 else
     puts_error "Failed to update GRUB menu, quitting."
