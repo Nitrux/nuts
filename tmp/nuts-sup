@@ -32,7 +32,7 @@ set -eu
 
 TOOL_NAME="Nitrux Update Tool System"
 COMP_NAME="(Self-Update Component)"
-SUP_VERSION="$(md5sum /usr/bin/nuts-sup | cut -c -32)"
+SUP_VERSION="$(md5sum "$0" | cut -c -32)"
 
 
 # -- Print informative messages to stderr.
@@ -89,6 +89,12 @@ unmount_directory() {
   fi
 }
 
+unmount_on_failure() {
+    unmount_directory "/home" || { puts_error "Failed to unmount /home, quitting."; }
+    unmount_directory "/dev" || { puts_error "Failed to unmount /dev, quitting."; }
+    exit 1
+}
+
 
 # -- Variables.
 
@@ -134,8 +140,8 @@ fi
 if [[ -n $CURRENT_NUTS_BRANCH ]]; then
     sed -i "s/^NUTS_BRANCH=.*$/NUTS_BRANCH=$CURRENT_NUTS_BRANCH/" "$CONFIG_FILE"
 else
-    puts_error "Failed to restore $TOOL_NAME branch." 
-    exit 1
+    puts_error "Failed to restore $TOOL_NAME branch, quitting." 
+    unmount_on_failure
 fi
 
 
@@ -163,6 +169,5 @@ puts_info "Rebooting to load changes into overlay in $REBOOT_SECONDS seconds. By
 sleep $REBOOT_SECONDS
 
 reboot
-
 
 #   ====== END ======

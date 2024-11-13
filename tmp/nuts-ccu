@@ -32,7 +32,7 @@ set -eu
 
 TOOL_NAME="Nitrux Update Tool System"
 COMP_NAME="(Cleanup Component)"
-CCU_VERSION="$(md5sum /tmp/nuts-ccu | cut -c -32)"
+CCU_VERSION="$(md5sum "$0" | cut -c -32)"
 
 
 # -- Print informative messages to stderr.
@@ -85,17 +85,17 @@ dl_file() {
     [ -f "$FILE_PATH" ] && rm "$FILE_PATH"
 
     if ! command -v axel >/dev/null 2>&1; then
-        puts_error "axel command not found, unable to download file."
+        puts_error "axel command not found, unable to download file, quitting."
         return 1
     fi
 
     if ! curl --output /dev/null --silent --head --fail "$FILE_URL"; then
-        puts_error "File URL is not accessible, unable to download file."
+        puts_error "File URL is not accessible, unable to download file, quitting."
         return 1
     fi
 
     if ! axel -o "/tmp" -n 10 "$FILE_URL"; then
-        puts_error "Failed to download file."
+        puts_error "Failed to download file, quitting."
         return 1
     fi
 }

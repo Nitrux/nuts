@@ -32,7 +32,7 @@ set -eu
 
 TOOL_NAME="Nitrux Update Tool System"
 COMP_NAME="(Update Component)"
-CRU_VERSION="$(md5sum /usr/bin/nuts-cru | cut -c -32)"
+CRU_VERSION="$(md5sum "$0" | cut -c -32)"
 
 
 # -- Print informative messages to stderr.
@@ -65,9 +65,20 @@ puts_error() {
 # -- Print messages or text using multiple lines to stderr.
 
 print_message() {
-	if [ -n "$1" ]; then
-		printf "%s\n" "$@" >&2
-	fi
+    if [ $# -eq 0 ]; then
+        printf "\n" >&2
+    else
+        printf "%s\n" "$@" >&2
+    fi
+}
+
+
+# -- Print warning messages to stderr.
+
+puts_warning() {
+    if [ -n "$1" ]; then
+        printf "%s: \e[33mWarning:\e[0m %s\n" "$TOOL_NAME" "$*" >&2
+    fi
 }
 
 
@@ -105,17 +116,17 @@ dl_file() {
     [ -f "$FILE_PATH" ] && rm "$FILE_PATH"
 
     if ! command -v axel >/dev/null 2>&1; then
-        puts_error "axel command not found, unable to download file."
+        puts_error "axel command not found, unable to download file, quitting."
         return 1
     fi
 
     if ! curl --output /dev/null --silent --head --fail "$FILE_URL"; then
-        puts_error "File URL is not accessible, unable to download file."
+        puts_error "File URL is not accessible, unable to download file, quitting."
         return 1
     fi
 
     if ! axel -o "/tmp" -n 10 "$FILE_URL"; then
-        puts_error "Failed to download file."
+        puts_error "Failed to download file, quitting."
         return 1
     fi
 }
@@ -151,8 +162,8 @@ unmount_directory() {
 }
 
 unmount_on_failure() {
-    unmount_directory "/home" || { puts_error "Failed to unmount /home."; }
-    unmount_directory "/dev" || { puts_error "Failed to unmount /dev."; }
+    unmount_directory "/home" || { puts_error "Failed to unmount /home, quitting."; }
+    unmount_directory "/dev" || { puts_error "Failed to unmount /dev, quitting."; }
     exit 1
 }
 
@@ -231,7 +242,7 @@ DIRECTORIES=("$NUTS_DIR_BAK" "$NUTS_DIR_XFS" "$NUTS_DIR_DLS" "$NUTS_DIR_SQS")
 
 for DIR in "${DIRECTORIES[@]}"; do
   if [[ ! -d "$DIR" ]]; then
-    puts_error "Directory '$DIR' does not exist. Creating the directory..."
+    puts_warning "Directory '$DIR' does not exist. Creating the directory..."
     if ! mkdir -p "$DIR"; then
       puts_error "Failed to create directory '$DIR', quitting."
       unmount_on_failure
@@ -240,7 +251,7 @@ for DIR in "${DIRECTORIES[@]}"; do
   fi
 done
 
-puts_info "All required directories exist, continuing..."
+puts_success "Success! All required directories exist, continuing..."
 
 
 # -- Run the backup cleaner.
@@ -291,7 +302,7 @@ OTA_FILE="$NUTS_DIR_DLS/nuts-ota.squashfs"
 if [[ -f "$OTA_FILE" ]]; then
     puts_info "OTA file found, skipping..."
 else
-    puts_info "OTA file not found! Downloading OTA file, continuing..."
+    puts_warning "OTA file not found! Downloading OTA file, continuing..."
     MIRROR_LIST=$(grep 'MIRRORLIST=' /tmp/nuts-query.info | sed -e 's/[^=]*=//' -e 's/,/ /g')
     DOWNLOAD_SUCCESS=false
     for MIRROR_URL in $MIRROR_LIST; do
@@ -301,7 +312,7 @@ else
         wait $!
 
         if ! wait $!; then
-            puts_error "Download from $MIRROR_URL failed. Trying the next mirror..."
+            puts_warning "Download from $MIRROR_URL failed. Trying the next mirror..."
         else
             puts_success "Success! OTA update download completed, continuing..."
             DOWNLOAD_SUCCESS=true
@@ -325,9 +336,9 @@ NQ_OTA_SUM=$(grep -oP '(?<=OTASUM=)[a-f0-9]{32}' /tmp/nuts-query.info)
 if [[ "$LOCAL_OTA_SUM" == "$NQ_OTA_SUM" ]]; then
     puts_info "OTA file checksum matches, continuing..."
 else
-    puts_error "OTA file checksum does not match, deleting file..."
+    puts_warning "OTA file checksum does not match, deleting file..."
     rm "$NUTS_DIR_DLS"/nuts-ota.squashfs
-    puts_error "Mismatched OTA file deleted; reboot and try to update again. Quitting."
+    puts_error "Mismatched OTA file deleted; reboot and try to update again, quitting."
     unmount_on_failure
 fi
 
@@ -352,12 +363,12 @@ VAR_DATA_URL="https://raw.githubusercontent.com/Nitrux/storage/master/Other/var-
 TARFILE_DL_PATH="/tmp/var-lib-dpkg-$VAR_DATA_TARGET.tar.xz"
 
 if [[ -f "$AIPKG_MANAGER" ]]; then
-    puts_info "AppImage already exists, skipping download."
+    puts_info "AppImage already exists, skipping download, continuing..."
 else
     if dl_file "$APPIMAGE_URL" > "$AIFILE_DL_PATH" && \
        [[ $(file --mime-type -b "$AIFILE_DL_PATH") == "application/x-executable" ]] && \
        mv "$AIFILE_DL_PATH" "$AIPKG_MANAGER" && chmod +x "$AIPKG_MANAGER"; then
-        puts_info "AppImage downloaded and processed successfully, continuing..."
+        puts_success "Success! AppImage downloaded and processed successfully, continuing..."
     else
         puts_error "Failed to download or process the AppImage, quitting."
         [[ -f "$AIPKG_MANAGER" ]] && rm "$AIPKG_MANAGER"
@@ -409,7 +420,7 @@ dl_file "$CLEANUP_SCRIPT_URL" >/tmp/nuts-ccu || { puts_error "Failed to download
 if chmod +x /tmp/nuts-ccu && bash /tmp/nuts-ccu ; then
     puts_success "Success! Cleanup script executed without problems, continuing..."
 else
-    puts_error "Something failed in the cleanup script, quitting." 
+    puts_error "Something failed in the cleanup script; reboot and try to update again, quitting."
     unmount_on_failure
 fi
 

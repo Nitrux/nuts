@@ -33,7 +33,7 @@ set -eu
 
 TOOL_NAME="Nitrux Update Tool System"
 TOOL_SHRT_NAME="nuts"
-TOOL_VERSION="$(md5sum /usr/bin/nuts | cut -c -32)"
+TOOL_VERSION="$(md5sum "$0" | cut -c -32)"
 VENDOR='Nitrux Latinoamericana S.C.'
 FECHA=$(date +%Y)
 
@@ -68,9 +68,11 @@ puts_error() {
 # -- Print messages or text using multiple lines to stderr.
 
 print_message() {
-	if [ -n "$1" ]; then
-		printf "%s\n" "$@" >&2
-	fi
+    if [ $# -eq 0 ]; then
+        printf "\n" >&2
+    else
+        printf "%s\n" "$@" >&2
+    fi
 }
 
 
@@ -145,17 +147,17 @@ dl_file() {
     [ -f "$FILE_PATH" ] && rm "$FILE_PATH"
 
     if ! command -v axel >/dev/null 2>&1; then
-        puts_error "axel command not found, unable to download file."
+        puts_error "axel command not found, unable to download file, quitting."
         return 1
     fi
 
     if ! curl --output /dev/null --silent --head --fail "$FILE_URL"; then
-        puts_error "File URL is not accessible, unable to download file."
+        puts_error "File URL is not accessible, unable to download file, quitting."
         return 1
     fi
 
     if ! axel -o "/tmp" -n 10 "$FILE_URL"; then
-        puts_error "Failed to download file."
+        puts_error "Failed to download file, quitting."
         return 1
     fi
 }
@@ -164,7 +166,7 @@ overlay_ch() {
     local ROOT=("sudo" "overlayroot-chroot" "$@")
 
     if ! command -v "${ROOT[0]}" >/dev/null 2>&1; then
-        puts_error "Error: '${ROOT[0]}' command not found. Please make sure it's installed and try again."
+        puts_error "Error: '${ROOT[0]}' command not found. Please make sure it's installed and try again, quitting."
         return 1
     fi
 
@@ -232,469 +234,614 @@ if [ "$(get_gpu_manufacturer)" == "NVIDIA" ]; then
 fi
 
 
-for cmd; do
-	case "$cmd" in
-		-h | --help )
-			print_message "$TOOL_NAME" \
-				"" \
-				"Description:" \
-				"" \
-				"    $TOOL_NAME or $TOOL_SHRT_NAME is a utility to update the Nitrux Operating System and back up the root for rollbacks." \
-				"    ⚠️ Important: $TOOL_SHRT_NAME is intended to work exclusively in Nitrux OS, and using this utility in other distributions will break them or not work at all." \
-				"" \
-				"    Report bugs at: https://github.com/Nitrux/nuts/issues." \
-				"" \
-				"Flags:" \
-				"    -h or --help                   Show this help." \
-				"    -v or --version                Show the version." \
-				"    -d or --debug                  Enable verbose output." \
-				"    --use-main-branch              Defines the main branch of the $TOOL_NAME to download its components." \
-				"    --use-development-branch       Defines the development branch of the $TOOL_NAME to download its components." \
-				"    --keep-backups-on-update       Defines whether the $TOOL_NAME deletes backups during the update process." \
-				"" \
-				"Operations:" \
-				"    update            Update the currently installed root using the archive specified in nuts-query and creates a backup of the current root directory." \
-				"    restore           Restore the backup of the root directory generated during the update." \
-				"    rescue            Restore the backup of the root partition in case of an interrupted update." \
-				"    self-update       Update the $TOOL_NAME and its configuration file using the branch set in the configuration file." \
-				"" \
-				"Usage:" \
-				"    sudo nuts <flag> (operation)" \
-				"" \
-				"Examples:" \
-				"    sudo nuts update" \
-				"    sudo nuts -d restore"
-				
-			exit
-			;;
+for CMD in "$@"; do
+    case "$CMD" in
+        -h | --help )
+            print_message "$TOOL_NAME" \
+                "" \
+                "Description:" \
+                "" \
+                "    $TOOL_NAME or $TOOL_SHRT_NAME is a utility to update the Nitrux Operating System and back up the root for rollbacks." \
+                "    ⚠️ Important: $TOOL_SHRT_NAME is intended to work exclusively in Nitrux OS, and using this utility in other distributions will break them or not work at all." \
+                "" \
+                "    Report bugs at: https://github.com/Nitrux/nuts/issues." \
+                "" \
+                "Flags:" \
+                "    -h or --help                   Show this help." \
+                "    -v or --version                Show the version." \
+                "    -d or --debug                  Enable verbose output." \
+                "    --use-main-branch              Defines the main branch of the $TOOL_NAME to download its components." \
+                "    --use-development-branch       Defines the development branch of the $TOOL_NAME to download its components." \
+                "    --keep-backups-on-update       Defines whether the $TOOL_NAME deletes backups during the update process." \
+                "" \
+                "OPERATIONs:" \
+                "    update            Update the currently installed root using the archive specified in nuts-query and creates a backup of the current root directory." \
+                "    restore           Restore the backup of the root directory generated during the update." \
+                "    rescue            Restore the backup of the root partition in case of an interrupted update." \
+                "    self-update       Update the $TOOL_NAME and its configuration file using the branch set in the configuration file." \
+                "" \
+                "Usage:" \
+                "    sudo nuts <flag> (OPERATION)" \
+                "" \
+                "Examples:" \
+                "    sudo nuts update" \
+                "    sudo nuts -d restore"
+                
+            exit
+		;;
 
-		-v | --version )
-			print_message "$TOOL_NAME" \
-				"" \
-				"Version: $TOOL_VERSION from branch ""$NUTS_BRANCH""." \
-				"" \
-				"The license used for this file and its contents is: BSD-3-Clause." \
-				"" \
-				"Authors:" \
-				"" \
-				"    Copyright <2023-2024> <Uri Herrera <uri_herrera@nxos.org>>" \
-				"    Copyright <2023> <Luis Lavaire <luis_lavaire@nxos.org>>" \
-				"" \
-				"(c) $FECHA Some Rights Reserved. Made by $VENDOR"
+        -v | --version )
+            print_message "$TOOL_NAME" \
+                "" \
+                "Version: $TOOL_VERSION from branch ""$NUTS_BRANCH""." \
+                "" \
+                "The license used for this file and its contents is: BSD-3-Clause." \
+                "" \
+                "Authors:" \
+                "" \
+                "    Copyright <2023-2024> <Uri Herrera <uri_herrera@nxos.org>>" \
+                "    Copyright <2023> <Luis Lavaire <luis_lavaire@nxos.org>>" \
+                "" \
+                "(c) $FECHA Some Rights Reserved. Made by $VENDOR"
+            exit
+		;;
 
-			exit
-			;;
+        -d | --debug )
+            set -x
+            shift
+		;;
 
-		-d | --debug )
-			set -x
-			shift
-			;;
+        --use-main-branch )
+            overlay_ch sed -i 's+NUTS_BRANCH=development+NUTS_BRANCH=main+g' /etc/nuts.conf
+            puts_success "$TOOL_NAME is using the following git branch: main"
+            puts_info "Reboot to load changes into overlay. Bye."
+            exit
+		;;
 
-		--use-main-branch )
-			overlay_ch sed -i 's+NUTS_BRANCH=development+NUTS_BRANCH=main+g' /etc/nuts.conf
-			puts_success "$TOOL_NAME is using the following git branch: main"
-			puts_info "Reboot to load changes into overlay. Bye."
+        --use-development-branch )
+            overlay_ch sed -i 's+NUTS_BRANCH=main+NUTS_BRANCH=development+g' /etc/nuts.conf
+            puts_success "$TOOL_NAME is using the following git branch: development"
+            puts_info "Reboot to load changes into overlay. Bye."
+            exit
+		;;
 
-			exit
-			;;
+        --keep-backups-on-update )
+            CURRENT_SETTING=$(grep '^UPDATE_DELETES_BACKUPS=' /etc/nuts.conf | cut -d'=' -f2)
+            if [ "$CURRENT_SETTING" = "yes" ]; then
+                overlay_ch sed -i 's+UPDATE_DELETES_BACKUPS=yes+UPDATE_DELETES_BACKUPS=no+g' /etc/nuts.conf
+                puts_success "$TOOL_NAME will not delete backups during updates."
+            else
+                overlay_ch sed -i 's+UPDATE_DELETES_BACKUPS=no+UPDATE_DELETES_BACKUPS=yes+g' /etc/nuts.conf
+                puts_success "$TOOL_NAME will delete backups during updates."
+            fi
+            puts_info "Reboot to load changes into overlay. Bye."
+            exit
+		;;
 
-		--use-development-branch )
-			overlay_ch sed -i 's+NUTS_BRANCH=main+NUTS_BRANCH=development+g' /etc/nuts.conf
-			puts_success "$TOOL_NAME is using the following git branch: development"
-			puts_info "Reboot to load changes into overlay. Bye."
+        update | restore | rescue | self-update )
+            OPERATION="$CMD"
+		;;
 
-			exit
-			;;
-
-		--keep-backups-on-update )
-			current_setting=$(grep '^UPDATE_DELETES_BACKUPS=' /etc/nuts.conf | cut -d'=' -f2)
-
-			if [ "$current_setting" = "yes" ]; then
-				overlay_ch sed -i 's+UPDATE_DELETES_BACKUPS=yes+UPDATE_DELETES_BACKUPS=no+g' /etc/nuts.conf
-				puts_success "$TOOL_NAME will not delete backups during updates."
-			else
-				overlay_ch sed -i 's+UPDATE_DELETES_BACKUPS=no+UPDATE_DELETES_BACKUPS=yes+g' /etc/nuts.conf
-				puts_success "$TOOL_NAME will delete backups during updates."
-			fi
-
-			puts_info "Reboot to load changes into overlay. Bye."
-			exit
-			;;
-	esac
+        * )
+            puts_error "Unknown flag or operation: «$CMD», quitting."
+            puts_info "Use «-h or --help» to display the help."
+            exit 1
+		;;
+    esac
 done
 
 
 ( 
-	for cmd; do
-		case "$cmd" in
-			'' )  error "No operation specified (use -h to see a list of operations).";;
+	case "$OPERATION" in
+		'' )  error "No operation specified (use -h to see a list of operations).";;
 
-			update )
+		update )
 
-				# -- Step 0: Run checks before actually doing anything.
+			# -- Step 0: Run checks before actually doing anything.
 
-				# -- Ensure that this utility runs in Nitrux and has an Internet connection.
-				# -- Exit if value is not 'nitrux'.
+			# -- Ensure that this utility runs in Nitrux and has an Internet connection.
+			# -- Exit if value is not 'nitrux'.
 
-				if [[ "$CURRENT_DIST" == "$TARGET_DIST" ]]; then
-					puts_success "This utility is running in ${TARGET_DIST^}, continuing..."
+			if [[ "$CURRENT_DIST" == "$TARGET_DIST" ]]; then
+				puts_success "This utility is running in ${TARGET_DIST^}, continuing..."
+			else
+				puts_error "$TOOL_NAME is intended to work exclusively in ${TARGET_DIST^}. Using this utility in ${CURRENT_DIST^} will break it and not work at all, quitting."
+				exit 1
+			fi
+
+
+			# -- Check Internet connection but do nothing yet.
+			# -- We use wget and ping because, for an absurd and unknown reason, using only ping fails in GNOME Boxes!, which is fantastic because we get to be blamed for something we didn't break. Nice! /s.
+			# -- Exit if connection test fails.
+
+			if ping -q -c 1 -W 1 nxos.org >/dev/null || wget -q --spider https://filesamples.com/samples/document/txt/sample1.txt; then
+				puts_success "This computer can reach the Internet, continuing..."
+			else
+				puts_error "This computer cannot reach the Internet, quitting."
+				exit 1
+			fi
+
+
+			# -- Check connection to GitHub (raw.githubusercontent.com) in the current environment and then within the chroot.
+			# -- If the test fails in the chroot, attempt to fix it by adding the IP address and the domain to /etc/hosts.
+			# -- Exit if the connection test fails twice.
+
+			if ping -q -c 1 -W 1 raw.githubusercontent.com >/dev/null || wget -q --spider https://raw.githubusercontent.com/Nitrux/storage/refs/heads/master/Other/sample1.txt; then
+				if overlay_ch ping -q -c 1 -W 1 raw.githubusercontent.com >/dev/null || overlay_ch wget -q --spider https://raw.githubusercontent.com/Nitrux/storage/refs/heads/master/Other/sample1.txt; then
+					print_message ""
+					puts_success "Success! This computer can reach GitHub, continuing..."
 				else
-					puts_error "$TOOL_NAME is intended to work exclusively in ${TARGET_DIST^}. Using this utility in ${CURRENT_DIST^} will break it and not work at all, quitting."
-					exit 1
-				fi
+					puts_warning "Cannot reach GitHub from within the overlay, adding entry to /etc/hosts and retrying..."
 
+					overlay_ch sh -c 'echo "# Try to reach the GitHub sub-domain" >> /etc/hosts'
+					overlay_ch sh -c 'echo "185.199.108.133 raw.githubusercontent.com" >> /etc/hosts'
 
-				# -- Check Internet connection but do nothing yet.
-				# -- For some reason, ping fails in GNOME Boxes even though ping works literally everywhere else. Use wget as an alternative to verify a connection.
-				# -- Exit if connection test fails.
-
-				if ping -q -c 1 -W 1 nxos.org >/dev/null && ping -q -c 1 -W 1 raw.githubusercontent.com >/dev/null || wget -q --spider https://filesamples.com/samples/document/txt/sample1.txt; then
-					puts_success "This computer can reach the Internet, continuing..."
-				else
-					puts_error "This computer cannot reach the Internet, quitting."
-					exit 1
-				fi
-
-
-				# -- Update process begins.
-				# -- The update process is divided into two sub-processes, the first is backup, and the second is the actual update.
-
-				# -- Download the nuts-query file from our repository and then use the checksum listed in the file to compare their values.
-				# -- This file is always downloaded to a temporary directory, as there's no reason to keep it.
-				# -- Overwrite the file if it already exists.
-
-				INFO_FILE="/tmp/nuts-query.info"
-
-				if [[ ! -f "$INFO_FILE" ]]; then
-					puts_info "Can't find nuts-query.info, downloading..."
-				else
-					puts_info "Found nuts-query.info, overwriting..."
-					rm -f "$INFO_FILE"
-				fi
-
-				dl_file "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-query.info" > /dev/null 2>&1
-
-
-				# -- Make a comparison of the current installation version against the minimum target for upgrade.
-				# -- This way, we know that the user is running this tool on an installation that we can upgrade; thus, this tool works as intended.
-				# -- If the check matches, it means there's an update.
-				# -- if the check doesn't match, it means there's no update.
-
-				DISTRIB_RELEASE=$(grep 'DISTRIB_RELEASE' /etc/lsb-release | cut -d'=' -f2)
-				MINTARGET=$(grep 'MINTARGET=' /tmp/nuts-query.info | cut -d'=' -f2)
-
-				if [[ "$DISTRIB_RELEASE" != "$MINTARGET" ]]; then
-					puts_info "No update is available for ${TARGET_DIST^} $DISTRIB_RELEASE. Bye."
-					exit 0
-				else
-					puts_info "An update is available for ${TARGET_DIST^} $DISTRIB_RELEASE, continuing..."
-				fi
-
-
-				# -- Create the directories for nuts.
-				# -- Create working directories in /home since this partition will likely have more space than the root partition.
-
-				DIRECTORIES=("$NUTS_DIR_BAK" "$NUTS_DIR_XFS" "$NUTS_DIR_DLS" "$NUTS_DIR_SQS")
-
-				for DIR in "${DIRECTORIES[@]}"; do
-				if [[ ! -d "$DIR" ]]; then
-					puts_error "Directory '$DIR' does not exist. Creating the directory..."
-					if ! mkdir -p "$DIR"; then
-					puts_error "Failed to create directory '$DIR', quitting."
-					exit 1
+					if overlay_ch ping -q -c 1 -W 1 raw.githubusercontent.com >/dev/null || overlay_ch wget -q --spider https://raw.githubusercontent.com/Nitrux/storage/refs/heads/master/Other/sample1.txt; then
+						print_message ""
+						puts_success "Successfully reached GitHub after modifying /etc/hosts."
+					else
+						puts_error "Still cannot reach GitHub from within the overlay. Removing entry from /etc/hosts and quitting."
+						overlay_ch sh -c 'sed -i "/# Try to reach the GitHub sub-domain/d" /etc/hosts'
+						overlay_ch sh -c 'sed -i "/185.199.108.133 raw.githubusercontent.com/d" /etc/hosts'
+						exit 1
 					fi
-					puts_info "Directory '$DIR' created successfully."
 				fi
-				done
+			else
+				puts_error "This computer cannot reach GitHub, quitting."
+				puts_warning "This utility requires downloading content from raw.githubusercontent.com to work adequately."
+				exit 1
+			fi
 
-				puts_info "All required directories exist, continuing..."
+
+			# -- Update process begins.
+			# -- The update process is divided into two sub-processes, the first is backup, and the second is the actual update.
+
+			# -- Download the nuts-query file from our repository and then use the checksum listed in the file to compare their values.
+			# -- This file is always downloaded to a temporary directory, as there's no reason to keep it.
+			# -- Overwrite the file if it already exists.
+
+			INFO_FILE="/tmp/nuts-query.info"
+
+			if [[ ! -f "$INFO_FILE" ]]; then
+				puts_info "Can't find nuts-query.info, downloading..."
+			else
+				puts_info "Found nuts-query.info, overwriting..."
+				rm -f "$INFO_FILE"
+			fi
+
+			dl_file "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-query.info" > /dev/null 2>&1
 
 
-				# -- Step 1: Backup sub-process
+			# -- Make a comparison of the current installation version against the minimum target for upgrade.
+			# -- This way, we know that the user is running this tool on an installation that we can upgrade; thus, this tool works as intended.
+			# -- If the check matches, it means there's an update.
+			# -- if the check doesn't match, it means there's no update.
 
-				# -- This process begins as a step before doing an update.
-				# -- Backup files are only generated when updating; the user can't ask the utility to create them on demand.
-				# -- This utility will create two backups for redundancy, first a backup of the root partition and then a backup of the root directory.
+			DISTRIB_RELEASE=$(grep 'DISTRIB_RELEASE' /etc/lsb-release | cut -d'=' -f2)
+			MINTARGET=$(grep 'MINTARGET=' /tmp/nuts-query.info | cut -d'=' -f2)
 
-				# -- Create a backup of the partition for redundancy using xfsdump to later use it during a rescue operation from a Live session.
-				# -- By the way, only *one* backup file is created, then compress the backup file using zstd. We must delete the original file after compression.
-				# -- This backup is created outside of the chroot because xfsdump relies on /etc/mtab, and that file is unavailable when using overlayroot-chroot.
-				# -- Since the XFS backup is a "full-backup" (level 0), it won't support incremental updates.
+			if [[ "$DISTRIB_RELEASE" != "$MINTARGET" ]]; then
+				puts_info "No update is available for ${TARGET_DIST^} $DISTRIB_RELEASE. Bye."
+				exit 0
+			else
+				puts_info "An update is available for ${TARGET_DIST^} $DISTRIB_RELEASE, continuing..."
+			fi
 
-				ROOT_PARTITION=$(findfs LABEL=NX_ROOT)
-				ROOT_PARTITION_LABEL=$(blkid -o value -s LABEL "$ROOT_PARTITION")
-				XFS_BACKUP_FILE="$NUTS_DIR_XFS/xfs-backup.xfs"
-				COMPRESSED_XFS_BACKUP="$XFS_BACKUP_FILE.zst"
-				ZSTD_COMP_THREADS=$(nproc)
 
-				if [[ -f "$COMPRESSED_XFS_BACKUP" ]]; then
-					puts_info "Redundant backup of $ROOT_PARTITION_LABEL found, skipping..."
+			# -- Create the directories for nuts.
+			# -- Create working directories in /home since this partition will likely have more space than the root partition.
+
+			DIRECTORIES=("$NUTS_DIR_BAK" "$NUTS_DIR_XFS" "$NUTS_DIR_DLS" "$NUTS_DIR_SQS")
+
+			for DIR in "${DIRECTORIES[@]}"; do
+			if [[ ! -d "$DIR" ]]; then
+				puts_warning "Directory '$DIR' does not exist. Creating the directory..."
+				if ! mkdir -p "$DIR"; then
+				puts_error "Failed to create directory '$DIR', quitting."
+				exit 1
+				fi
+				puts_info "Directory '$DIR' created successfully."
+			fi
+			done
+
+			puts_success "Success! All required directories exist, continuing..."
+
+
+			# -- Step 1: Backup sub-process
+
+			# -- This process begins as a step before doing an update.
+			# -- Backup files are only generated when updating; the user can't ask the utility to create them on demand.
+			# -- This utility will create two backups for redundancy, first a backup of the root partition and then a backup of the root directory.
+
+			# -- Create a backup of the partition for redundancy using xfsdump to later use it during a rescue OPERATION from a Live session.
+			# -- By the way, only *one* backup file is created, then compress the backup file using zstd. We must delete the original file after compression.
+			# -- This backup is created outside of the chroot because xfsdump relies on /etc/mtab, and that file is unavailable when using overlayroot-chroot.
+			# -- Since the XFS backup is a "full-backup" (level 0), it won't support incremental updates.
+
+			ROOT_PARTITION=$(findfs LABEL=NX_ROOT)
+			ROOT_PARTITION_LABEL=$(blkid -o value -s LABEL "$ROOT_PARTITION")
+			ROOT_PARTITION_FS=$(blkid -o value -s TYPE "$ROOT_PARTITION")
+			XFS_BACKUP_FILE="$NUTS_DIR_XFS/xfs-backup.xfs"
+			COMPRESSED_XFS_BACKUP="$XFS_BACKUP_FILE.zst"
+			ZSTD_COMP_THREADS=$(nproc)
+
+			if [[ "$ROOT_PARTITION_FS" != "xfs" ]]; then
+				puts_error "The filesystem of $ROOT_PARTITION_LABEL is not XFS, quitting."
+				exit 1
+			fi
+
+			if [[ -f "$COMPRESSED_XFS_BACKUP" ]]; then
+				puts_info "Redundant backup of $ROOT_PARTITION_LABEL found, skipping..."
+			else
+				puts_warning "Redundant backup of $ROOT_PARTITION_LABEL not found, creating it..."
+				xfsdump -l0 -L "Nitrux_Update_Tool_System-XFS_Backup" -M "NX_BAK-Vol-1" -f "$XFS_BACKUP_FILE" "$ROOT_PARTITION" > /dev/null 2>&1 &
+				spinner
+				puts_info "Using $ZSTD_COMP_THREADS threads for backup compression, please wait..."
+				zstd -T"$ZSTD_COMP_THREADS" --ultra -19 "$XFS_BACKUP_FILE" -o "$COMPRESSED_XFS_BACKUP" &
+				spinner
+				rm -f "$XFS_BACKUP_FILE"
+				md5sum "$COMPRESSED_XFS_BACKUP" > "$NUTS_DIR_XFS/xfs-backup.md5sum"
+				sync
+				puts_success "Success! $ROOT_PARTITION_LABEL redundant backup has been created, continuing..."
+			fi
+
+
+			# -- Step 2: Actual Update sub-process
+
+			# -- Check for the overlayroot-chroot executable and mounts using OverlayFS.
+			# -- Quit if either of these checks fails since OverlayFS is assumed to be used.
+
+			OVERLAYROOT_CHROOT="/usr/sbin/overlayroot-chroot"
+
+			if [[ ! -f "$OVERLAYROOT_CHROOT" ]]; then
+				puts_error "Can't find overlayroot-chroot, quitting."
+				exit 1
+			else
+				puts_info "Found overlayroot-chroot, continuing..."
+			fi
+
+			if ! mount | grep -q "overlayroot"; then
+				puts_error "No OverlayFS mounts in use, quitting."
+				puts_warning "$TOOL_NAME requires OverlayFS to be active."
+				exit 1
+			else
+				puts_info "OverlayFS mounts in use, continuing..."
+			fi
+
+
+			# -- Enter the Matri... I mean, the overlay.
+			# -- After using overlay_ch, it's essential to remember that **EVERY COMMAND IS RUNNING AS ROOT AND ON THE LOWER DIRECTORY OF THE OVERLAY**.
+			# -- Run nuts-cru to perform the backup and update.
+			# -- Always download the latest component. The component will remain in the filesystem after using it; however, once the user executes this <operation> again, it will be deleted and re-downloaded.
+			# -- Download nuts-query.info to the chroot because we initially downloaded it to the overlay.
+
+			overlay_ch mount -t devtmpfs dev /dev
+			overlay_ch find /usr/bin -type f -name "nuts-cru" -exec rm -v {} \;
+			overlay_ch axel -o /usr/bin -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-cru" > /dev/null 2>&1
+			overlay_ch chmod +x /usr/bin/nuts-cru
+			overlay_ch find /tmp -type f -name "nuts-query.info" -exec rm -v {} \;
+			overlay_ch axel -o /tmp -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-query.info" > /dev/null 2>&1
+			overlay_ch nuts-cru
+
+
+		# -- End main component.
+
+		exit
+		;;
+
+
+		restore )
+
+			# -- Step 0: Restore Process
+
+			# -- The restore process is the same as the Actual Update sub-process but using the backup SquashFS.
+
+			# -- Ensure that this utility runs in Nitrux and has an Internet connection.
+			# -- Exit if value is not 'nitrux'.
+
+			if [[ "$CURRENT_DIST" == "$TARGET_DIST" ]]; then
+				puts_success "This utility is running in ${TARGET_DIST^}, continuing..."
+			else
+				puts_error "$TOOL_NAME is intended to work exclusively in ${TARGET_DIST^}. Using this utility in ${CURRENT_DIST^} will break it and not work at all, quitting."
+				exit 1
+			fi
+
+
+			# -- Check Internet connection but do nothing yet.
+			# -- We use wget and ping because, for an absurd and unknown reason, using only ping fails in GNOME Boxes!, which is fantastic because we get to be blamed for something we didn't break. Nice! /s.
+			# -- Exit if connection test fails.
+
+			if ping -q -c 1 -W 1 nxos.org >/dev/null || wget -q --spider https://filesamples.com/samples/document/txt/sample1.txt; then
+				puts_success "This computer can reach the Internet, continuing..."
+			else
+				puts_error "This computer cannot reach the Internet, quitting."
+				exit 1
+			fi
+
+
+			# -- Check connection to GitHub (raw.githubusercontent.com) in the current environment and then within the chroot.
+			# -- If the test fails in the chroot, attempt to fix it by adding the IP address and the domain to /etc/hosts.
+			# -- Exit if the connection test fails twice.
+
+			if ping -q -c 1 -W 1 raw.githubusercontent.com >/dev/null || wget -q --spider https://raw.githubusercontent.com/Nitrux/storage/refs/heads/master/Other/sample1.txt; then
+				if overlay_ch ping -q -c 1 -W 1 raw.githubusercontent.com >/dev/null || overlay_ch wget -q --spider https://raw.githubusercontent.com/Nitrux/storage/refs/heads/master/Other/sample1.txt; then
+					print_message ""
+					puts_success "Success! This computer can reach GitHub, continuing..."
 				else
-					puts_error "Redundant backup of $ROOT_PARTITION_LABEL not found, creating it..."
-					xfsdump -l0 -L "Nitrux_Update_Tool_System-XFS_Backup" -M "NX_BAK-Vol-1" -f "$XFS_BACKUP_FILE" "$ROOT_PARTITION" > /dev/null 2>&1 &
-					spinner
-					puts_info "Using $ZSTD_COMP_THREADS threads for backup compression, please wait..."
-					zstd -T"$ZSTD_COMP_THREADS" --ultra -19 "$XFS_BACKUP_FILE" -o "$COMPRESSED_XFS_BACKUP" &
-					spinner
-					rm -f "$XFS_BACKUP_FILE"
-					md5sum "$COMPRESSED_XFS_BACKUP" > "$NUTS_DIR_XFS/xfs-backup.md5sum"
-					sync
-					puts_success "Success! $ROOT_PARTITION_LABEL redundant backup has been created, continuing..."
+					puts_warning "Cannot reach GitHub from within the overlay, adding entry to /etc/hosts and retrying..."
+
+					overlay_ch sh -c 'echo "# Try to reach the GitHub sub-domain" >> /etc/hosts'
+					overlay_ch sh -c 'echo "185.199.108.133 raw.githubusercontent.com" >> /etc/hosts'
+
+					if overlay_ch ping -q -c 1 -W 1 raw.githubusercontent.com >/dev/null || overlay_ch wget -q --spider https://raw.githubusercontent.com/Nitrux/storage/refs/heads/master/Other/sample1.txt; then
+						print_message ""
+						puts_success "Successfully reached GitHub after modifying /etc/hosts."
+					else
+						puts_error "Still cannot reach GitHub from within the overlay. Removing entry from /etc/hosts and quitting."
+						overlay_ch sh -c 'sed -i "/# Try to reach the GitHub sub-domain/d" /etc/hosts'
+						overlay_ch sh -c 'sed -i "/185.199.108.133 raw.githubusercontent.com/d" /etc/hosts'
+						exit 1
+					fi
 				fi
+			else
+				puts_error "This computer cannot reach GitHub, quitting."
+				puts_warning "This utility requires downloading content from raw.githubusercontent.com to work adequately."
+				exit 1
+			fi
 
 
-				# -- Step 2: Actual Update sub-process
+			# -- Check for the overlayroot-chroot executable and mounts using OverlayFS.
+			# -- Quit if either of these checks fails since OverlayFS is assumed to be used.
 
-				# -- After using overlay_ch, it's essential to remember that **EVERY COMMAND IS RUNNING AS ROOT AND ON THE LOWER DIRECTORY OF THE OVERLAY**.
+			OVERLAYROOT_CHROOT="/usr/sbin/overlayroot-chroot"
 
-				OVERLAYROOT="/usr/sbin/overlayroot-chroot"
+			if [[ ! -f "$OVERLAYROOT_CHROOT" ]]; then
+				puts_error "Can't find overlayroot-chroot, quitting."
+				exit 1
+			else
+				puts_info "Found overlayroot-chroot, continuing..."
+			fi
 
-				if [[ ! -f "$OVERLAYROOT" ]]; then
-					puts_error "Can't find overlayroot, quitting."
-					exit 1
+			if ! mount | grep -q "overlayroot"; then
+				puts_error "No OverlayFS mounts in use, quitting."
+				puts_warning "$TOOL_NAME requires OverlayFS to be active."
+				exit 1
+			else
+				puts_info "OverlayFS mounts in use, continuing..."
+			fi
+
+
+			# -- Enter the Matri... I mean, the overlay.
+			# -- After using overlay_ch, it's essential to remember that **EVERY COMMAND IS RUNNING AS ROOT AND ON THE LOWER DIRECTORY OF THE OVERLAY**.
+			# -- Run nuts-crr to perform the restore actions inside the chroot.
+			# -- Always download the latest component. The component will remain in the filesystem after using it; however, once the user executes this <operation> again, it will be deleted and re-downloaded.
+
+			overlay_ch mount -t devtmpfs dev /dev
+			overlay_ch find /usr/bin -type f -name "nuts-crr" -exec rm -v {} \;
+			overlay_ch axel -o /usr/bin -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-crr" > /dev/null 2>&1
+			overlay_ch chmod +x /usr/bin/nuts-crr
+			overlay_ch nuts-crr
+
+
+		# -- End main component.
+
+		exit
+		;;
+
+
+		rescue )
+
+			# -- Step X: Rescue Process
+
+			# -- The Rescue Process is a special handling of an unforeseen event; as such, this <operation> does not require using overlayroot-chroot.
+
+			# -- Ensure that this utility runs in Nitrux and has an Internet connection.
+			# -- Exit if value is not 'nitrux'.
+
+			if [[ "$CURRENT_DIST" == "$TARGET_DIST" ]]; then
+				puts_success "This utility is running in ${TARGET_DIST^}, continuing..."
+			else
+				puts_error "$TOOL_NAME is intended to work exclusively in ${TARGET_DIST^}. Using this utility in ${CURRENT_DIST^} will break it and not work at all, quitting."
+				exit 1
+			fi
+
+
+			# -- We do this because if the root is unusable, i.e., the user can't access the GUI or, worse, a TTY, the user can't restore the SquashFS.
+			# -- With that being the case, this <operation> allows the user to restore the root partition from a Live session.
+
+			# -- Automatically check if this utility is running in a Live session. Calamares is an easy check as it's only available in a Live session.
+			# -- This check assumes that the root is now inconsistent; thus, using the SquashFS backup is impossible, so we must restore the XFS backup hence why the user tells this utility to restore a backup from a Live session.
+			# -- If the check returns that this utility is not running from a Live session, it directs the user to use the SquashFS backup instead.
+
+			ROOT_PARTITION=$(findfs LABEL=NX_ROOT)
+			ROOT_PARTITION_LABEL=$(blkid -o value -s LABEL "$ROOT_PARTITION")
+			ROOT_PARTITION_FS=$(blkid -o value -s TYPE "$ROOT_PARTITION")
+			HOME_PARTITION=$(findfs LABEL=NX_HOME)
+			HOME_PARTITION_LABEL=$(blkid -o value -s LABEL "$HOME_PARTITION")
+			NUTS_USER="nitrux"
+
+			if [[ "$ROOT_PARTITION_FS" != "xfs" ]]; then
+				puts_error "The filesystem of $ROOT_PARTITION_LABEL is not XFS, quitting."
+				exit 1
+			fi
+
+			if mountpoint -q "/media/$NUTS_USER/NX_ROOT"; then
+				puts_info "/media/root is already mounted. Unmounting..."
+				umount "/media/$NUTS_USER/NX_ROOT"
+			fi
+
+			if mountpoint -q "/media/$NUTS_USER/NX_HOME"; then
+				puts_info "/media/home is already mounted. Unmounting..."
+				umount "/media/$NUTS_USER/NX_HOME"
+			fi
+
+			mkdir -p "/media/$NUTS_USER/NX_ROOT" "/media/$NUTS_USER/NX_HOME"
+
+			puts_info "Mounting $ROOT_PARTITION_LABEL to /media/$NUTS_USER/NX_ROOT..."
+			mount -t auto "$ROOT_PARTITION" "/media/$NUTS_USER/NX_ROOT"
+
+			puts_info "Mounting $HOME_PARTITION_LABEL to /media/$NUTS_USER/NX_HOME..."
+			mount -t auto "$HOME_PARTITION" "/media/$NUTS_USER/NX_HOME"
+
+			COMPRESSED_XFS_BACKUP="/media/$NUTS_USER/NX_HOME/.nuts/xfs/xfs-backup.xfs.zst"
+			XFS_BACKUP_CHECKSUM_FILE="/media/$NUTS_USER/NX_HOME/.nuts/xfs/xfs-backup.md5sum"
+			DECOMPRESSED_XFS_BACKUP="/media/$NUTS_USER/NX_HOME/.nuts/xfs/xfs-backup.xfs"
+
+			if [[ ! -f "$COMPRESSED_XFS_BACKUP" ]]; then
+				puts_error "XFS backup file $COMPRESSED_XFS_BACKUP not found, quitting."
+				exit 1
+			fi
+
+			if [[ ! -f "$XFS_BACKUP_CHECKSUM_FILE" ]]; then
+				puts_error "XFS backup checksum file $XFS_BACKUP_CHECKSUM_FILE not found, quitting."
+				exit 1
+			fi
+
+			BACKUP_SUM=$(md5sum "$COMPRESSED_XFS_BACKUP" | cut -c -32)
+			GEN_BAK_SUM=$(tail "$XFS_BACKUP_CHECKSUM_FILE" | cut -c -32)
+
+			if [[ "$BACKUP_SUM" == "$GEN_BAK_SUM" ]]; then
+				puts_info "Backup checksum matches, continuing..."
+			else
+				puts_error "Backup checksum does not match, quitting."
+				exit 1
+			fi
+
+			if [[ -x "/usr/bin/calamares" ]]; then
+				puts_info "Running $TOOL_NAME from a Live session, proceed with restoration of $ROOT_PARTITION_LABEL, continuing..."
+				zstd -d "$COMPRESSED_XFS_BACKUP"
+				xfsrestore -f "$DECOMPRESSED_XFS_BACKUP" "/media/$NUTS_USER/NX_ROOT"
+
+				puts_success "Success! $ROOT_PARTITION_LABEL has been restored."
+
+				rm -f "$DECOMPRESSED_XFS_BACKUP"
+
+				unmount_directory "/media/$NUTS_USER/NX_ROOT" || { puts_error "Failed to unmount NX_ROOT, quitting."; exit 1; }
+				unmount_directory "/media/$NUTS_USER/NX_HOME" || { puts_error "Failed to unmount NX_HOME, quitting."; exit 1; }
+			else
+				puts_warning "Only use this option from a Live session and in an emergency."
+				puts_info "For a non-emergency situation, use: "$TOOL_SHRT_NAME restore"."
+
+				unmount_directory "/media/$NUTS_USER/NX_ROOT" || { puts_error "Failed to unmount NX_ROOT, quitting."; exit 1; }
+				unmount_directory "/media/$NUTS_USER/NX_HOME" || { puts_error "Failed to unmount NX_HOME, quitting."; exit 1; }
+				exit 0
+			fi
+
+
+		# -- End main component.
+
+		exit
+		;;
+
+
+		self-update )
+
+			# -- Step 0: Self-Update Process
+
+			# -- Ensure that this utility runs in Nitrux and has an Internet connection.
+			# -- Exit if value is not 'nitrux'.
+
+			if [[ "$CURRENT_DIST" == "$TARGET_DIST" ]]; then
+				puts_success "This utility is running in ${TARGET_DIST^}, continuing..."
+			else
+				puts_error "$TOOL_NAME is intended to work exclusively in ${TARGET_DIST^}. Using this utility in ${CURRENT_DIST^} will break it and not work at all, quitting."
+				exit 1
+			fi
+
+			# -- Check Internet connection but do nothing yet.
+			# -- We use wget and ping because, for an absurd and unknown reason, using only ping fails in GNOME Boxes!, which is fantastic because we get to be blamed for something we didn't break. Nice! /s.
+			# -- Exit if connection test fails.
+
+			if ping -q -c 1 -W 1 nxos.org >/dev/null || wget -q --spider https://filesamples.com/samples/document/txt/sample1.txt; then
+				puts_success "This computer can reach the Internet, continuing..."
+			else
+				puts_error "This computer cannot reach the Internet, quitting."
+				exit 1
+			fi
+
+
+			# -- Check connection to GitHub (raw.githubusercontent.com) in the current environment and then within the chroot.
+			# -- If the test fails in the chroot, attempt to fix it by adding the IP address and the domain to /etc/hosts.
+			# -- Exit if the connection test fails twice.
+
+			if ping -q -c 1 -W 1 raw.githubusercontent.com >/dev/null || wget -q --spider https://raw.githubusercontent.com/Nitrux/storage/refs/heads/master/Other/sample1.txt; then
+				if overlay_ch ping -q -c 1 -W 1 raw.githubusercontent.com >/dev/null || overlay_ch wget -q --spider https://raw.githubusercontent.com/Nitrux/storage/refs/heads/master/Other/sample1.txt; then
+					print_message ""
+					puts_success "Success! This computer can reach GitHub, continuing..."
 				else
-					puts_info "Found overlayroot, continuing..."
+					puts_warning "Cannot reach GitHub from within the overlay, adding entry to /etc/hosts and retrying..."
+
+					overlay_ch sh -c 'echo "# Try to reach the GitHub sub-domain" >> /etc/hosts'
+					overlay_ch sh -c 'echo "185.199.108.133 raw.githubusercontent.com" >> /etc/hosts'
+
+					if overlay_ch ping -q -c 1 -W 1 raw.githubusercontent.com >/dev/null || overlay_ch wget -q --spider https://raw.githubusercontent.com/Nitrux/storage/refs/heads/master/Other/sample1.txt; then
+						print_message ""
+						puts_success "Successfully reached GitHub after modifying /etc/hosts."
+					else
+						puts_error "Still cannot reach GitHub from within the overlay. Removing entry from /etc/hosts and quitting."
+						overlay_ch sh -c 'sed -i "/# Try to reach the GitHub sub-domain/d" /etc/hosts'
+						overlay_ch sh -c 'sed -i "/185.199.108.133 raw.githubusercontent.com/d" /etc/hosts'
+						exit 1
+					fi
 				fi
+			else
+				puts_error "This computer cannot reach GitHub, quitting."
+				puts_warning "This utility requires downloading content from raw.githubusercontent.com to work adequately."
+				exit 1
+			fi
 
 
-				# -- Enter the Matri... I mean, the overlay.
-				# -- Run nuts-cru to perform the backup and update.
-				# -- Always download the latest component. The component will remain in the filesystem after using it; however, once the user executes this <operation> again, it will be deleted and re-downloaded.
-				# -- Download nuts-query.info to the chroot because we initially downloaded it to the overlay.
+			# -- Check for the overlayroot-chroot executable and mounts using OverlayFS.
+			# -- Quit if either of these checks fails since OverlayFS is assumed to be used.
 
-				overlay_ch mount -t devtmpfs dev /dev
-				overlay_ch find /usr/bin -type f -name "nuts-cru" -exec rm -v {} \;
-				overlay_ch axel -o /usr/bin -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-cru" > /dev/null 2>&1
-				overlay_ch chmod +x /usr/bin/nuts-cru
-				overlay_ch find /tmp -type f -name "nuts-query.info" -exec rm -v {} \;
-				overlay_ch axel -o /tmp -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-query.info" > /dev/null 2>&1
-				overlay_ch nuts-cru
+			OVERLAYROOT_CHROOT="/usr/sbin/overlayroot-chroot"
 
+			if [[ ! -f "$OVERLAYROOT_CHROOT" ]]; then
+				puts_error "Can't find overlayroot-chroot, quitting."
+				exit 1
+			else
+				puts_info "Found overlayroot-chroot, continuing..."
+			fi
 
-				# -- End main component.
+			if ! mount | grep -q "overlayroot"; then
+				puts_error "No OverlayFS mounts in use, quitting."
+				puts_warning "$TOOL_NAME requires OverlayFS to be active."
+				exit 1
+			else
+				puts_info "OverlayFS mounts in use, continuing..."
+			fi
 
-				exit
-				;;
 
+			# -- Display branch used to update.
 
-			restore )
+			puts_info "Using branch ""$NUTS_BRANCH"" to update $TOOL_NAME, continuing..."
 
-				# -- Step 1: Restore Process
 
-				# -- The restore process is the same as the Actual Update sub-process but using the backup SquashFS.
+			# -- Whenever a new update to the utility is uploaded to the repository, users use this <operation> to update it. This operation also updates the configuration file.
+			# -- After using overlay_ch, it's essential to remember that **EVERY COMMAND IS RUNNING AS ROOT AND ON THE LOWER DIRECTORY OF THE OVERLAY**.
+			# -- Always download the latest component. The component will remain in the filesystem after using it; however, once the user executes this <operation> again, it will be deleted and re-downloaded.
 
-				# -- Ensure that this utility runs in Nitrux and has an Internet connection.
-				# -- Exit if value is not 'nitrux'.
+			overlay_ch mount -t devtmpfs dev /dev
+			overlay_ch find /usr/bin -type f -name "nuts-sup" -exec rm -v {} \;
+			overlay_ch axel -o /usr/bin -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-sup" > /dev/null 2>&1
+			overlay_ch chmod +x /usr/bin/nuts-sup
+			overlay_ch nuts-sup
 
-				if [[ "$CURRENT_DIST" == "$TARGET_DIST" ]]; then
-					puts_success "This utility is running in ${TARGET_DIST^}, continuing..."
-				else
-					puts_error "$TOOL_NAME is intended to work exclusively in ${TARGET_DIST^}. Using this utility in ${CURRENT_DIST^} will break it and not work at all, quitting."
-					exit 1
-				fi
 
+		# -- End main component.
 
-				# -- Check Internet connection but do nothing yet.
-				# -- For some reason, ping fails in GNOME Boxes even though ping works literally everywhere else. Use wget as an alternative to verify a connection.
-				# -- Exit if connection test fails.
+		exit
+		;;
 
-				if ping -q -c 1 -W 1 nxos.org >/dev/null && ping -q -c 1 -W 1 raw.githubusercontent.com >/dev/null || wget -q --spider https://filesamples.com/samples/document/txt/sample1.txt; then
-					puts_success "This computer can reach the Internet, continuing..."
-				else
-					puts_error "This computer cannot reach the Internet, quitting."
-					exit 1
-				fi
 
-
-				# -- This process is also done inside the chroot and it is the same as Calamares, except for user creation, mounts and bootloader configuration.
-				# -- After using overlay_ch, it's essential to remember that **EVERY COMMAND IS RUNNING AS ROOT AND ON THE LOWER DIRECTORY OF THE OVERLAY**.
-
-				OVERLAYROOT="/usr/sbin/overlayroot-chroot"
-
-				if [[ ! -f "$OVERLAYROOT" ]]; then
-					puts_error "Can't find overlayroot, quitting."
-					exit 1
-				else
-					puts_info "Found overlayroot, continuing..."
-				fi
-
-
-				# -- Enter the Matri... I mean, the overlay.
-				# -- Run nuts-crr to perform the restore actions inside the chroot.
-				# -- Always download the latest component. The component will remain in the filesystem after using it; however, once the user executes this <operation> again, it will be deleted and re-downloaded.
-
-				overlay_ch mount -t devtmpfs dev /dev
-				overlay_ch find /usr/bin -type f -name "nuts-crr" -exec rm -v {} \;
-				overlay_ch axel -o /usr/bin -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-crr" > /dev/null 2>&1
-				overlay_ch chmod +x /usr/bin/nuts-crr
-				overlay_ch nuts-crr
-
-
-				# -- End main component.
-
-				exit
-				;;
-
-
-			rescue )
-
-				# -- Step X: Rescue Process
-
-				# -- The Rescue Process is a special handling of an unforeseen event; as such, this <operation> does not require using overlayroot-chroot.
-
-				# -- Ensure that this utility runs in Nitrux and has an Internet connection.
-				# -- Exit if value is not 'nitrux'.
-
-				if [[ "$CURRENT_DIST" == "$TARGET_DIST" ]]; then
-					puts_success "This utility is running in ${TARGET_DIST^}, continuing..."
-				else
-					puts_error "$TOOL_NAME is intended to work exclusively in ${TARGET_DIST^}. Using this utility in ${CURRENT_DIST^} will break it and not work at all, quitting."
-					exit 1
-				fi
-
-
-				# -- We do this because if the root is unusable, i.e., the user can't access the GUI or, worse, a TTY, the user can't restore the SquashFS.
-				# -- With that being the case, this <operation> allows the user to restore the root partition from a Live session.
-
-				# -- Automatically check if this utility is running in a Live session. Calamares is an easy check as it's only available in a Live session.
-				# -- This check assumes that the root is now inconsistent; thus, using the SquashFS backup is impossible, so we must restore the XFS backup hence why the user tells this utility to restore a backup from a Live session.
-				# -- If the check returns that this utility is not running from a Live session, it directs the user to use the SquashFS backup instead.
-
-				ROOT_PARTITION=$(findfs LABEL=NX_ROOT)
-				ROOT_PARTITION_LABEL=$(blkid -o value -s LABEL "$ROOT_PARTITION")
-				HOME_PARTITION=$(findfs LABEL=NX_HOME)
-				HOME_PARTITION_LABEL=$(blkid -o value -s LABEL "$HOME_PARTITION")
-				NUTS_USER="nitrux"
-
-				if mountpoint -q "/media/$NUTS_USER/NX_ROOT"; then
-					puts_info "/media/root is already mounted. Unmounting..."
-					umount "/media/$NUTS_USER/NX_ROOT"
-				fi
-
-				if mountpoint -q "/media/$NUTS_USER/NX_HOME"; then
-					puts_info "/media/home is already mounted. Unmounting..."
-					umount "/media/$NUTS_USER/NX_HOME"
-				fi
-
-				mkdir -p "/media/$NUTS_USER/NX_ROOT" "/media/$NUTS_USER/NX_HOME"
-
-				puts_info "Mounting $ROOT_PARTITION_LABEL to /media/$NUTS_USER/NX_ROOT..."
-				mount -t auto "$ROOT_PARTITION" "/media/$NUTS_USER/NX_ROOT"
-
-				puts_info "Mounting $HOME_PARTITION_LABEL to /media/$NUTS_USER/NX_HOME..."
-				mount -t auto "$HOME_PARTITION" "/media/$NUTS_USER/NX_HOME"
-
-				COMPRESSED_XFS_BACKUP="/media/$NUTS_USER/NX_HOME/.nuts/xfs/xfs-backup.xfs.zst"
-				XFS_BACKUP_CHECKSUM_FILE="/media/$NUTS_USER/NX_HOME/.nuts/xfs/xfs-backup.md5sum"
-				DECOMPRESSED_XFS_BACKUP="/media/$NUTS_USER/NX_HOME/.nuts/xfs/xfs-backup.xfs"
-
-				if [[ ! -f "$COMPRESSED_XFS_BACKUP" ]]; then
-					puts_error "XFS backup file $COMPRESSED_XFS_BACKUP not found, quitting."
-					exit 1
-				fi
-
-				if [[ ! -f "$XFS_BACKUP_CHECKSUM_FILE" ]]; then
-					puts_error "XFS backup checksum file $XFS_BACKUP_CHECKSUM_FILE not found, quitting."
-					exit 1
-				fi
-
-				BACKUP_SUM=$(md5sum "$COMPRESSED_XFS_BACKUP" | cut -c -32)
-				GEN_BAK_SUM=$(tail "$XFS_BACKUP_CHECKSUM_FILE" | cut -c -32)
-
-				if [[ "$BACKUP_SUM" == "$GEN_BAK_SUM" ]]; then
-					puts_info "Backup checksum matches, continuing..."
-				else
-					puts_error "Backup checksum does not match, quitting."
-					exit 1
-				fi
-
-				if [[ -x "/usr/bin/calamares" ]]; then
-					puts_info "Running $TOOL_NAME from a Live session, proceed with restoration of $ROOT_PARTITION_LABEL, continuing..."
-					zstd -d "$COMPRESSED_XFS_BACKUP"
-					xfsrestore -f "$DECOMPRESSED_XFS_BACKUP" "/media/$NUTS_USER/NX_ROOT"
-
-					puts_success "Success! $ROOT_PARTITION_LABEL has been restored."
-
-					rm -f "$DECOMPRESSED_XFS_BACKUP"
-
-					unmount_directory "/media/$NUTS_USER/NX_ROOT" || { puts_error "Failed to unmount NX_ROOT, quitting."; exit 1; }
-					unmount_directory "/media/$NUTS_USER/NX_HOME" || { puts_error "Failed to unmount NX_HOME, quitting."; exit 1; }
-				else
-					puts_warning "Only use this option from a Live session and in an emergency."
-					puts_info "For a non-emergency situation, use: "$TOOL_SHRT_NAME restore"."
-
-					unmount_directory "/media/$NUTS_USER/NX_ROOT" || { puts_error "Failed to unmount NX_ROOT, quitting."; exit 1; }
-					unmount_directory "/media/$NUTS_USER/NX_HOME" || { puts_error "Failed to unmount NX_HOME, quitting."; exit 1; }
-					exit 0
-				fi
-
-
-				# -- End main component.
-
-				exit
-				;;
-
-
-			self-update )
-
-				# -- Step Y: Self-Update Process
-
-				# -- Ensure that this utility runs in Nitrux and has an Internet connection.
-				# -- Exit if value is not 'nitrux'.
-
-				if [[ "$CURRENT_DIST" == "$TARGET_DIST" ]]; then
-					puts_success "This utility is running in ${TARGET_DIST^}, continuing..."
-				else
-					puts_error "$TOOL_NAME is intended to work exclusively in ${TARGET_DIST^}. Using this utility in ${CURRENT_DIST^} will break it and not work at all, quitting."
-					exit 1
-				fi
-
-				# -- Check Internet connection but do nothing yet.
-				# -- For some reason, ping fails in GNOME Boxes even though ping works literally everywhere else. Use wget as an alternative to verify a connection.
-				# -- Exit if connection test fails.
-
-				if ping -q -c 1 -W 1 nxos.org >/dev/null && ping -q -c 1 -W 1 raw.githubusercontent.com >/dev/null || wget -q --spider https://filesamples.com/samples/document/txt/sample1.txt; then
-					puts_success "This computer can reach the Internet, continuing..."
-				else
-					puts_error "This computer cannot reach the Internet, quitting."
-					exit 1
-				fi
-
-
-				# -- After using overlay_ch, it's essential to remember that **EVERY COMMAND IS RUNNING AS ROOT AND ON THE LOWER DIRECTORY OF THE OVERLAY**.
-
-				OVERLAYROOT="/usr/sbin/overlayroot-chroot"
-
-				if [[ ! -f "$OVERLAYROOT" ]]; then
-					puts_error "Can't find overlayroot, quitting."
-					exit 1
-				else
-					puts_info "Found overlayroot, continuing..."
-				fi
-
-
-				# -- Display branch used to update.
-
-				puts_info "Using branch ""$NUTS_BRANCH"" to update $TOOL_NAME, continuing..."
-
-
-				# -- Whenever a new update to the utility is uploaded to the repository, users use this <operation> to update nuts.
-				# -- This also updates the configuration file.
-				# -- Always download the latest component. The component will remain in the filesystem after using it; however, once the user executes this <operation> again, it will be deleted and re-downloaded.
-
-				overlay_ch mount -t devtmpfs dev /dev
-				overlay_ch find /usr/bin -type f -name "nuts-sup" -exec rm -v {} \;
-				overlay_ch axel -o /usr/bin -c -n 10 "https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-sup" > /dev/null 2>&1
-				overlay_ch chmod +x /usr/bin/nuts-sup
-				overlay_ch nuts-sup
-
-
-				# -- End main component.
-
-				exit
-				;;
-		esac
-	done
+		# -- Exit if not valid operation was specified.
+				
+		*)
+			puts_error "No valid operation specified, quitting."
+			puts_info "Use «-h or --help» to display the help."
+			exit 1
+		;;
+	esac
 ) 2>&1 | tee -a "$NUTS_LOG"
 
 #   ====== END ======

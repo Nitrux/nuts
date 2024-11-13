@@ -1,3 +1,13 @@
+nuts (2.1.9) nitrux; urgency=medium
+
+  * Improve status messages for better readability.
+  * Add a new check to specifically verify the connection to raw.githubusercontent.com in the overlay and the chroot.
+  * Do not proceed with the update if the root partition filesystem is not XFS.
+  * Quit the rscue process if the root partition filesystem is not XFS.
+  * Fix error handling and improve some functions.
+
+ -- Uri Herrera <uri_herrera@nxos.org>  Tue, 12 Nov 2024 21:32:00 -0500
+
 nuts (2.1.8) nitrux; urgency=medium
 
   * Ensure DKMS builds xone for the newer kernel.
