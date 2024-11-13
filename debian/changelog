@@ -5,6 +5,7 @@ nuts (2.1.9) nitrux; urgency=medium
   * Quit the update process if the root partition filesystem is not XFS.
   * Quit the rescue process if the root partition filesystem is not XFS.
   * Fix error handling and improve some functions.
+  * Quit the update, restore, and self-update processes if not using OverlayFS.
 
  -- Uri Herrera <uri_herrera@nxos.org>  Tue, 12 Nov 2024 21:32:00 -0500
 
