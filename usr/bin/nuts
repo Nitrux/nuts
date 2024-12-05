@@ -254,7 +254,7 @@ for CMD in "$@"; do
                 "    --use-development-branch       Defines the development branch of the $TOOL_NAME to download its components." \
                 "    --keep-backups-on-update       Defines whether the $TOOL_NAME deletes backups during the update process." \
                 "" \
-                "OPERATIONs:" \
+                "Operations:" \
                 "    update            Update the currently installed root using the archive specified in nuts-query and creates a backup of the current root directory." \
                 "    restore           Restore the backup of the root directory generated during the update." \
                 "    rescue            Restore the backup of the root partition in case of an interrupted update." \
@@ -453,7 +453,7 @@ done
 			# -- Backup files are only generated when updating; the user can't ask the utility to create them on demand.
 			# -- This utility will create two backups for redundancy, first a backup of the root partition and then a backup of the root directory.
 
-			# -- Create a backup of the partition for redundancy using xfsdump to later use it during a rescue OPERATION from a Live session.
+			# -- Create a backup of the partition for redundancy using xfsdump to later use it during a rescue operation from a Live session.
 			# -- By the way, only *one* backup file is created, then compress the backup file using zstd. We must delete the original file after compression.
 			# -- This backup is created outside of the chroot because xfsdump relies on /etc/mtab, and that file is unavailable when using overlayroot-chroot.
 			# -- Since the XFS backup is a "full-backup" (level 0), it won't support incremental updates.
