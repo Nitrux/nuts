@@ -106,7 +106,7 @@ download_appimage() {
     local destination="/Applications/$name"
 
     rm -f "$destination"
-    axel -a -q -k -U "$user_agent" -n 8 "$url" -o "$destination"
+    axel -q -k -U "$user_agent" -n 8 "$url" -o "$destination"
     chmod +x "$destination"
 }
 
@@ -116,28 +116,8 @@ download_binary() {
     local destination="/usr/bin/$name"
     
     rm -f "$destination"
-    axel -a -q -k -U "$user_agent" -n 8 "$url" -o "$destination"
+    axel -q -k -U "$user_agent" -n 8 "$url" -o "$destination"
     chmod +x "$destination"
-}
-
-spinner() {
-    local pid=$!
-    local delay=0.1
-    local elapsed=0
-    local dots=0
-
-    while ps -p "$pid" > /dev/null; do
-        if [ $dots -lt 3 ]; then
-            dots=$((dots + 1))
-        else
-            dots=1
-        fi
-        printf " [%-3s] Elapsed time: %.1f seconds" "$(printf '%*s' $dots | tr ' ' '.')" "$elapsed"
-        sleep $delay
-        elapsed=$(echo "$elapsed + $delay" | bc)
-        printf "\r"
-    done
-    printf "\n"
 }
 
 #   ====== START ======
@@ -146,7 +126,7 @@ spinner() {
 #   When updating packages the stuff below will be overwritten, thus we must apply changes from iso-tool.  #
 ############################################################################################################
 
-puts_info "Updating misc. and configuration files, continuing..."
+puts_info "Updating services, misc. and configuration files, continuing..."
 
 #######################################################################################
 #   Always apply these changes because the packages from Debian will overwrite them.  #
@@ -179,7 +159,6 @@ declare -A FILES_TO_DOWNLOAD=(
 
 for URL in "${!FILES_TO_DOWNLOAD[@]}"; do
     dl_file "$URL" > /dev/null 2>&1 &
-    spinner
     wait $!
 
     if ! wait $!; then
@@ -251,23 +230,21 @@ fi
 
 # -- Sort OpenRC services.
 
-puts_info "Updating OpenRC services, continuing..."
-
 $(which rm) -f /etc/runlevels/{default,nonetwork,off,recovery,sysinit,boot}/*
 
 mkdir -p /etc/runlevels/async && rc-update add -s async default
 
-$(which cp) /etc/init.d/{acpi-support,acpid,console-setup.sh,dbus,debugfs-mount-openrc,elogind,fprintd-openrc,mountbinds,network-manager,nohang-desktop-openrc,ntpsec-openrc,plymouth-openrc,powertop-openrc,rmnologin,sddm,sudo,tlp,uuidd} /etc/runlevels/default/ || true
+$(which cp) /etc/init.d/{acpi-support,acpid,console-setup.sh,dbus,debugfs-mount-openrc,elogind,fprintd-openrc,keyboard-setup.sh,mountbinds,network-manager,nohang-desktop-openrc,ntpsec-openrc,plymouth-openrc,powertop-openrc,rmnologin,sddm,sudo,tlp,uuidd,x11-common} /etc/runlevels/default/ || true
 
-$(which cp) /etc/init.d/{avahi-daemon-openrc,bcm-drv,bluez-meshd-openrc,bluez-obexd-openrc,bluez-openrc,cron,cups,irqbalance,nmbd,preload,rsyslog-openrc,smbd,thp-settings,usbmuxd-openrc} /etc/runlevels/async/ || true
+$(which cp) /etc/init.d/{bcm-drv,bluez-meshd-openrc,bluez-obexd-openrc,bluez-openrc,cron,cups,irqbalance,preload,rapl-power,rsyslog-openrc,thp-settings,usbmuxd-openrc} /etc/runlevels/async/ || true
 
 # $(which cp) /etc/init.d/rc.local /etc/runlevels/nonetwork/local || true
 
-$(which cp) /etc/init.d/{savecache,sendsigs,umountfs,umountnfs.sh,umountroot} /etc/runlevels/off || true
+$(which cp) /etc/init.d/{plymouth-openrc,savecache,sendsigs,umountfs,umountroot} /etc/runlevels/off || true
 
 # $(which cp) /etc/init.d/{bootlogs,killprocs,single} /etc/runlevels/recovery || true
 
-$(which cp) /etc/init.d/{apparmor,bootmisc.sh,brightness,cgroups,checkroot-bootclean.sh,checkroot.sh,eudev,hostname.sh,hwclock.sh,keyboard-setup.sh,kmod,mount-configfs,mountall-bootclean.sh,mountall.sh,mountdevsubfs.sh,mountkernfs.sh,mountnfs.sh,networking,plymouth-log,procps,selinux-autorelabel,ufw,urandom,x11-common} /etc/runlevels/sysinit || true
+$(which cp) /etc/init.d/{apparmor,bootmisc.sh,brightness,cgroups,eudev,hostname.sh,hwclock.sh,kmod,mount-configfs,mountall-bootclean.sh,mountall.sh,mountdevsubfs.sh,mountkernfs.sh,networking,plymouth-log,procps,rc.local,ufw,urandom} /etc/runlevels/sysinit || true
 
 $(which cp) /etc/init.d/{cryptdisks,cryptdisks-early,cryptmount-openrc,device-mapper-openrc,dmcrypt-openrc,dmeventd-openrc} /etc/runlevels/boot || true
 
@@ -294,6 +271,7 @@ ORIGINAL_DIR=$(pwd)
 TEMP_DIR1=$(mktemp -d)
 git clone --depth=1 https://github.com/Nitrux/storage.git "$TEMP_DIR1"
 cd "$TEMP_DIR1"
+rm -r /etc/skel/Desktop/Documentation
 cp -R Other/Documentation /etc/skel/Desktop
 cd "$ORIGINAL_DIR"
 
@@ -303,10 +281,17 @@ cd "$ORIGINAL_DIR"
 FILE_URL="https://github.com/Dreaming-Codes/nvidia_oc/releases/download/0.1.11/nvidia_oc"
 DEST_DIR="/usr/bin"
 DEST_FILE="$DEST_DIR/nvidia-oc"
-if curl -L -o "$DEST_FILE" "$FILE_URL"; then
-    chmod +x "$DEST_FILE"
+
+if [ -f "$DEST_FILE" ]; then
+    puts_info "$DEST_FILE already exists, continuing..."
 else
-    exit 1
+    if curl -L -o "$DEST_FILE" "$FILE_URL"; then
+        chmod +x "$DEST_FILE"
+        puts_success "File downloaded and made executable: $DEST_FILE"
+    else
+        puts_error "Failed to download file from $FILE_URL."
+        exit 1
+    fi
 fi
 
 
@@ -315,7 +300,7 @@ fi
 sed -i "s/reverse_sorted_list=.*/reverse_sorted_list=\$(echo \"\$list\" | tr ' ' '\\n' | sort -Vr)/" /etc/grub.d/10_linux
 
 
-puts_success "Success! misc. and configuration files have been updated, continuing..."
+puts_success "Success! services, misc. and configuration files have been updated, continuing..."
 
 ######################################################
 #   End of misc-fixes and edit-conf from iso-tool    #
@@ -328,85 +313,42 @@ puts_success "Success! misc. and configuration files have been updated, continui
 
 puts_info "Applying changes introduced in the new release, continuing..."
 
-# -- Ensure that xone is built with DKMS with kernels newer than 6.11.
-# -- The driver version from upstream builds up to kernel 6.10, so we need to remove that and download the fork.
-
-VERSION="unknown"
-SOURCE_DIR="/usr/src/xone-$VERSION"
-LOG_FILE="/var/lib/dkms/xone/$VERSION/build/make.log"
-REPO_URL="https://github.com/tskaar/xone.git"
-BRANCH="fix-6.12"
-
-LATEST_KERNEL=$(find /boot -name 'vmlinuz-*' -exec basename {} \; | cut -d- -f2- | sort -V | tail -n 1)
-
-rm -rf "$SOURCE_DIR"
-
-git clone -b "$BRANCH" --single-branch "$REPO_URL" "$SOURCE_DIR" || {
-    echo "Failed to clone repository." >&2
-    exit 1
-}
-
-if dkms install -m xone -v "$VERSION" -k "$LATEST_KERNEL"; then
-    [ ! -f /etc/modprobe.d/xone-blacklist.conf ] && install -D -m 644 "$SOURCE_DIR/install/modprobe.conf" /etc/modprobe.d/xone-blacklist.conf
-    [ ! -f /usr/local/bin/xone-get-firmware.sh ] && install -D -m 755 "$SOURCE_DIR/install/firmware.sh" /usr/local/bin/xone-get-firmware.sh
-
-    for MODULE in xpad mt76x2u; do
-        if lsmod | grep -q "^$MODULE"; then
-            modprobe -r "$MODULE"
-        fi
-    done
-else
-    [ -r "$LOG_FILE" ] && cat "$LOG_FILE" >&2
-    exit 1
-fi
 
 puts_success "Success! new changes applied to the system, continuing..."
 
 
 ######################################################
-#   Start of update AppImages and static binaries    #
+#   Start of update AppImages and static binaries.   #
 ######################################################
 
 puts_info "Updating system AppImages and static binaries, continuing..."
 
 user_agent="BrightSign/8.2.55.5 (XT1144) Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) QtWebEngine/5.12.3 Chrome/69.0.3497.128 Safari/537.36"
 
-latest_release_url=$(curl -sL "https://api.github.com/repos/linuxhw/hw-probe/releases/tags/1.6" | grep -oE 'https://github.com/linuxhw/hw-probe/releases/download/1.6/hw-probe.*x86_64.AppImage' | head -n 1)
-
-filename=$(basename "$latest_release_url")
-
-download_appimage "$filename" "$latest_release_url" &
-spinner
-mv /Applications/hw-probe-* /Applications/hw-probe
-
 latest_release_url=$(curl -sL https://api.github.com/repos/srevinsaju/Firefox-Appimage/releases/tags/firefox | grep -oE 'https://github.com/srevinsaju/Firefox-Appimage/releases/download/firefox/firefox.*x86_64.AppImage' | head -n 1)
 
 filename=$(basename "$latest_release_url")
 
-download_appimage "$filename" "$latest_release_url" &
-spinner
+download_appimage "$filename" "$latest_release_url" 
+
 mv /Applications/firefox-* /Applications/firefox
-
-download_appimage "appimaged" "https://github.com/AppImage/appimaged/releases/download/continuous/appimaged-x86_64.AppImage" &
-spinner
-mv /Applications/appimaged /etc/skel/.local/bin
-
-download_binary "zap" "https://github.com/srevinsaju/zap/releases/download/continuous/zap-amd64" &
-spinner
-
-download_appimage "nx-software-center" "https://github.com/Nitrux/nx-software-center/releases/download/latest/nx-software-center-latest-x86_64.AppImage"
-spinner
 
 puts_success "System AppImages and static binaries have been updated, continuing..."
 
 ####################################################
-#   End of update AppImages and static binaries    #
+#   End of update AppImages and static binaries.   #
 ####################################################
+
+puts_info "Regenerating initramfs for available kernels, continuing..."
 
 # -- Update the initramfs.
 
 update-initramfs -c -k all
 
+puts_success "Success! The initramfs was regenerated for all available kernels, continuing..."
+
+
+puts_info "Updating GRUB menu entries, continuing..."
 
 # -- Update GRUB.
 # -- Whenever we add new parameters, ensure that these are added to existing installations.
@@ -415,42 +357,45 @@ GRUB_FILE="/etc/default/grub"
 BACKUP_FILE="/etc/default/grub.bak"
 
 REQUIRED_PARAMS=(
-  "amdgpu.cik_support=1"
-  "amdgpu.ppfeaturemask=0xffffffff"
-  "amdgpu.si_support=1"
-  "amdgpu.vm_update_mode=3"
-  "apparmor=1"
-  "cfi=kcfi"
-  "hardened_usercopy=1"
-  "hpet=disable"
-  "init_on_free=1"
-  "intel_pstate=enable"
-  "libahci.ignore_sss=1"
-  "modprobe.blacklist=iTCO_wdt"
-  "modprobe.blacklist=sp5100_tco"
-  "nosgx"
-  "nvidia_drm.modeset=1"
-  "nvme_core.multipath=Y"
-  "overlayroot=tmpfs:swap=1,recurse=0"
-  "page_alloc.shuffle=1"
-  "quiet"
-  "radeon.cik_support=0"
-  "radeon.si_support=0"
-  "randomize_kstack_offset=on"
-  "rcu_nocbs=all"
-  "rcupdate.rcu_expedited=1"
-  "rcutree.enable_rcu_lazy=1"
-  "security=apparmor"
-  "slab_nomerge"
-  "slub_debug=FZ"
-  "usbcore.autosuspend=-1"
-  "vdso32=0"
-  "vsyscall=none"
-  "zswap.compressor=zstd"
-  "zswap.enabled=1"
-  "zswap.max_pool_percent=20"
-  "zswap.zpool=zsmalloc"
-  "splash"
+    "amdgpu.cik_support=1"
+    "amdgpu.ppfeaturemask=0xffffffff"
+    "amdgpu.si_support=1"
+    "amdgpu.vm_update_mode=3"
+    "apparmor=1"
+    "clocksource=tsc"
+    "hardened_usercopy=1"
+    "hpet=disable"
+    "init_on_free=1"
+    "intel_pstate=enable"
+    "libahci.ignore_sss=1"
+    "modprobe.blacklist=iTCO_wdt"
+    "modprobe.blacklist=sp5100_tco"
+    "nohz=on"
+    "nosgx"
+    "nvidia_drm.modeset=1"
+    "nvme_core.multipath=Y"
+    "overlayroot=tmpfs:swap=1,recurse=0"
+    "page_alloc.shuffle=1"
+    "quiet"
+    "radeon.cik_support=0"
+    "radeon.si_support=0"
+    "randomize_kstack_offset=on"
+    "rcu_nocbs=all"
+    "rcupdate.rcu_expedited=1"
+    "rcutree.enable_rcu_lazy=1"
+    "security=apparmor"
+    "slab_nomerge"
+    "slub_debug=FZ"
+    "splash"
+    "tsc=nowatchdog"
+    "tsc=reliable"
+    "usbcore.autosuspend=-1"
+    "vdso32=0"
+    "vsyscall=none"
+    "zswap.compressor=zstd"
+    "zswap.enabled=1"
+    "zswap.max_pool_percent=20"
+    "zswap.zpool=zsmalloc"
 )
 
 param_exists() {
@@ -566,12 +511,18 @@ if [ -n "$current_line" ]; then
         fi
     done
 
-    mapfile -t sorted_params < <(printf '%s\n' "${unique_params[@]}" | sort -f)
+    filtered_params=()
+    for param in "${unique_params[@]}"; do
+        if [[ " ${REQUIRED_PARAMS[*]} " == *" $param "* ]]; then
+            filtered_params+=("$param")
+        fi
+    done
 
-    updated_params="${sorted_params[*]}"
-else
-    updated_params="${REQUIRED_PARAMS[*]}"
+    unique_params=("${filtered_params[@]}")
 fi
+
+mapfile -t sorted_params < <(printf '%s\n' "${unique_params[@]}" | sort -f)
+updated_params="${sorted_params[*]}"
 
 new_line="GRUB_CMDLINE_LINUX_DEFAULT=\"${updated_params}\""
 

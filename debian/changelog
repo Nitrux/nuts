@@ -1,3 +1,12 @@
+nuts (2.2.0) nitrux; urgency=medium
+
+  * Fix problem in nuts-ccu that would cause absurdly long elapsed time values.
+  * Remove unnecesary code from the cleanup component.
+  * Improve status messages for better readability.
+  * Ensure new kernel paramaters are addded to GRUB.
+
+ -- Uri Herrera <uri_herrera@nxos.org>  Thu, 05 Dec 2024 12:08:00 -0500
+
 nuts (2.1.9) nitrux; urgency=medium
 
   * Improve status messages for better readability.
