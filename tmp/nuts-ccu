@@ -392,6 +392,7 @@ REQUIRED_PARAMS=(
     "usbcore.autosuspend=-1"
     "vdso32=0"
     "vsyscall=none"
+    "xhci_hcd.quirks=270336"
     "zswap.compressor=zstd"
     "zswap.enabled=1"
     "zswap.max_pool_percent=20"
