@@ -384,7 +384,6 @@ REQUIRED_PARAMS=(
     "rcupdate.rcu_expedited=1"
     "rcutree.enable_rcu_lazy=1"
     "slab_nomerge"
-    "slub_debug=FZ"
     "splash"
     "tsc=nowatchdog"
     "tsc=reliable"
