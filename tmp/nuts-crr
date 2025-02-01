@@ -149,20 +149,22 @@ unmount_on_failure() {
 }
 
 spinner() {
-    local pid=$!
+    local pid="$1"
     local delay=0.1
-    local elapsed=0
+    local start
+    start=$(date +%s.%N)
     local dots=0
+    local elapsed=0.0
 
-    while ps -p "$pid" > /dev/null; do
-        if [ $dots -lt 3 ]; then
-            dots=$((dots + 1))
-        else
-            dots=1
-        fi
-        printf " [%-3s] Elapsed time: %.1f seconds" "$(printf '%*s' $dots | tr ' ' '.')" "$elapsed"
-        sleep $delay
-        elapsed=$(echo "$elapsed + $delay" | bc)
+    while ps -p "$pid" > /dev/null 2>&1; do
+        dots=$(( (dots % 3) + 1 ))
+        # Get the current timestamp.
+        local now
+        now=$(date +%s.%N)
+        # Compute the difference using awk.
+        elapsed=$(awk -v start="$start" -v now="$now" 'BEGIN { printf "%.1f", now - start }')
+        printf " [%-3s] Elapsed time: %s seconds" "$(printf '%*s' "$dots" '' | tr ' ' '.')" "$elapsed"
+        sleep "$delay"
         printf "\r"
     done
     printf "\n"
@@ -277,7 +279,7 @@ DESTINATION_DIR="/"
 EXCLUDES_FILE="/tmp/rsync-exclude.list"
 
 rsync -aHAXh --exclude-from="$EXCLUDES_FILE" "$SOURCE_DIR/" "$DESTINATION_DIR" > /dev/null 2>&1 &
-spinner
+spinner "$!"
 
 sync
 

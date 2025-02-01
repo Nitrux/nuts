@@ -185,23 +185,23 @@ unmount_directory() {
 }
 
 spinner() {
-	local pid=$!
-	local delay=0.1
-	local elapsed=0
-	local dots=0
+    local pid="$1"
+    local delay=0.1
+    local start
+    start=$(date +%s.%N)
+    local dots=0
+    local elapsed=0.0
 
-	while ps -p "$pid" > /dev/null; do
-		if [ $dots -lt 3 ]; then
-			dots=$((dots + 1))
-		else
-			dots=1
-		fi
-		printf " [%-3s] Elapsed time: %.1f seconds" "$(printf '%*s' $dots | tr ' ' '.')" "$elapsed"
-		sleep $delay
-		elapsed=$(echo "$elapsed + $delay" | bc)
-		printf "\r"
-	done
-	printf "\n"
+    while ps -p "$pid" > /dev/null 2>&1; do
+        dots=$(( (dots % 3) + 1 ))
+        local now
+        now=$(date +%s.%N)
+        elapsed=$(awk -v start="$start" -v now="$now" 'BEGIN { printf "%.1f", now - start }')
+        printf " [%-3s] Elapsed time: %s seconds" "$(printf '%*s' "$dots" '' | tr ' ' '.')" "$elapsed"
+        sleep "$delay"
+        printf "\r"
+    done
+    printf "\n"
 }
 
 get_gpu_manufacturer() {
@@ -475,10 +475,10 @@ done
 			else
 				puts_warning "Redundant backup of $ROOT_PARTITION_LABEL not found, creating it..."
 				xfsdump -l0 -L "Nitrux_Update_Tool_System-XFS_Backup" -M "NX_BAK-Vol-1" -f "$XFS_BACKUP_FILE" "$ROOT_PARTITION" > /dev/null 2>&1 &
-				spinner
+				spinner "$!"
 				puts_info "Using $ZSTD_COMP_THREADS threads for backup compression, please wait..."
 				zstd -T"$ZSTD_COMP_THREADS" --ultra -19 "$XFS_BACKUP_FILE" -o "$COMPRESSED_XFS_BACKUP" &
-				spinner
+				spinner "$!"
 				rm -f "$XFS_BACKUP_FILE"
 				md5sum "$COMPRESSED_XFS_BACKUP" > "$NUTS_DIR_XFS/xfs-backup.md5sum"
 				sync

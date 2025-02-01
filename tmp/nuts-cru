@@ -168,20 +168,20 @@ unmount_on_failure() {
 }
 
 spinner() {
-    local pid=$!
+    local pid="$1"
     local delay=0.1
-    local elapsed=0
+    local start
+    start=$(date +%s.%N)
     local dots=0
+    local elapsed=0.0
 
-    while ps -p "$pid" > /dev/null; do
-        if [ $dots -lt 3 ]; then
-            dots=$((dots + 1))
-        else
-            dots=1
-        fi
-        printf " [%-3s] Elapsed time: %.1f seconds" "$(printf '%*s' $dots | tr ' ' '.')" "$elapsed"
-        sleep $delay
-        elapsed=$(echo "$elapsed + $delay" | bc)
+    while ps -p "$pid" > /dev/null 2>&1; do
+        dots=$(( (dots % 3) + 1 ))
+        local now
+        now=$(date +%s.%N)
+        elapsed=$(awk -v start="$start" -v now="$now" 'BEGIN { printf "%.1f", now - start }')
+        printf " [%-3s] Elapsed time: %s seconds" "$(printf '%*s' "$dots" '' | tr ' ' '.')" "$elapsed"
+        sleep "$delay"
         printf "\r"
     done
     printf "\n"
@@ -308,7 +308,7 @@ else
     for MIRROR_URL in $MIRROR_LIST; do
         puts_info "Trying mirror URL: $MIRROR_URL"
         axel -q -n 10 -o "$OTA_FILE" "$MIRROR_URL" &
-        spinner
+        spinner "$!"
         wait $!
 
         if ! wait $!; then
@@ -396,7 +396,7 @@ fi
 puts_info "Proceed to apply OTA update, continuing..."
 
 find "${NUTS_DIR_SQS}/ota/updates/" -name '*.deb' -exec sh -c "DEBIAN_FRONTEND=noninteractive $AIPKG_MANAGER --force-all -i \"\$0\"" {} \; > /dev/null 2>&1 &
-spinner
+spinner "$!"
 wait $!
 
 if ! wait $!; then
