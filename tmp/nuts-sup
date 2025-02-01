@@ -146,8 +146,10 @@ puts_info "Updating $TOOL_NAME to the latest version, continuing..."
 git clone --depth=1 --branch "$NUTS_BRANCH" https://github.com/Nitrux/nuts.git "$NUTS_GIT_DIR" > /dev/null 2>&1
 if [ ! -f /usr/bin/nuts ] || [ "$(md5sum "$NUTS_GIT_DIR/usr/bin/nuts" | cut -d " " -f 1)" != "$(md5sum /usr/bin/nuts | cut -d " " -f 1)" ]; then
     puts_info "$TOOL_NAME is being updated, continuing..."
+    (
     cp "$NUTS_GIT_DIR/usr/bin/nuts" /usr/bin
     cp "$NUTS_GIT_DIR/etc/nuts.conf" /etc
+    ) &
     spinner "$!"
 else
     unmount_directory "/dev"
