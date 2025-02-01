@@ -148,6 +148,26 @@ unmount_on_failure() {
     exit 1
 }
 
+spinner() {
+    local pid=$!
+    local delay=0.1
+    local elapsed=0
+    local dots=0
+
+    while ps -p "$pid" > /dev/null; do
+        if [ $dots -lt 3 ]; then
+            dots=$((dots + 1))
+        else
+            dots=1
+        fi
+        printf " [%-3s] Elapsed time: %.1f seconds" "$(printf '%*s' $dots | tr ' ' '.')" "$elapsed"
+        sleep $delay
+        elapsed=$(echo "$elapsed + $delay" | bc)
+        printf "\r"
+    done
+    printf "\n"
+}
+
 
 # -- Variables.
 
@@ -257,6 +277,7 @@ DESTINATION_DIR="/"
 EXCLUDES_FILE="/tmp/rsync-exclude.list"
 
 rsync -aHAXh --exclude-from="$EXCLUDES_FILE" "$SOURCE_DIR/" "$DESTINATION_DIR" > /dev/null 2>&1 &
+spinner
 
 sync
 
