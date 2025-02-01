@@ -264,7 +264,7 @@ fi
 chmod a-x /usr/lib/x86_64-linux-gnu/libexec/drkonqi 
 
 
-# -- Add tutorials to /etc/skel so they're added to the Desktop directory.
+# -- Update tutorials in /etc/skel so they're added to the Desktop directory.
 
 ORIGINAL_DIR=$(pwd)
 
@@ -313,6 +313,119 @@ puts_success "Success! services, misc. and configuration files have been updated
 
 puts_info "Applying changes introduced in the new release, continuing..."
 
+# -- The developer of xpadneo updated the install script on 19/12/24 (commit 875d5aa6) to exit on errors with the comment, "Fixes a problem where the installer would not exit if the git clone is not properly set up." However, the script was working fine, installing the driver with DKMS. While now, it simply quits. Thus, we must revert this change so the script builds the driver.
+# -- FIXME: There are no Debian packages available, if and when they are, switch to use them instead.
+
+TEMP_DIR2=$(mktemp -d)
+git clone https://github.com/atar-axis/xpadneo.git "$TEMP_DIR2"
+cd "$TEMP_DIR2"
+sed -i '/^\s*set\s\+-e\s*$/d' install.sh
+bash install.sh
+cd "$ORIGINAL_DIR"
+
+
+# -- Install XR Linux Driver to automatically recognize supported XR glasses.
+# -- FIXME: There are no Debian packages available, if and when they are, switch to use them instead.
+
+ARCH=$(uname -m)
+REPO="wheaney/XRLinuxDriver"
+API_URL="https://api.github.com/repos/${REPO}/releases/latest"
+TMP_DIR=$(mktemp -d)
+ARCHIVE_NAME="xrDriver-${ARCH}.tar.gz"
+
+response=$(curl -sL "${API_URL}")
+download_url=$(echo "${response}" | grep -oP "https://github.com/${REPO}/releases/download/.*/xrDriver-${ARCH}.tar.gz")
+
+curl -L -o "${ARCHIVE_NAME}" "${download_url}"
+tar -xzf "${ARCHIVE_NAME}" -C "${TMP_DIR}"
+
+mv "${TMP_DIR}/xr_driver/bin/"* /usr/bin/
+mv "${TMP_DIR}/xr_driver/lib/"* /usr/lib/x86_64-linux-gnu/
+mv "${TMP_DIR}/xr_driver/udev/"* /etc/udev/rules.d/
+
+rm -f "${ARCHIVE_NAME}"
+
+
+# -- Install AX88179_178A Linux driver for AX88179 USB 3.0 Ethernet adapters.
+# -- FIXME: There are no Debian packages available, if and when they are, switch to use them instead.
+
+TEMP_DIR4=$(mktemp -d)
+git clone https://github.com/Nitrux/asix-ax88179-dkms.git "$TEMP_DIR4"
+cp -r "$TEMP_DIR4" /usr/src/asix-ax88179-dkms-3.4.0
+dkms add -m asix-ax88179-dkms -v 3.4.0
+dkms build -m asix-ax88179-dkms -v 3.4.0
+dkms install --force -m asix-ax88179-dkms -v 3.4.0
+mv /usr/src/asix-ax88179-dkms-3.4.0/asix-ax88179.conf /etc/modprobe.d/asix-ax88179.conf
+cd "$ORIGINAL_DIR"
+
+
+# -- Add Hyper-V modules to load at boot time.
+
+HV_MOD_CONF="/etc/modules-load.d/hyperv-modules-boot-time.conf"
+
+rm -f "$HV_MOD_CONF"
+printf '%s\n' hv_balloon hv_netvsc hv_storvsc hv_utils hv_vmbus hv_sock >> "$HV_MOD_CONF"
+
+
+# -- Update the desktop launcher of the NX Software Center.
+
+DESKTOP_FILE="/usr/share/applications/org.nx.softwarecenter.desktop"
+
+cat << EOF > "$DESKTOP_FILE"
+[Desktop Entry]
+Name=NX Software Center
+Comment=Software store for AppImages
+Exec=/Applications/nx-software-center %U
+TryExec=/Applications/nx-software-center
+Keywords=program;software;repository;package;install;remove;update;apps;applications;appimage;
+Terminal=false
+Type=Application
+GenericName=Software Center
+Categories=Qt;KDE;System;
+StartupNotify=true
+Icon=nx-software-center
+MimeType=application/vnd.appimage;application/x-executable;
+
+SingleMainWindow=true
+EOF
+
+
+# -- Enforce sync only for specific filesystems, like vfat.
+
+sed -i '/^\[defaults\]/a\vfat_defaults=sync' /etc/udisks2/udisks2.conf
+
+
+# -- Disable the virtualization extensions (like Intel VT-x or AMD-V) from loading automatically when the KVM module is loaded into the kernel.
+# -- INFO: This is to make VirtualBox work.
+
+sed -i "/^options kvm /a options kvm enable_virt_at_load=0" /etc/modprobe.d/kvm.conf
+
+
+# -- Mitigate Bluetooth devices disconnecting randomly.
+
+MAIN_CONF="/etc/bluetooth/main.conf"
+INPUT_CONF="/etc/bluetooth/input.conf"
+
+if [ -f "$MAIN_CONF" ]; then
+    sed -i \
+        -e 's/^#DiscoverableTimeout = 0/DiscoverableTimeout = 0/' \
+        -e 's/^#PairableTimeout = 0/PairableTimeout = 0/' \
+        -e 's/^#ControllerMode = dual/ControllerMode = bredr/' \
+        "$MAIN_CONF"
+fi
+
+if [ -f "$INPUT_CONF" ]; then
+    sed -i 's/^#IdleTimeout=0/IdleTimeout=0/' "$INPUT_CONF"
+fi
+
+
+# -- Fix issue with ALSA UCM, see: https://github.com/alsa-project/alsa-ucm-conf/commit/11b028a9a01e47fc9b48e4a566803752011902e2.
+
+sed -i \
+    -e "/If\.SOFVendor {/,/}/s/Type Empty/Type String/" \
+    -e "/If\.SOFVendor {/,/}/s/String \"\${var:SOFVendor}\"/Empty \"\${var:SOFVendor}\"/" \
+    /usr/share/alsa/ucm2/Intel/sof-hda-dsp/HiFi-sof.conf
+
 
 puts_success "Success! new changes applied to the system, continuing..."
 
@@ -357,6 +470,8 @@ GRUB_FILE="/etc/default/grub"
 BACKUP_FILE="/etc/default/grub.bak"
 
 REQUIRED_PARAMS=(
+    "amd_prefcore=enabled"
+    "amd_pstate=active"
     "amdgpu.cik_support=1"
     "amdgpu.ppfeaturemask=0xffffffff"
     "amdgpu.si_support=1"
@@ -367,7 +482,7 @@ REQUIRED_PARAMS=(
     "hpet=disable"
     "init_on_free=1"
     "intel_pstate=enable"
-    "kfence.sample_interval=400"
+    "kfence=off"
     "libahci.ignore_sss=1"
     "lsm=capability,yama,bpf,apparmor,landlock"
     "modprobe.blacklist=iTCO_wdt,sp5100_tco"
@@ -381,7 +496,7 @@ REQUIRED_PARAMS=(
     "quiet"
     "radeon.cik_support=0"
     "radeon.si_support=0"
-    "randomize_kstack_offset=on"
+    "randomize_kstack_offset=1"
     "rcu_nocbs=all"
     "rcupdate.rcu_expedited=1"
     "rcutree.enable_rcu_lazy=1"
