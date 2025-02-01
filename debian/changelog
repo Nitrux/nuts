@@ -1,6 +1,6 @@
 nuts (2.2.1) nitrux; urgency=medium
 
-  * Fix the spinner function in all scripts that would break probably because of bc.
+  * Fix the spinner function in all scripts that would break probably because of bc causing absurdly long elapsed time values or none.
 
  -- Uri Herrera <uri_herrera@nxos.org>  Sat, 01 Feb 2025 16:55:00 -0500
 
