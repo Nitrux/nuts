@@ -270,18 +270,6 @@ chmod a-x /usr/lib/x86_64-linux-gnu/libexec/drkonqi
 git config --global https.postBuffer 5242888000
 
 
-# -- Update tutorials in /etc/skel so they're added to the Desktop directory.
-
-ORIGINAL_DIR=$(pwd)
-
-TEMP_DIR1=$(mktemp -d)
-git clone --depth=1 https://github.com/Nitrux/storage.git "$TEMP_DIR1"
-cd "$TEMP_DIR1"
-rm -r /etc/skel/Desktop/Documentation
-cp -R Other/Documentation /etc/skel/Desktop
-cd "$ORIGINAL_DIR"
-
-
 # -- Add nvidia_oc binary to overclock NVIDIA GPUs on Wayland.
 
 FILE_URL="https://github.com/Dreaming-Codes/nvidia_oc/releases/download/0.1.11/nvidia_oc"
