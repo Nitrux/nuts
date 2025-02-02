@@ -25,7 +25,7 @@
 
 # -- Exit on errors.
 
-set -xeu
+set -eu
 
 
 # -- Set program name and version.
@@ -120,26 +120,6 @@ dl_file() {
 	fi
 }
 
-spinner() {
-	local pid="$1"
-	local delay=0.1
-	local start
-	start=$(date +%s.%N)
-	local dots=0
-	local elapsed=0.0
-
-	while ps -p "$pid" > /dev/null 2>&1; do
-		dots=$(( (dots % 3) + 1 ))
-		local now
-		now=$(date +%s.%N)
-		elapsed=$(awk -v start="$start" -v now="$now" 'BEGIN { printf "%.1f", now - start }')
-		printf " [%-3s] Elapsed time: %s seconds" "$(printf '%*s' "$dots" '' | tr ' ' '.')" "$elapsed"
-		sleep "$delay"
-		printf "\r"
-	done
-	printf "\n"
-}
-
 
 #   ====== START ======
 
@@ -180,7 +160,6 @@ declare -A FILES_TO_DOWNLOAD=(
 
 for URL in "${!FILES_TO_DOWNLOAD[@]}"; do
 	dl_file "$URL" > /dev/null 2>&1 &
-	spinner "$!"
 	wait $!
 
 	if ! wait $!; then
@@ -461,7 +440,6 @@ puts_info "Updating system AppImages and static binaries, continuing..."
 LATEST_RELEASE_URL="https://nxos.org/ftp_up/firefox-134.0.r20250120135430-x86_64.AppImage"
 
 dl_file "$LATEST_RELEASE_URL"
-spinner "$!"
 
 mv /tmp/firefox-* /Applications/firefox
 
@@ -478,7 +456,6 @@ puts_info "Regenerating initramfs for available kernels, continuing..."
 # -- Update the initramfs.
 
 update-initramfs -c -k all
-spinner "$!"
 
 puts_success "Success! The initramfs was regenerated for all available kernels, continuing..."
 
