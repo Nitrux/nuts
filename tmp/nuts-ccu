@@ -250,6 +250,27 @@ else
 fi
 
 
+# -- Sort OpenRC services.
+
+$(which rm) -f /etc/runlevels/{default,nonetwork,off,recovery,sysinit,boot}/*
+
+mkdir -p /etc/runlevels/async && rc-update add -s async default
+
+$(which cp) /etc/init.d/{acpi-support,acpid,console-setup.sh,dbus,debugfs-mount-openrc,elogind,fprintd-openrc,keyboard-setup.sh,mountbinds,network-manager,nohang-desktop-openrc,ntpsec-openrc,plymouth-openrc,power-profiles-daemon-openrc,powertop-openrc,rmnologin,sddm,sudo,uuidd,x11-common} /etc/runlevels/default/ || true
+
+$(which cp) /etc/init.d/{bcm-drv,bluez-meshd-openrc,bluez-obexd-openrc,bluez-openrc,cron,cups,irqbalance,nvidia-powerd,preload,rapl-power,rsyslog-openrc,thp-settings,usbmuxd-openrc} /etc/runlevels/async/ || true
+
+# $(which cp) /etc/init.d/rc.local /etc/runlevels/nonetwork/local || true
+
+$(which cp) /etc/init.d/{plymouth-openrc,savecache,sendsigs,umountfs,umountroot} /etc/runlevels/off || true
+
+# $(which cp) /etc/init.d/{bootlogs,killprocs,single} /etc/runlevels/recovery || true
+
+$(which cp) /etc/init.d/{apparmor,bootmisc.sh,brightness,cgroups,eudev,hostname.sh,hwclock.sh,kmod,mount-configfs,mountall-bootclean.sh,mountall.sh,mountdevsubfs.sh,mountkernfs.sh,networking,plymouth-log,procps,rc.local,ufw,urandom} /etc/runlevels/sysinit || true
+
+$(which cp) /etc/init.d/{cryptdisks,cryptdisks-early,cryptmount-openrc,device-mapper-openrc,dmcrypt-openrc,dmeventd-openrc} /etc/runlevels/boot || true
+
+
 # -- Remove AppArmor profile that causes Flatpak not to work.
 
 src="/etc/apparmor.d/bwrap-userns-restrict"
