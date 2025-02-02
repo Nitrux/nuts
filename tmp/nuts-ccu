@@ -458,13 +458,11 @@ puts_success "Success! new changes applied to the system, continuing..."
 
 puts_info "Updating system AppImages and static binaries, continuing..."
 
-LATEST_RELEASE_URL=$(https://nxos.org/ftp_up/firefox-134.0.r20250120135430-x86_64.AppImage)
+LATEST_RELEASE_URL="https://nxos.org/ftp_up/firefox-134.0.r20250120135430-x86_64.AppImage"
 
-FILENAME=$(basename "$LATEST_RELEASE_URL")
+dl_file "$LATEST_RELEASE_URL"
 
-dl_file "$FILENAME" "$LATEST_RELEASE_URL"
-
-mv /Applications/firefox-* /Applications/firefox
+mv /tmp/firefox-* /Applications/firefox
 
 puts_success "System AppImages and static binaries have been updated, continuing..."
 
