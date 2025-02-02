@@ -265,30 +265,6 @@ fi
 chmod a-x /usr/lib/x86_64-linux-gnu/libexec/drkonqi 
 
 
-# -- Increase Git buffer size, otherwise when cloning the repositories below we get the error message "efrror: RPC failed [...]"
-
-git config --global https.postBuffer 5242888000
-
-
-# -- Add nvidia_oc binary to overclock NVIDIA GPUs on Wayland.
-
-FILE_URL="https://github.com/Dreaming-Codes/nvidia_oc/releases/download/0.1.11/nvidia_oc"
-DEST_DIR="/usr/bin"
-DEST_FILE="$DEST_DIR/nvidia-oc"
-
-if [ -f "$DEST_FILE" ]; then
-	puts_info "$DEST_FILE already exists, continuing..."
-else
-	if curl -L -o "$DEST_FILE" "$FILE_URL"; then
-		chmod +x "$DEST_FILE"
-		puts_success "File downloaded and made executable: $DEST_FILE"
-	else
-		puts_error "Failed to download file from $FILE_URL."
-		exit 1
-	fi
-fi
-
-
 # -- FIX upstream's BUG in 10_linux!.
 
 sed -i "s/reverse_sorted_list=.*/reverse_sorted_list=\$(echo \"\$list\" | tr ' ' '\\n' | sort -Vr)/" /etc/grub.d/10_linux
@@ -306,6 +282,11 @@ puts_success "Success! services, misc. and configuration files have been updated
 #######################################################
 
 puts_info "Applying changes introduced in the new release, continuing..."
+
+# -- Increase Git buffer size, otherwise when cloning the repositories below we get the error message "efrror: RPC failed [...]"
+
+git config --global https.postBuffer 5242888000
+
 
 # -- The developer of xpadneo updated the install script on 19/12/24 (commit 875d5aa6) to exit on errors with the comment, "Fixes a problem where the installer would not exit if the git clone is not properly set up." However, the script was working fine, installing the driver with DKMS. While now, it simply quits. Thus, we must revert this change so the script builds the driver.
 # -- FIXME: There are no Debian packages available, if and when they are, switch to use them instead.
