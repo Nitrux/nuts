@@ -231,7 +231,7 @@ fi
 
 # -- Sort OpenRC services.
 
-$(which rm) -f /etc/runlevels/{default,nonetwork,off,recovery,sysinit,boot}/*
+$(which rm) -f /etc/runlevels/{default,async,nonetwork,off,recovery,sysinit,boot}/*
 
 mkdir -p /etc/runlevels/async && rc-update add -s async default
 
