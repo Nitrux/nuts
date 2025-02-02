@@ -3,7 +3,7 @@
 #############################################################################################################################################################################
 #   The license used for this file and its contents is: BSD-3-Clause                                                                                                        #
 #                                                                                                                                                                           #
-#   Copyright <2023-2024> <Uri Herrera <uri_herrera@nxos.org>>                                                                                                              #
+#   Copyright <2023-2025> <Uri Herrera <uri_herrera@nxos.org>>                                                                                                              #
 #                                                                                                                                                                           #
 #   Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:                          #
 #                                                                                                                                                                           #
@@ -180,7 +180,7 @@ declare -A FILES_TO_DOWNLOAD=(
 
 for URL in "${!FILES_TO_DOWNLOAD[@]}"; do
 	dl_file "$URL" > /dev/null 2>&1 &
-	spinner "$!" 
+	spinner "$!"
 	wait $!
 
 	if ! wait $!; then
@@ -461,6 +461,7 @@ puts_info "Updating system AppImages and static binaries, continuing..."
 LATEST_RELEASE_URL="https://nxos.org/ftp_up/firefox-134.0.r20250120135430-x86_64.AppImage"
 
 dl_file "$LATEST_RELEASE_URL"
+spinner "$!"
 
 mv /tmp/firefox-* /Applications/firefox
 
@@ -475,6 +476,7 @@ puts_info "Regenerating initramfs for available kernels, continuing..."
 # -- Update the initramfs.
 
 update-initramfs -c -k all
+spinner "$!"
 
 puts_success "Success! The initramfs was regenerated for all available kernels, continuing..."
 
