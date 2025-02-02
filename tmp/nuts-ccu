@@ -465,6 +465,8 @@ spinner "$!"
 
 mv /tmp/firefox-* /Applications/firefox
 
+chmod +x /Applications/firefox
+
 puts_success "System AppImages and static binaries have been updated, continuing..."
 
 ####################################################
