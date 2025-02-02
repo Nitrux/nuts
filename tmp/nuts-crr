@@ -125,7 +125,7 @@ dl_file() {
 		return 1
 	fi
 
-	if ! axel -n 10 -o "/tmp" "$FILE_URL"; then
+	if ! axel -q -n 10 -o "/tmp" "$FILE_URL"; then
 		puts_error "Failed to download file, quitting."
 		return 1
 	fi
