@@ -1,8 +1,10 @@
 nuts (2.2.1) nitrux; urgency=medium
 
   * Fix the spinner function in all scripts that would break probably because of bc causing absurdly long elapsed time values or none.
+  * Improve style by using tabs instead of spaced for indentation.
+  * Remove the spinner function from nuts-ccu since it seemed to cause an issue when exectuing the commands in the script.
 
- -- Uri Herrera <uri_herrera@nxos.org>  Sat, 01 Feb 2025 16:55:00 -0500
+ -- Uri Herrera <uri_herrera@nxos.org>  Mon, 03 Feb 2025 00:51:00 -0500
 
 nuts (2.2.0) nitrux; urgency=medium
 
