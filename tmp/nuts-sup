@@ -3,7 +3,7 @@
 #############################################################################################################################################################################
 #   The license used for this file and its contents is: BSD-3-Clause                                                                                                        #
 #                                                                                                                                                                           #
-#   Copyright <2023-2024> <Uri Herrera <uri_herrera@nxos.org>>                                                                                                              #
+#   Copyright <2023-2025> <Uri Herrera <uri_herrera@nxos.org>>                                                                                                              #
 #                                                                                                                                                                           #
 #   Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:                          #
 #                                                                                                                                                                           #
@@ -53,6 +53,35 @@ puts_success() {
 }
 
 
+# -- Print error messages to stderr.
+
+puts_error() {
+	if [ -n "$1" ]; then
+		printf "%s: \e[31mError:\e[0m %b\n" "$TOOL_NAME" "$*" >&2
+	fi
+}
+
+
+# -- Print messages or text using multiple lines to stderr.
+
+print_message() {
+	if [ $# -eq 0 ]; then
+		printf "\n" >&2
+	else
+		printf "%s\n" "$@" >&2
+	fi
+}
+
+
+# -- Print warning messages to stderr.
+
+puts_warning() {
+	if [ -n "$1" ]; then
+		printf "%s: \e[33mWarning:\e[0m %s\n" "$TOOL_NAME" "$*" >&2
+	fi
+}
+
+
 # -- Display version of running component.
 
 puts_info "$TOOL_NAME $COMP_NAME version $SUP_VERSION."
@@ -67,8 +96,8 @@ CONFIG_FILE="/etc/nuts.conf"
 # -- Include fix for SC1090 – ShellCheck.
 
 if [[ ! -f $CONFIG_FILE ]]; then
-    puts_error "$TOOL_NAME configuration file not found!, quitting." 2>&1
-    exit 1
+	puts_error "$TOOL_NAME configuration file not found!, quitting." 2>&1
+	exit 1
 else
 	puts_success "Success! $TOOL_NAME configuration file found, continuing..."
 	# shellcheck source=/dev/null
@@ -79,20 +108,40 @@ fi
 # -- Functions.
 
 unmount_directory() {
-  local DIRECTORY="$1"
+	local DIRECTORY="$1"
 
-  if mountpoint -q "$DIRECTORY"; then
-    puts_info "Unmounting: $DIRECTORY"
-    umount "$DIRECTORY"
-  else
-    puts_info "Directory is not mounted: $DIRECTORY"
-  fi
+	if mountpoint -q "$DIRECTORY"; then
+		puts_info "Unmounting: $DIRECTORY"
+		umount "$DIRECTORY"
+	else
+		puts_info "Directory is not mounted: $DIRECTORY"
+	fi
 }
 
 unmount_on_failure() {
-    unmount_directory "/home" || { puts_error "Failed to unmount /home, quitting."; }
-    unmount_directory "/dev" || { puts_error "Failed to unmount /dev, quitting."; }
-    exit 1
+	unmount_directory "/home" || { puts_error "Failed to unmount /home, quitting."; }
+	unmount_directory "/dev" || { puts_error "Failed to unmount /dev, quitting."; }
+	exit 1
+}
+
+spinner() {
+	local pid="$1"
+	local delay=0.1
+	local start
+	start=$(date +%s.%N)
+	local dots=0
+	local elapsed=0.0
+
+	while ps -p "$pid" > /dev/null 2>&1; do
+		dots=$(( (dots % 3) + 1 ))
+		local now
+		now=$(date +%s.%N)
+		elapsed=$(awk -v start="$start" -v now="$now" 'BEGIN { printf "%.1f", now - start }')
+		printf " [%-3s] Elapsed time: %s seconds" "$(printf '%*s' "$dots" '' | tr ' ' '.')" "$elapsed"
+		sleep "$delay"
+		printf "\r"
+	done
+	printf "\n"
 }
 
 
@@ -111,8 +160,8 @@ CURRENT_NUTS_BRANCH=$(grep -oP '^NUTS_BRANCH=\K.*' "$CONFIG_FILE")
 # -- Check if /dev is already mounted.
 
 if mountpoint -q /dev; then
-    puts_info "/dev is already mounted. Unmounting..."
-    umount /dev
+	puts_info "/dev is already mounted. Unmounting..."
+	umount /dev
 fi
 
 puts_info "Mounting /dev..."
@@ -125,23 +174,26 @@ puts_info "Updating $TOOL_NAME to the latest version, continuing..."
 
 git clone --depth=1 --branch "$NUTS_BRANCH" https://github.com/Nitrux/nuts.git "$NUTS_GIT_DIR" > /dev/null 2>&1
 if [ ! -f /usr/bin/nuts ] || [ "$(md5sum "$NUTS_GIT_DIR/usr/bin/nuts" | cut -d " " -f 1)" != "$(md5sum /usr/bin/nuts | cut -d " " -f 1)" ]; then
-    puts_info "$TOOL_NAME is being updated, continuing..."
-    cp "$NUTS_GIT_DIR/usr/bin/nuts" /usr/bin
-    cp "$NUTS_GIT_DIR/etc/nuts.conf" /etc
+	puts_info "$TOOL_NAME is being updated, continuing..."
+	(
+	cp "$NUTS_GIT_DIR/usr/bin/nuts" /usr/bin
+	cp "$NUTS_GIT_DIR/etc/nuts.conf" /etc
+	) &
+	spinner "$!"
 else
-    unmount_directory "/dev"
-    puts_info "$TOOL_NAME is already at the latest version. Bye."
-    exit 0
+	unmount_directory "/dev"
+	puts_info "$TOOL_NAME is already at the latest version. Bye."
+	exit 0
 fi
 
 
 # -- Restore the value of NUTS_BRANCH in /etc/nuts.conf.
 
 if [[ -n $CURRENT_NUTS_BRANCH ]]; then
-    sed -i "s/^NUTS_BRANCH=.*$/NUTS_BRANCH=$CURRENT_NUTS_BRANCH/" "$CONFIG_FILE"
+	sed -i "s/^NUTS_BRANCH=.*$/NUTS_BRANCH=$CURRENT_NUTS_BRANCH/" "$CONFIG_FILE"
 else
-    puts_error "Failed to restore $TOOL_NAME branch, quitting." 
-    unmount_on_failure
+	puts_error "Failed to restore $TOOL_NAME branch, quitting." 
+	unmount_on_failure
 fi
 
 

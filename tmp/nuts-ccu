@@ -3,7 +3,7 @@
 #############################################################################################################################################################################
 #   The license used for this file and its contents is: BSD-3-Clause                                                                                                        #
 #                                                                                                                                                                           #
-#   Copyright <2023-2024> <Uri Herrera <uri_herrera@nxos.org>>                                                                                                              #
+#   Copyright <2023-2025> <Uri Herrera <uri_herrera@nxos.org>>                                                                                                              #
 #                                                                                                                                                                           #
 #   Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:                          #
 #                                                                                                                                                                           #
@@ -53,12 +53,32 @@ puts_success() {
 }
 
 
+# -- Print error messages to stderr.
+
+puts_error() {
+	if [ -n "$1" ]; then
+		printf "%s: \e[31mError:\e[0m %b\n" "$TOOL_NAME" "$*" >&2
+	fi
+}
+
+
+# -- Print messages or text using multiple lines to stderr.
+
+print_message() {
+	if [ $# -eq 0 ]; then
+		printf "\n" >&2
+	else
+		printf "%s\n" "$@" >&2
+	fi
+}
+
+
 # -- Print warning messages to stderr.
 
 puts_warning() {
-    if [ -n "$1" ]; then
-        printf "%s: \e[33mWarning:\e[0m %s\n" "$TOOL_NAME" "$*" >&2
-    fi
+	if [ -n "$1" ]; then
+		printf "%s: \e[33mWarning:\e[0m %s\n" "$TOOL_NAME" "$*" >&2
+	fi
 }
 
 
@@ -77,48 +97,29 @@ create_symlink() {
 }
 
 dl_file() {
-    local FILE_URL="$1"
-    local FILE_NAME
-    FILE_NAME=$(basename "$FILE_URL")
-    local FILE_PATH="/tmp/$FILE_NAME"
+	local FILE_URL="$1"
+	local FILE_NAME
+	FILE_NAME=$(basename "$FILE_URL")
+	local FILE_PATH="/tmp/$FILE_NAME"
 
-    [ -f "$FILE_PATH" ] && rm "$FILE_PATH"
+	[ -f "$FILE_PATH" ] && rm "$FILE_PATH"
 
-    if ! command -v axel >/dev/null 2>&1; then
-        puts_error "axel command not found, unable to download file, quitting."
-        return 1
-    fi
+	if ! command -v axel >/dev/null 2>&1; then
+		puts_error "axel command not found, unable to download file, quitting."
+		return 1
+	fi
 
-    if ! curl --output /dev/null --silent --head --fail "$FILE_URL"; then
-        puts_error "File URL is not accessible, unable to download file, quitting."
-        return 1
-    fi
+	if ! curl --output /dev/null --silent --head --fail "$FILE_URL"; then
+		puts_error "File URL is not accessible, unable to download file, quitting."
+		return 1
+	fi
 
-    if ! axel -o "/tmp" -n 10 "$FILE_URL"; then
-        puts_error "Failed to download file, quitting."
-        return 1
-    fi
+	if ! axel -q -n 10 -o "/tmp" "$FILE_URL"; then
+		puts_error "Failed to download file, quitting."
+		return 1
+	fi
 }
 
-download_appimage() {
-    local name="$1"
-    local url="$2"
-    local destination="/Applications/$name"
-
-    rm -f "$destination"
-    axel -q -k -U "$user_agent" -n 8 "$url" -o "$destination"
-    chmod +x "$destination"
-}
-
-download_binary() {
-    local name="$1"
-    local url="$2"
-    local destination="/usr/bin/$name"
-    
-    rm -f "$destination"
-    axel -q -k -U "$user_agent" -n 8 "$url" -o "$destination"
-    chmod +x "$destination"
-}
 
 #   ====== START ======
 
@@ -133,55 +134,55 @@ puts_info "Updating services, misc. and configuration files, continuing..."
 #######################################################################################
 
 declare -A FILES_TO_DOWNLOAD=(
-    # Replace user-setup-apply so that it shuts up about dpkg.
-    ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/scripts/others/user-setup-apply"]="/usr/lib/user-setup/user-setup-apply"
-    # Replace update-grub with our version that doesn't break OUR stuff.
-    ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/scripts/others/update-grub"]="/usr/sbin/update-grub"
-    # Replace /usr/lib/grub/grub-sort-version with a version that doesn't use apt.pkg do it can generate a usable boot menu.
-    ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/grub_files/grub-sort-version"]="/usr/lib/grub/grub-sort-version"
-    # Replace dnscrypt-proxy default configuration.
-    ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/dnscrypt-proxy-settings/dnscrypt-proxy.toml"]="/etc/dnscrypt-proxy/dnscrypt-proxy.toml"
-    ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/dnscrypt-proxy-settings/public-resolvers.md"]="/var/cache/dnscrypt-proxy/public-resolvers.md"
-    ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/dnscrypt-proxy-settings/public-resolvers.md.minisig"]="/var/cache/dnscrypt-proxy/public-resolvers.md.minisig"
-    # Replace common-password.
-    # Increase size of hashing rounds in /etc/pam.d/common-password. See https://cisofy.com/lynis/controls/AUTH-9230/
-    ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/common-password"]="/etc/pam.d/common-password"
-    # Add pwquality.conf (which is missing for some reason!).
-    ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/conf/pwquality.conf"]="/etc/security/pwquality.conf"
-    # Add hook scripts for initramfs.
-    ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/initramfs-tools/hooks/amd64_microcode"]="/usr/share/initramfs-tools/hooks/amd64_microcode"
-    ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/initramfs-tools/hooks/intel_microcode"]="/usr/share/initramfs-tools/hooks/intel_microcode"
-    # Replace elogind files.
-    ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/elogind/logind.conf"]="/etc/elogind/logind.conf"
-    ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/elogind/sleep.conf"]="/etc/elogind/sleep.conf"
-    ["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/elogind/sleep.conf.d/10-elogind.conf"]="/etc/elogind/sleep.conf.d/10-elogind.conf"
+	# Replace user-setup-apply so that it shuts up about dpkg.
+	["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/scripts/others/user-setup-apply"]="/usr/lib/user-setup/user-setup-apply"
+	# Replace update-grub with our version that doesn't break OUR stuff.
+	["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/scripts/others/update-grub"]="/usr/sbin/update-grub"
+	# Replace /usr/lib/grub/grub-sort-version with a version that doesn't use apt.pkg do it can generate a usable boot menu.
+	["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/grub_files/grub-sort-version"]="/usr/lib/grub/grub-sort-version"
+	# Replace dnscrypt-proxy default configuration.
+	["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/dnscrypt-proxy-settings/dnscrypt-proxy.toml"]="/etc/dnscrypt-proxy/dnscrypt-proxy.toml"
+	["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/dnscrypt-proxy-settings/public-resolvers.md"]="/var/cache/dnscrypt-proxy/public-resolvers.md"
+	["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/dnscrypt-proxy-settings/public-resolvers.md.minisig"]="/var/cache/dnscrypt-proxy/public-resolvers.md.minisig"
+	# Replace common-password.
+	# Increase size of hashing rounds in /etc/pam.d/common-password. See https://cisofy.com/lynis/controls/AUTH-9230/
+	["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/common-password"]="/etc/pam.d/common-password"
+	# Add pwquality.conf (which is missing for some reason!).
+	["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/conf/pwquality.conf"]="/etc/security/pwquality.conf"
+	# Add hook scripts for initramfs.
+	["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/initramfs-tools/hooks/amd64_microcode"]="/usr/share/initramfs-tools/hooks/amd64_microcode"
+	["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/initramfs-tools/hooks/intel_microcode"]="/usr/share/initramfs-tools/hooks/intel_microcode"
+	# Replace elogind files.
+	["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/elogind/logind.conf"]="/etc/elogind/logind.conf"
+	["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/elogind/sleep.conf"]="/etc/elogind/sleep.conf"
+	["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/elogind/sleep.conf.d/10-elogind.conf"]="/etc/elogind/sleep.conf.d/10-elogind.conf"
 )
 
 for URL in "${!FILES_TO_DOWNLOAD[@]}"; do
-    dl_file "$URL" > /dev/null 2>&1 &
-    wait $!
+	dl_file "$URL" > /dev/null 2>&1 &
+	wait $!
 
-    if ! wait $!; then
-        puts_error "Failed to download file(s), quitting."
-        exit 1
-    fi
+	if ! wait $!; then
+		puts_error "Failed to download file(s), quitting."
+		exit 1
+	fi
 
-    FILE_NAME=$(basename "$URL")
-    DOWNLOADED_FILE="/tmp/$FILE_NAME"
-    TARGET_PATH="${FILES_TO_DOWNLOAD[$URL]}"
+	FILE_NAME=$(basename "$URL")
+	DOWNLOADED_FILE="/tmp/$FILE_NAME"
+	TARGET_PATH="${FILES_TO_DOWNLOAD[$URL]}"
 
-    if [ -f "$DOWNLOADED_FILE" ]; then
-        mv "$DOWNLOADED_FILE" "$TARGET_PATH"
+	if [ -f "$DOWNLOADED_FILE" ]; then
+		mv "$DOWNLOADED_FILE" "$TARGET_PATH"
 
-        if [[ "$TARGET_PATH" == "/usr/lib/user-setup/user-setup-apply" || 
-              "$TARGET_PATH" == "/usr/sbin/update-grub" || 
-              "$TARGET_PATH" == "/usr/lib/grub/grub-sort-version" ]]; then
-            chmod +x "$TARGET_PATH"
-        fi
-    else
-        puts_error "Downloaded file(s) not found after download, quitting."
-        exit 1
-    fi
+		if [[ "$TARGET_PATH" == "/usr/lib/user-setup/user-setup-apply" || 
+			"$TARGET_PATH" == "/usr/sbin/update-grub" || 
+			"$TARGET_PATH" == "/usr/lib/grub/grub-sort-version" ]]; then
+			chmod +x "$TARGET_PATH"
+		fi
+	else
+		puts_error "Downloaded file(s) not found after download, quitting."
+		exit 1
+	fi
 done
 
 
@@ -218,35 +219,35 @@ sed -i 's+Categories=System;Settings;Utility;+Categories=Utility;+g' /usr/share/
 # -- Check the session set in SDDM. If the session is Plasma X11, leave the file as-is. If the session is Plasma Wayland, then reset this change.
 
 if grep -q '^Session=plasma$' /etc/sddm.conf.d/kde_settings.conf; then
-    puts_info "Detected graphical session set to Plasma (X11) in SDDM, leaving session file unchanged, continuing..."
+	puts_info "Detected graphical session set to Plasma (X11) in SDDM, leaving session file unchanged, continuing..."
 elif grep -q '^Session=plasmawayland$' /etc/sddm.conf.d/kde_settings.conf; then
-    if [ -f /usr/share/xsessions/plasma.desktop ]; then
-        mv /usr/share/xsessions/plasma.desktop /usr/share/xsessions/orig.plasma.desktop.bak
-    fi
+	if [ -f /usr/share/xsessions/plasma.desktop ]; then
+		mv /usr/share/xsessions/plasma.desktop /usr/share/xsessions/orig.plasma.desktop.bak
+	fi
 else
-    puts_info "Detected graphical session set to Plasma (Wayland) in SDDM, renaming X session file, continuing..."
+	puts_info "Detected graphical session set to Plasma (Wayland) in SDDM, renaming X session file, continuing..."
 fi
 
 
 # -- Sort OpenRC services.
 
-$(which rm) -f /etc/runlevels/{default,nonetwork,off,recovery,sysinit,boot}/*
+$(which rm) -f /etc/runlevels/{default,async,nonetwork,off,recovery,sysinit,boot}/*
 
 mkdir -p /etc/runlevels/async && rc-update add -s async default
 
-$(which cp) /etc/init.d/{acpi-support,acpid,console-setup.sh,dbus,debugfs-mount-openrc,elogind,fprintd-openrc,keyboard-setup.sh,mountbinds,network-manager,nohang-desktop-openrc,ntpsec-openrc,plymouth-openrc,powertop-openrc,rmnologin,sddm,sudo,tlp,uuidd,x11-common} /etc/runlevels/default/ || true
+yes | $(which cp) -rf  /etc/init.d/{acpi-support,acpid,console-setup.sh,dbus,debugfs-mount-openrc,elogind,fprintd-openrc,keyboard-setup.sh,mountbinds,network-manager,nohang-desktop-openrc,ntpsec-openrc,plymouth-openrc,power-profiles-daemon-openrc,powertop-openrc,rmnologin,sddm,sudo,uuidd,x11-common} /etc/runlevels/default/ || true
 
-$(which cp) /etc/init.d/{bcm-drv,bluez-meshd-openrc,bluez-obexd-openrc,bluez-openrc,cron,cups,irqbalance,preload,rapl-power,rsyslog-openrc,thp-settings,usbmuxd-openrc} /etc/runlevels/async/ || true
+yes | $(which cp) -rf /etc/init.d/{bcm-drv,bluez-meshd-openrc,bluez-obexd-openrc,bluez-openrc,cron,cups,irqbalance,nvidia-powerd,preload,rapl-power,rsyslog-openrc,thp-settings,usbmuxd-openrc} /etc/runlevels/async/ || true
 
-# $(which cp) /etc/init.d/rc.local /etc/runlevels/nonetwork/local || true
+# yes | $(which cp) -rf /etc/init.d/rc.local /etc/runlevels/nonetwork/local || true
 
-$(which cp) /etc/init.d/{plymouth-openrc,savecache,sendsigs,umountfs,umountroot} /etc/runlevels/off || true
+yes | $(which cp) -rf /etc/init.d/{plymouth-openrc,savecache,sendsigs,umountfs,umountroot} /etc/runlevels/off || true
 
-# $(which cp) /etc/init.d/{bootlogs,killprocs,single} /etc/runlevels/recovery || true
+# yes | $(which cp) -rf /etc/init.d/{bootlogs,killprocs,single} /etc/runlevels/recovery || true
 
-$(which cp) /etc/init.d/{apparmor,bootmisc.sh,brightness,cgroups,eudev,hostname.sh,hwclock.sh,kmod,mount-configfs,mountall-bootclean.sh,mountall.sh,mountdevsubfs.sh,mountkernfs.sh,networking,plymouth-log,procps,rc.local,ufw,urandom} /etc/runlevels/sysinit || true
+yes | $(which cp) -rf /etc/init.d/{apparmor,bootmisc.sh,brightness,cgroups,eudev,hostname.sh,hwclock.sh,kmod,mount-configfs,mountall-bootclean.sh,mountall.sh,mountdevsubfs.sh,mountkernfs.sh,networking,plymouth-log,procps,rc.local,ufw,urandom} /etc/runlevels/sysinit || true
 
-$(which cp) /etc/init.d/{cryptdisks,cryptdisks-early,cryptmount-openrc,device-mapper-openrc,dmcrypt-openrc,dmeventd-openrc} /etc/runlevels/boot || true
+yes | $(which cp) -rf /etc/init.d/{cryptdisks,cryptdisks-early,cryptmount-openrc,device-mapper-openrc,dmcrypt-openrc,dmeventd-openrc} /etc/runlevels/boot || true
 
 
 # -- Remove AppArmor profile that causes Flatpak not to work.
@@ -255,44 +256,13 @@ src="/etc/apparmor.d/bwrap-userns-restrict"
 target="/etc/apparmor.d/disable/bwrap-userns-restrict"
 
 if [ ! -e "$target" ]; then
-    create_symlink "$src" "$target"
+	create_symlink "$src" "$target"
 fi
 
 
 # -- Disable DrKonqi.
 
 chmod a-x /usr/lib/x86_64-linux-gnu/libexec/drkonqi 
-
-
-# -- Add tutorials to /etc/skel so they're added to the Desktop directory.
-
-ORIGINAL_DIR=$(pwd)
-
-TEMP_DIR1=$(mktemp -d)
-git clone --depth=1 https://github.com/Nitrux/storage.git "$TEMP_DIR1"
-cd "$TEMP_DIR1"
-rm -r /etc/skel/Desktop/Documentation
-cp -R Other/Documentation /etc/skel/Desktop
-cd "$ORIGINAL_DIR"
-
-
-# -- Add nvidia_oc binary to overclock NVIDIA GPUs on Wayland.
-
-FILE_URL="https://github.com/Dreaming-Codes/nvidia_oc/releases/download/0.1.11/nvidia_oc"
-DEST_DIR="/usr/bin"
-DEST_FILE="$DEST_DIR/nvidia-oc"
-
-if [ -f "$DEST_FILE" ]; then
-    puts_info "$DEST_FILE already exists, continuing..."
-else
-    if curl -L -o "$DEST_FILE" "$FILE_URL"; then
-        chmod +x "$DEST_FILE"
-        puts_success "File downloaded and made executable: $DEST_FILE"
-    else
-        puts_error "Failed to download file from $FILE_URL."
-        exit 1
-    fi
-fi
 
 
 # -- FIX upstream's BUG in 10_linux!.
@@ -313,6 +283,119 @@ puts_success "Success! services, misc. and configuration files have been updated
 
 puts_info "Applying changes introduced in the new release, continuing..."
 
+# -- Increase Git buffer size, otherwise when cloning the repositories below we get the error message "efrror: RPC failed [...]"
+
+git config --global https.postBuffer 5242888000
+
+
+# -- Create variable to make cloning these repositories easier.
+
+ORIGINAL_DIR=$(pwd)
+
+
+# -- Install XR Linux Driver to automatically recognize supported XR glasses.
+# -- FIXME: There are no Debian packages available, if and when they are, switch to use them instead.
+
+ARCH=$(uname -m)
+REPO="wheaney/XRLinuxDriver"
+API_URL="https://api.github.com/repos/${REPO}/releases/latest"
+TMP_DIR=$(mktemp -d)
+ARCHIVE_NAME="xrDriver-${ARCH}.tar.gz"
+
+response=$(curl -sL "${API_URL}")
+download_url=$(echo "${response}" | grep -oP "https://github.com/${REPO}/releases/download/.*/xrDriver-${ARCH}.tar.gz")
+
+curl -L -o "${ARCHIVE_NAME}" "${download_url}"
+tar -xzf "${ARCHIVE_NAME}" -C "${TMP_DIR}"
+
+mv "${TMP_DIR}/xr_driver/bin/"* /usr/bin/
+mv "${TMP_DIR}/xr_driver/lib/"* /usr/lib/x86_64-linux-gnu/
+mv "${TMP_DIR}/xr_driver/udev/"* /etc/udev/rules.d/
+
+rm -f "${ARCHIVE_NAME}"
+
+
+# -- Install AX88179_178A Linux driver for AX88179 USB 3.0 Ethernet adapters.
+# -- FIXME: There are no Debian packages available, if and when they are, switch to use them instead.
+
+TEMP_DIR4=$(mktemp -d)
+git clone https://github.com/Nitrux/asix-ax88179-dkms.git "$TEMP_DIR4"
+cp -r "$TEMP_DIR4" /usr/src/asix-ax88179-dkms-3.4.0
+dkms add -m asix-ax88179-dkms -v 3.4.0
+dkms build -m asix-ax88179-dkms -v 3.4.0
+dkms install --force -m asix-ax88179-dkms -v 3.4.0
+mv /usr/src/asix-ax88179-dkms-3.4.0/asix-ax88179.conf /etc/modprobe.d/asix-ax88179.conf
+cd "$ORIGINAL_DIR"
+
+
+
+# -- Add Hyper-V modules to load at boot time.
+
+HV_MOD_CONF="/etc/modules-load.d/hyperv-modules-boot-time.conf"
+
+rm -f "$HV_MOD_CONF"
+printf '%s\n' hv_balloon hv_netvsc hv_storvsc hv_utils hv_vmbus hv_sock >> "$HV_MOD_CONF"
+
+
+# -- Update the desktop launcher of the NX Software Center.
+
+DESKTOP_FILE="/usr/share/applications/org.nx.softwarecenter.desktop"
+
+cat << EOF > "$DESKTOP_FILE"
+[Desktop Entry]
+Name=NX Software Center
+Comment=Software store for AppImages
+Exec=/Applications/nx-software-center %U
+TryExec=/Applications/nx-software-center
+Keywords=program;software;repository;package;install;remove;update;apps;applications;appimage;
+Terminal=false
+Type=Application
+GenericName=Software Center
+Categories=Qt;KDE;System;
+StartupNotify=true
+Icon=nx-software-center
+MimeType=application/vnd.appimage;application/x-executable;
+
+SingleMainWindow=true
+EOF
+
+
+# -- Enforce sync only for specific filesystems, like vfat.
+
+sed -i '/^\[defaults\]/a\vfat_defaults=sync' /etc/udisks2/udisks2.conf
+
+
+# -- Disable the virtualization extensions (like Intel VT-x or AMD-V) from loading automatically when the KVM module is loaded into the kernel.
+# -- INFO: This is to make VirtualBox work.
+
+sed -i "/^options kvm /a options kvm enable_virt_at_load=0" /etc/modprobe.d/kvm.conf
+
+
+# -- Mitigate Bluetooth devices disconnecting randomly.
+
+MAIN_CONF="/etc/bluetooth/main.conf"
+INPUT_CONF="/etc/bluetooth/input.conf"
+
+if [ -f "$MAIN_CONF" ]; then
+    sed -i \
+        -e 's/^#DiscoverableTimeout = 0/DiscoverableTimeout = 0/' \
+        -e 's/^#PairableTimeout = 0/PairableTimeout = 0/' \
+        -e 's/^#ControllerMode = dual/ControllerMode = bredr/' \
+        "$MAIN_CONF"
+fi
+
+if [ -f "$INPUT_CONF" ]; then
+    sed -i 's/^#IdleTimeout=0/IdleTimeout=0/' "$INPUT_CONF"
+fi
+
+
+# -- Fix issue with ALSA UCM, see: https://github.com/alsa-project/alsa-ucm-conf/commit/11b028a9a01e47fc9b48e4a566803752011902e2.
+
+sed -i \
+    -e "/If\.SOFVendor {/,/}/s/Type Empty/Type String/" \
+    -e "/If\.SOFVendor {/,/}/s/String \"\${var:SOFVendor}\"/Empty \"\${var:SOFVendor}\"/" \
+    /usr/share/alsa/ucm2/Intel/sof-hda-dsp/HiFi-sof.conf
+
 
 puts_success "Success! new changes applied to the system, continuing..."
 
@@ -323,15 +406,13 @@ puts_success "Success! new changes applied to the system, continuing..."
 
 puts_info "Updating system AppImages and static binaries, continuing..."
 
-user_agent="BrightSign/8.2.55.5 (XT1144) Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) QtWebEngine/5.12.3 Chrome/69.0.3497.128 Safari/537.36"
+LATEST_RELEASE_URL="https://nxos.org/ftp_up/firefox-134.0.r20250120135430-x86_64.AppImage"
 
-latest_release_url=$(curl -sL https://api.github.com/repos/srevinsaju/Firefox-Appimage/releases/tags/firefox | grep -oE 'https://github.com/srevinsaju/Firefox-Appimage/releases/download/firefox/firefox.*x86_64.AppImage' | head -n 1)
+dl_file "$LATEST_RELEASE_URL"
 
-filename=$(basename "$latest_release_url")
+mv /tmp/firefox-* /Applications/firefox
 
-download_appimage "$filename" "$latest_release_url" 
-
-mv /Applications/firefox-* /Applications/firefox
+chmod +x /Applications/firefox
 
 puts_success "System AppImages and static binaries have been updated, continuing..."
 
@@ -357,102 +438,105 @@ GRUB_FILE="/etc/default/grub"
 BACKUP_FILE="/etc/default/grub.bak"
 
 REQUIRED_PARAMS=(
-    "amdgpu.cik_support=1"
-    "amdgpu.ppfeaturemask=0xffffffff"
-    "amdgpu.si_support=1"
-    "amdgpu.vm_update_mode=3"
-    "apparmor=1"
-    "clocksource=tsc"
-    "hardened_usercopy=1"
-    "hpet=disable"
-    "init_on_free=1"
-    "intel_pstate=enable"
-    "libahci.ignore_sss=1"
-    "modprobe.blacklist=iTCO_wdt"
-    "modprobe.blacklist=sp5100_tco"
-    "nohz=on"
-    "nosgx"
-    "nvidia_drm.modeset=1"
-    "nvme_core.multipath=Y"
-    "overlayroot=tmpfs:swap=1,recurse=0"
-    "page_alloc.shuffle=1"
-    "quiet"
-    "radeon.cik_support=0"
-    "radeon.si_support=0"
-    "randomize_kstack_offset=on"
-    "rcu_nocbs=all"
-    "rcupdate.rcu_expedited=1"
-    "rcutree.enable_rcu_lazy=1"
-    "security=apparmor"
-    "slab_nomerge"
-    "slub_debug=FZ"
-    "splash"
-    "tsc=nowatchdog"
-    "tsc=reliable"
-    "usbcore.autosuspend=-1"
-    "vdso32=0"
-    "vsyscall=none"
-    "zswap.compressor=zstd"
-    "zswap.enabled=1"
-    "zswap.max_pool_percent=20"
-    "zswap.zpool=zsmalloc"
+	"amd_prefcore=enabled"
+	"amd_pstate=active"
+	"amdgpu.cik_support=1"
+	"amdgpu.ppfeaturemask=0xffffffff"
+	"amdgpu.si_support=1"
+	"amdgpu.vm_update_mode=3"
+	"apparmor=1"
+	"clocksource=tsc"
+	"hardened_usercopy=1"
+	"hpet=disable"
+	"init_on_free=1"
+	"intel_pstate=enable"
+	"kfence=off"
+	"libahci.ignore_sss=1"
+	"lsm=capability,yama,bpf,apparmor,landlock"
+	"modprobe.blacklist=iTCO_wdt,sp5100_tco"
+	"nohz=on"
+	"nosgx"
+	"nvidia_drm.modeset=1"
+	"nvme_core.multipath=Y"
+	"overlayroot=tmpfs:swap=1,recurse=0"
+	"page_alloc.shuffle=1"
+	"pti=on"
+	"quiet"
+	"radeon.cik_support=0"
+	"radeon.si_support=0"
+	"randomize_kstack_offset=1"
+	"rcu_nocbs=all"
+	"rcupdate.rcu_expedited=1"
+	"rcutree.enable_rcu_lazy=1"
+	"slab_nomerge"
+	"splash"
+	"tsc=nowatchdog"
+	"tsc=reliable"
+	"usbcore.autosuspend=-1"
+	"vdso32=0"
+	"vsyscall=none"
+	"xhci_hcd.quirks=270336"
+	"zswap.compressor=zstd"
+	"zswap.enabled=1"
+	"zswap.max_pool_percent=20"
+	"zswap.zpool=zsmalloc"
 )
 
 param_exists() {
-    local target_lower
-    target_lower=$(echo "$1" | tr '[:upper:]' '[:lower:]')
-    local existing_lower
-    for existing_param in "${unique_params[@]}"; do
-        existing_lower=$(echo "$existing_param" | tr '[:upper:]' '[:lower:]')
-        if [[ "$existing_lower" == "$target_lower" ]]; then
-            return 0
-        fi
-    done
-    return 1
+	local target_lower
+	target_lower=$(echo "$1" | tr '[:upper:]' '[:lower:]')
+	local existing_lower
+	for existing_param in "${unique_params[@]}"; do
+		existing_lower=$(echo "$existing_param" | tr '[:upper:]' '[:lower:]')
+		if [[ "$existing_lower" == "$target_lower" ]]; then
+			return 0
+		fi
+	done
+	return 1
 }
 
 handle_modprobe_blacklist() {
-    local required_param="$1"
-    local key="modprobe.blacklist="
-    if [[ "$required_param" == $key* ]]; then
-        local module
-        module=$(echo "$required_param" | cut -d'=' -f2)
-        local existing_entry=""
-        for i in "${!unique_params[@]}"; do
-            if [[ "${unique_params[i],,}" == modprobe.blacklist=* ]]; then
-                existing_entry="${unique_params[i]}"
-                break
-            fi
-        done
-        if [ -n "$existing_entry" ]; then
-            local modules
-            modules=$(echo "$existing_entry" | cut -d'=' -f2)
-            IFS=',' read -r -a existing_modules <<< "$modules"
-            local module_found=false
-            for em in "${existing_modules[@]}"; do
-                if [[ "${em,,}" == "${module,,}" ]]; then
-                    module_found=true
-                    break
-                fi
-            done
-            if [ "$module_found" = false ]; then
-                existing_modules+=("$module")
-                unique_params=("${unique_params[@]/$existing_entry/}")
-                unique_params+=("modprobe.blacklist=$(IFS=, ; echo "${existing_modules[*]}")")
-            fi
-        else
-            unique_params+=("$required_param")
-        fi
-    else
-        if ! param_exists "$required_param"; then
-            unique_params+=("$required_param")
-        fi
-    fi
+	local required_param="$1"
+	local key="modprobe.blacklist="
+	if [[ "$required_param" == $key* ]]; then
+		local module
+		module=$(echo "$required_param" | cut -d'=' -f2)
+		local existing_entry=""
+		for i in "${!unique_params[@]}"; do
+			if [[ "${unique_params[i],,}" == modprobe.blacklist=* ]]; then
+				existing_entry="${unique_params[i]}"
+				break
+			fi
+		done
+		if [ -n "$existing_entry" ]; then
+			local modules
+			modules=$(echo "$existing_entry" | cut -d'=' -f2)
+			IFS=',' read -r -a existing_modules <<< "$modules"
+			local module_found=false
+			for em in "${existing_modules[@]}"; do
+				if [[ "${em,,}" == "${module,,}" ]]; then
+					module_found=true
+					break
+				fi
+			done
+			if [ "$module_found" = false ]; then
+				existing_modules+=("$module")
+				unique_params=("${unique_params[@]/$existing_entry/}")
+				unique_params+=("modprobe.blacklist=$(IFS=, ; echo "${existing_modules[*]}")")
+			fi
+		else
+			unique_params+=("$required_param")
+		fi
+	else
+		if ! param_exists "$required_param"; then
+			unique_params+=("$required_param")
+		fi
+	fi
 }
 
 if [ ! -f "$GRUB_FILE" ]; then
-    puts_error "$GRUB_FILE not found, quitting."
-    exit 1
+	puts_error "$GRUB_FILE not found, quitting."
+	exit 1
 fi
 
 cp "$GRUB_FILE" "$BACKUP_FILE"
@@ -460,65 +544,65 @@ cp "$GRUB_FILE" "$BACKUP_FILE"
 current_line=$(grep '^GRUB_CMDLINE_LINUX_DEFAULT=' "$GRUB_FILE" || true)
 
 if [ -n "$current_line" ]; then
-    current_params=$(echo "$current_line" | sed -E 's/GRUB_CMDLINE_LINUX_DEFAULT="(.*)"/\1/')
-    read -r -a param_array <<< "$current_params"
+	current_params=$(echo "$current_line" | sed -E 's/GRUB_CMDLINE_LINUX_DEFAULT="(.*)"/\1/')
+	read -r -a param_array <<< "$current_params"
 
-    unique_params=()
-    for param in "${param_array[@]}"; do
-        param_lower=$(echo "$param" | tr '[:upper:]' '[:lower:]')
-        found=false
-        for up in "${unique_params[@]}"; do
-            up_lower=$(echo "$up" | tr '[:upper:]' '[:lower:]')
-            if [[ "$up_lower" == "$param_lower" ]]; then
-                found=true
-                break
-            fi
-        done
-        if [ "$found" = false ]; then
-            unique_params+=("$param")
-        fi
-    done
+	unique_params=()
+	for param in "${param_array[@]}"; do
+		param_lower=$(echo "$param" | tr '[:upper:]' '[:lower:]')
+		found=false
+		for up in "${unique_params[@]}"; do
+			up_lower=$(echo "$up" | tr '[:upper:]' '[:lower:]')
+			if [[ "$up_lower" == "$param_lower" ]]; then
+				found=true
+				break
+			fi
+		done
+		if [ "$found" = false ]; then
+			unique_params+=("$param")
+		fi
+	done
 
-    modprobe_blacklist_modules=()
-    for param in "${unique_params[@]}"; do
-        if [[ "${param,,}" == modprobe.blacklist=* ]]; then
-            IFS=',' read -r -a modules <<< "${param#*=}"
-            for m in "${modules[@]}"; do
-                modprobe_blacklist_modules+=("$m")
-            done
-        fi
-    done
+	modprobe_blacklist_modules=()
+	for param in "${unique_params[@]}"; do
+		if [[ "${param,,}" == modprobe.blacklist=* ]]; then
+			IFS=',' read -r -a modules <<< "${param#*=}"
+			for m in "${modules[@]}"; do
+				modprobe_blacklist_modules+=("$m")
+			done
+		fi
+	done
 
-    mapfile -t unique_params < <(printf '%s\n' "${unique_params[@]//modprobe.blacklist=*/}" | grep -v '^$')
+	mapfile -t unique_params < <(printf '%s\n' "${unique_params[@]//modprobe.blacklist=*/}" | grep -v '^$')
 
-    for req_param in "${REQUIRED_PARAMS[@]}"; do
-        if [[ "$req_param" == modprobe.blacklist=* ]]; then
-            module=$(echo "$req_param" | cut -d'=' -f2)
-            modprobe_blacklist_modules+=("$module")
-        fi
-    done
+	for req_param in "${REQUIRED_PARAMS[@]}"; do
+		if [[ "$req_param" == modprobe.blacklist=* ]]; then
+			module=$(echo "$req_param" | cut -d'=' -f2)
+			modprobe_blacklist_modules+=("$module")
+		fi
+	done
 
-    mapfile -t unique_modprobe_blacklist_modules < <(printf '%s\n' "${modprobe_blacklist_modules[@]}" | awk '!a[$0]++')
-    mapfile -t sorted_modprobe_blacklist_modules < <(printf '%s\n' "${unique_modprobe_blacklist_modules[@]}" | sort -f)
+	mapfile -t unique_modprobe_blacklist_modules < <(printf '%s\n' "${modprobe_blacklist_modules[@]}" | awk '!a[$0]++')
+	mapfile -t sorted_modprobe_blacklist_modules < <(printf '%s\n' "${unique_modprobe_blacklist_modules[@]}" | sort -f)
 
-    if [ ${#sorted_modprobe_blacklist_modules[@]} -gt 0 ]; then
-        unique_params+=("modprobe.blacklist=$(IFS=, ; echo "${sorted_modprobe_blacklist_modules[*]}")")
-    fi
+	if [ ${#sorted_modprobe_blacklist_modules[@]} -gt 0 ]; then
+		unique_params+=("modprobe.blacklist=$(IFS=, ; echo "${sorted_modprobe_blacklist_modules[*]}")")
+	fi
 
-    for req_param in "${REQUIRED_PARAMS[@]}"; do
-        if [[ "$req_param" != modprobe.blacklist=* ]]; then
-            handle_modprobe_blacklist "$req_param"
-        fi
-    done
+	for req_param in "${REQUIRED_PARAMS[@]}"; do
+		if [[ "$req_param" != modprobe.blacklist=* ]]; then
+			handle_modprobe_blacklist "$req_param"
+		fi
+	done
 
-    filtered_params=()
-    for param in "${unique_params[@]}"; do
-        if [[ " ${REQUIRED_PARAMS[*]} " == *" $param "* ]]; then
-            filtered_params+=("$param")
-        fi
-    done
+	filtered_params=()
+	for param in "${unique_params[@]}"; do
+		if [[ " ${REQUIRED_PARAMS[*]} " == *" $param "* ]]; then
+			filtered_params+=("$param")
+		fi
+	done
 
-    unique_params=("${filtered_params[@]}")
+	unique_params=("${filtered_params[@]}")
 fi
 
 mapfile -t sorted_params < <(printf '%s\n' "${unique_params[@]}" | sort -f)
@@ -527,21 +611,21 @@ updated_params="${sorted_params[*]}"
 new_line="GRUB_CMDLINE_LINUX_DEFAULT=\"${updated_params}\""
 
 if grep -q '^GRUB_CMDLINE_LINUX_DEFAULT=' "$GRUB_FILE"; then
-    sed -i "s|^GRUB_CMDLINE_LINUX_DEFAULT=.*|$new_line|" "$GRUB_FILE"
-    puts_success "Updated GRUB_CMDLINE_LINUX_DEFAULT in $GRUB_FILE."
+	sed -i "s|^GRUB_CMDLINE_LINUX_DEFAULT=.*|$new_line|" "$GRUB_FILE"
+	puts_success "Updated GRUB_CMDLINE_LINUX_DEFAULT in $GRUB_FILE."
 else
-    echo "$new_line" >> "$GRUB_FILE"
-    puts_success "Added GRUB_CMDLINE_LINUX_DEFAULT to $GRUB_FILE."
+	echo "$new_line" >> "$GRUB_FILE"
+	puts_success "Added GRUB_CMDLINE_LINUX_DEFAULT to $GRUB_FILE."
 fi
 
 puts_success "Kernel parameters have been successfully added to $GRUB_FILE, continuing..."
 
 if command -v update-grub >/dev/null 2>&1; then
-    update-grub
-    puts_success "Success! GRUB menu was updated, continuing..."
+	update-grub
+	puts_success "Success! GRUB menu was updated, continuing..."
 else
-    puts_error "Failed to update GRUB menu, quitting."
-    exit 1
+	puts_error "Failed to update GRUB menu, quitting."
+	exit 1
 fi
 
 #   ====== END ======

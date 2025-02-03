@@ -3,7 +3,7 @@
 #############################################################################################################################################################################
 #   The license used for this file and its contents is: BSD-3-Clause                                                                                                        #
 #                                                                                                                                                                           #
-#   Copyright <2023-2024> <Uri Herrera <uri_herrera@nxos.org>>                                                                                                              #
+#   Copyright <2023-2025> <Uri Herrera <uri_herrera@nxos.org>>                                                                                                              #
 #                                                                                                                                                                           #
 #   Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:                          #
 #                                                                                                                                                                           #
@@ -65,20 +65,20 @@ puts_error() {
 # -- Print messages or text using multiple lines to stderr.
 
 print_message() {
-    if [ $# -eq 0 ]; then
-        printf "\n" >&2
-    else
-        printf "%s\n" "$@" >&2
-    fi
+	if [ $# -eq 0 ]; then
+		printf "\n" >&2
+	else
+		printf "%s\n" "$@" >&2
+	fi
 }
 
 
 # -- Print warning messages to stderr.
 
 puts_warning() {
-    if [ -n "$1" ]; then
-        printf "%s: \e[33mWarning:\e[0m %s\n" "$TOOL_NAME" "$*" >&2
-    fi
+	if [ -n "$1" ]; then
+		printf "%s: \e[33mWarning:\e[0m %s\n" "$TOOL_NAME" "$*" >&2
+	fi
 }
 
 
@@ -108,83 +108,83 @@ fi
 # -- Functions.
 
 dl_file() {
-    local FILE_URL="$1"
-    local FILE_NAME
-    FILE_NAME=$(basename "$FILE_URL")
-    local FILE_PATH="/tmp/$FILE_NAME"
+	local FILE_URL="$1"
+	local FILE_NAME
+	FILE_NAME=$(basename "$FILE_URL")
+	local FILE_PATH="/tmp/$FILE_NAME"
 
-    [ -f "$FILE_PATH" ] && rm "$FILE_PATH"
+	[ -f "$FILE_PATH" ] && rm "$FILE_PATH"
 
-    if ! command -v axel >/dev/null 2>&1; then
-        puts_error "axel command not found, unable to download file, quitting."
-        return 1
-    fi
+	if ! command -v axel >/dev/null 2>&1; then
+		puts_error "axel command not found, unable to download file, quitting."
+		return 1
+	fi
 
-    if ! curl --output /dev/null --silent --head --fail "$FILE_URL"; then
-        puts_error "File URL is not accessible, unable to download file, quitting."
-        return 1
-    fi
+	if ! curl --output /dev/null --silent --head --fail "$FILE_URL"; then
+		puts_error "File URL is not accessible, unable to download file, quitting."
+		return 1
+	fi
 
-    if ! axel -o "/tmp" -n 10 "$FILE_URL"; then
-        puts_error "Failed to download file, quitting."
-        return 1
-    fi
+	if ! axel -q -n 10 -o "/tmp" "$FILE_URL"; then
+		puts_error "Failed to download file, quitting."
+		return 1
+	fi
 }
 
 bak_cc() {
-    UPDATE_DELETES_BACKUPS=$(grep '^UPDATE_DELETES_BACKUPS=' /etc/nuts.conf | cut -d'=' -f2)
+	UPDATE_DELETES_BACKUPS=$(grep '^UPDATE_DELETES_BACKUPS=' /etc/nuts.conf | cut -d'=' -f2)
 
-    if [ "$UPDATE_DELETES_BACKUPS" != "yes" ]; then
-        return 0
-    fi
+	if [ "$UPDATE_DELETES_BACKUPS" != "yes" ]; then
+		return 0
+	fi
 
-    if [ ! -d "$NUTS_DIR_BAK" ]; then
-        return 1
-    fi
+	if [ ! -d "$NUTS_DIR_BAK" ]; then
+		return 1
+	fi
 
-    if ! [[ "$BACKUPS_TO_KEEP" =~ ^[0-9]+$ ]]; then
-        return 1
-    fi
+	if ! [[ "$BACKUPS_TO_KEEP" =~ ^[0-9]+$ ]]; then
+		return 1
+	fi
 
-    find "$NUTS_DIR_BAK" -maxdepth 1 -type f -exec rm {} +
-    find "$NUTS_DIR_BAK" -maxdepth 1 -type f | sort -r | tail -n +$((BACKUPS_TO_KEEP + 1)) | xargs --no-run-if-empty rm
+	find "$NUTS_DIR_BAK" -maxdepth 1 -type f -exec rm {} +
+	find "$NUTS_DIR_BAK" -maxdepth 1 -type f | sort -r | tail -n +$((BACKUPS_TO_KEEP + 1)) | xargs --no-run-if-empty rm
 }
 
 unmount_directory() {
-  local DIRECTORY="$1"
+	local DIRECTORY="$1"
 
-  if mountpoint -q "$DIRECTORY"; then
-    puts_info "Unmounting: $DIRECTORY"
-    umount "$DIRECTORY"
-  else
-    puts_info "Directory is not mounted: $DIRECTORY"
-  fi
+	if mountpoint -q "$DIRECTORY"; then
+		puts_info "Unmounting: $DIRECTORY"
+		umount "$DIRECTORY"
+	else
+		puts_info "Directory is not mounted: $DIRECTORY"
+	fi
 }
 
 unmount_on_failure() {
-    unmount_directory "/home" || { puts_error "Failed to unmount /home, quitting."; }
-    unmount_directory "/dev" || { puts_error "Failed to unmount /dev, quitting."; }
-    exit 1
+	unmount_directory "/home" || { puts_error "Failed to unmount /home, quitting."; }
+	unmount_directory "/dev" || { puts_error "Failed to unmount /dev, quitting."; }
+	exit 1
 }
 
 spinner() {
-    local pid=$!
-    local delay=0.1
-    local elapsed=0
-    local dots=0
+	local pid="$1"
+	local delay=0.1
+	local start
+	start=$(date +%s.%N)
+	local dots=0
+	local elapsed=0.0
 
-    while ps -p "$pid" > /dev/null; do
-        if [ $dots -lt 3 ]; then
-            dots=$((dots + 1))
-        else
-            dots=1
-        fi
-        printf " [%-3s] Elapsed time: %.1f seconds" "$(printf '%*s' $dots | tr ' ' '.')" "$elapsed"
-        sleep $delay
-        elapsed=$(echo "$elapsed + $delay" | bc)
-        printf "\r"
-    done
-    printf "\n"
+	while ps -p "$pid" > /dev/null 2>&1; do
+		dots=$(( (dots % 3) + 1 ))
+		local now
+		now=$(date +%s.%N)
+		elapsed=$(awk -v start="$start" -v now="$now" 'BEGIN { printf "%.1f", now - start }')
+		printf " [%-3s] Elapsed time: %s seconds" "$(printf '%*s' "$dots" '' | tr ' ' '.')" "$elapsed"
+		sleep "$delay"
+		printf "\r"
+	done
+	printf "\n"
 }
 
 
@@ -198,8 +198,8 @@ CURRENT_DIST=$(awk -F'=' '/VERSION_CODENAME/{print $NF}' /etc/os-release)
 # -- Check if /dev is already mounted.
 
 if mountpoint -q /dev; then
-    puts_info "/dev is already mounted. Unmounting..."
-    umount /dev
+	puts_info "/dev is already mounted. Unmounting..."
+	umount /dev
 fi
 
 puts_info "Mounting /dev..."
@@ -213,8 +213,8 @@ mount -t devtmpfs dev /dev
 HOME_PARTITION=$(findfs LABEL=NX_HOME)
 
 if mountpoint -q /home; then
-    puts_info "/home is already mounted. Unmounting..."
-    umount /home
+	puts_info "/home is already mounted. Unmounting..."
+	umount /home
 fi
 
 puts_info "Mounting $HOME_PARTITION to /home..."
@@ -227,8 +227,8 @@ mount -t auto "$HOME_PARTITION" /home
 VAR_LIB_PARTITION=$(findfs LABEL=NX_VAR_LIB)
 
 if mountpoint -q /var/lib; then
-    puts_info "/var/lib is already mounted. Unmounting..."
-    umount /var/lib
+	puts_info "/var/lib is already mounted. Unmounting..."
+	umount /var/lib
 fi
 
 puts_info "Mounting $VAR_LIB_PARTITION to /var/lib..."
@@ -241,14 +241,14 @@ mount -t auto "$VAR_LIB_PARTITION" /var/lib
 DIRECTORIES=("$NUTS_DIR_BAK" "$NUTS_DIR_XFS" "$NUTS_DIR_DLS" "$NUTS_DIR_SQS")
 
 for DIR in "${DIRECTORIES[@]}"; do
-  if [[ ! -d "$DIR" ]]; then
-    puts_warning "Directory '$DIR' does not exist. Creating the directory..."
-    if ! mkdir -p "$DIR"; then
-      puts_error "Failed to create directory '$DIR', quitting."
-      unmount_on_failure
-    fi
-    puts_info "Directory '$DIR' created successfully."
-  fi
+	if [[ ! -d "$DIR" ]]; then
+	puts_warning "Directory '$DIR' does not exist. Creating the directory..."
+		if ! mkdir -p "$DIR"; then
+			puts_error "Failed to create directory '$DIR', quitting."
+			unmount_on_failure
+		fi
+	puts_info "Directory '$DIR' created successfully."
+	fi
 done
 
 puts_success "Success! All required directories exist, continuing..."
@@ -302,28 +302,28 @@ OTA_FILE="$NUTS_DIR_DLS/nuts-ota.squashfs"
 if [[ -f "$OTA_FILE" ]]; then
     puts_info "OTA file found, skipping..."
 else
-    puts_warning "OTA file not found! Downloading OTA file, continuing..."
-    MIRROR_LIST=$(grep 'MIRRORLIST=' /tmp/nuts-query.info | sed -e 's/[^=]*=//' -e 's/,/ /g')
-    DOWNLOAD_SUCCESS=false
-    for MIRROR_URL in $MIRROR_LIST; do
-        puts_info "Trying mirror URL: $MIRROR_URL"
-        axel -q -n 10 -o "$OTA_FILE" "$MIRROR_URL" &
-        spinner
-        wait $!
+	puts_warning "OTA file not found! Downloading OTA file, continuing..."
+	MIRROR_LIST=$(grep 'MIRRORLIST=' /tmp/nuts-query.info | sed -e 's/[^=]*=//' -e 's/,/ /g')
+	DOWNLOAD_SUCCESS=false
+	for MIRROR_URL in $MIRROR_LIST; do
+		puts_info "Trying mirror URL: $MIRROR_URL"
+		axel -q -n 10 -o "$OTA_FILE" "$MIRROR_URL" &
+		spinner "$!"
+		wait $!
 
-        if ! wait $!; then
-            puts_warning "Download from $MIRROR_URL failed. Trying the next mirror..."
-        else
-            puts_success "Success! OTA update download completed, continuing..."
-            DOWNLOAD_SUCCESS=true
-            break
-        fi
+		if ! wait $!; then
+			puts_warning "Download from $MIRROR_URL failed. Trying the next mirror..."
+		else
+			puts_success "Success! OTA update download completed, continuing..."
+			DOWNLOAD_SUCCESS=true
+			break
+		fi
     done
 
-    if [ "$DOWNLOAD_SUCCESS" = false ]; then
-        puts_error "Download failed from all mirrors, quitting."
-        unmount_on_failure
-    fi
+	if [ "$DOWNLOAD_SUCCESS" = false ]; then
+		puts_error "Download failed from all mirrors, quitting."
+		unmount_on_failure
+	fi
 fi
 
 
@@ -334,12 +334,12 @@ LOCAL_OTA_SUM=$(md5sum "$NUTS_DIR_DLS"/nuts-ota.squashfs | awk '{ print $1 }')
 NQ_OTA_SUM=$(grep -oP '(?<=OTASUM=)[a-f0-9]{32}' /tmp/nuts-query.info)
 
 if [[ "$LOCAL_OTA_SUM" == "$NQ_OTA_SUM" ]]; then
-    puts_info "OTA file checksum matches, continuing..."
+	puts_info "OTA file checksum matches, continuing..."
 else
-    puts_warning "OTA file checksum does not match, deleting file..."
-    rm "$NUTS_DIR_DLS"/nuts-ota.squashfs
-    puts_error "Mismatched OTA file deleted; reboot and try to update again, quitting."
-    unmount_on_failure
+	puts_warning "OTA file checksum does not match, deleting file..."
+	rm "$NUTS_DIR_DLS"/nuts-ota.squashfs
+	puts_error "Mismatched OTA file deleted; reboot and try to update again, quitting."
+	unmount_on_failure
 fi
 
 
@@ -363,16 +363,16 @@ VAR_DATA_URL="https://raw.githubusercontent.com/Nitrux/storage/master/Other/var-
 TARFILE_DL_PATH="/tmp/var-lib-dpkg-$VAR_DATA_TARGET.tar.xz"
 
 if [[ -f "$AIPKG_MANAGER" ]]; then
-    puts_info "AppImage already exists, skipping download, continuing..."
+	puts_info "AppImage already exists, skipping download, continuing..."
 else
     if dl_file "$APPIMAGE_URL" > "$AIFILE_DL_PATH" && \
-       [[ $(file --mime-type -b "$AIFILE_DL_PATH") == "application/x-executable" ]] && \
-       mv "$AIFILE_DL_PATH" "$AIPKG_MANAGER" && chmod +x "$AIPKG_MANAGER"; then
-        puts_success "Success! AppImage downloaded and processed successfully, continuing..."
+		[[ $(file --mime-type -b "$AIFILE_DL_PATH") == "application/x-executable" ]] && \
+		mv "$AIFILE_DL_PATH" "$AIPKG_MANAGER" && chmod +x "$AIPKG_MANAGER"; then
+		puts_success "Success! AppImage downloaded and processed successfully, continuing..."
     else
-        puts_error "Failed to download or process the AppImage, quitting."
-        [[ -f "$AIPKG_MANAGER" ]] && rm "$AIPKG_MANAGER"
-        unmount_on_failure
+		puts_error "Failed to download or process the AppImage, quitting."
+		[[ -f "$AIPKG_MANAGER" ]] && rm "$AIPKG_MANAGER"
+		unmount_on_failure
     fi
 fi
 
@@ -383,25 +383,25 @@ puts_info "Fetching system data archive, continuing..."
 [[ -f "$TARFILE_DL_PATH" ]] && rm "$TARFILE_DL_PATH"
 
 if dl_file "$VAR_DATA_URL" > "$TARFILE_DL_PATH" && \
-   mkdir -p /var/lib/dpkg && \
-   (cd / && tar -xf "$TARFILE_DL_PATH") && \
-   [ -f /var/lib/dpkg/status ]; then
-    puts_success "Success! Data archive downloaded and extracted successfully, continuing..."
+	mkdir -p /var/lib/dpkg && \
+	(cd / && tar -xf "$TARFILE_DL_PATH") && \
+	[ -f /var/lib/dpkg/status ]; then
+	puts_success "Success! Data archive downloaded and extracted successfully, continuing..."
 else
-    puts_error "Failed to download or extract the data archive, quitting."
-    [[ -f "$TARFILE_DL_PATH" ]] && rm "$TARFILE_DL_PATH"
-    unmount_on_failure
+	puts_error "Failed to download or extract the data archive, quitting."
+	[[ -f "$TARFILE_DL_PATH" ]] && rm "$TARFILE_DL_PATH"
+	unmount_on_failure
 fi
 
 puts_info "Proceed to apply OTA update, continuing..."
 
 find "${NUTS_DIR_SQS}/ota/updates/" -name '*.deb' -exec sh -c "DEBIAN_FRONTEND=noninteractive $AIPKG_MANAGER --force-all -i \"\$0\"" {} \; > /dev/null 2>&1 &
-spinner
+spinner "$!"
 wait $!
 
 if ! wait $!; then
-    puts_error "Failed to apply OTA update, quitting."
-    unmount_on_failure
+	puts_error "Failed to apply OTA update, quitting."
+	unmount_on_failure
 fi
 
 puts_success "Success! OTA update process completed successfully, continuing..."
@@ -418,10 +418,10 @@ CLEANUP_SCRIPT_URL="https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/t
 dl_file "$CLEANUP_SCRIPT_URL" >/tmp/nuts-ccu || { puts_error "Failed to download the cleanup script, quitting." ; exit 1; }
 
 if chmod +x /tmp/nuts-ccu && bash /tmp/nuts-ccu ; then
-    puts_success "Success! Cleanup script executed without problems, continuing..."
+	puts_success "Success! Cleanup script executed without problems, continuing..."
 else
-    puts_error "Something failed in the cleanup script; reboot and try to update again, quitting."
-    unmount_on_failure
+	puts_error "Something failed in the cleanup script; reboot and try to update again, quitting."
+	unmount_on_failure
 fi
 
 rm -f /tmp/nuts-ccu

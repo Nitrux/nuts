@@ -3,7 +3,7 @@
 #############################################################################################################################################################################
 #   The license used for this file and its contents is: BSD-3-Clause                                                                                                        #
 #                                                                                                                                                                           #
-#   Copyright <2023-2024> <Uri Herrera <uri_herrera@nxos.org>>                                                                                                              #
+#   Copyright <2023-2025> <Uri Herrera <uri_herrera@nxos.org>>                                                                                                              #
 #   Copyright <2023> <Luis Lavaire <luis_lavaire@nxos.org>>                                                                                                                 #
 #                                                                                                                                                                           #
 #   Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:                          #
@@ -68,20 +68,20 @@ puts_error() {
 # -- Print messages or text using multiple lines to stderr.
 
 print_message() {
-    if [ $# -eq 0 ]; then
-        printf "\n" >&2
-    else
-        printf "%s\n" "$@" >&2
-    fi
+	if [ $# -eq 0 ]; then
+		printf "\n" >&2
+	else
+		printf "%s\n" "$@" >&2
+	fi
 }
 
 
 # -- Print warning messages to stderr.
 
 puts_warning() {
-    if [ -n "$1" ]; then
-        printf "%s: \e[33mWarning:\e[0m %s\n" "$TOOL_NAME" "$*" >&2
-    fi
+	if [ -n "$1" ]; then
+		printf "%s: \e[33mWarning:\e[0m %s\n" "$TOOL_NAME" "$*" >&2
+	fi
 }
 
 
@@ -113,8 +113,8 @@ fi
 # -- Display an error when no flag is used.
 
 error () {
-  puts_error "$TOOL_SHRT_NAME: \e[31mError:\e[0m: $*" >&2
-  exit 1
+	puts_error "$TOOL_SHRT_NAME: \e[31mError:\e[0m: $*" >&2
+	exit 1
 }
 
 
@@ -139,73 +139,73 @@ fi
 # -- Functions.
 
 dl_file() {
-    local FILE_URL="$1"
-    local FILE_NAME
-    FILE_NAME=$(basename "$FILE_URL")
-    local FILE_PATH="/tmp/$FILE_NAME"
+	local FILE_URL="$1"
+	local FILE_NAME
+	FILE_NAME=$(basename "$FILE_URL")
+	local FILE_PATH="/tmp/$FILE_NAME"
 
-    [ -f "$FILE_PATH" ] && rm "$FILE_PATH"
+	[ -f "$FILE_PATH" ] && rm "$FILE_PATH"
 
-    if ! command -v axel >/dev/null 2>&1; then
-        puts_error "axel command not found, unable to download file, quitting."
-        return 1
-    fi
+	if ! command -v axel >/dev/null 2>&1; then
+		puts_error "axel command not found, unable to download file, quitting."
+		return 1
+	fi
 
-    if ! curl --output /dev/null --silent --head --fail "$FILE_URL"; then
-        puts_error "File URL is not accessible, unable to download file, quitting."
-        return 1
-    fi
+	if ! curl --output /dev/null --silent --head --fail "$FILE_URL"; then
+		puts_error "File URL is not accessible, unable to download file, quitting."
+		return 1
+	fi
 
-    if ! axel -o "/tmp" -n 10 "$FILE_URL"; then
-        puts_error "Failed to download file, quitting."
-        return 1
-    fi
+	if ! axel -q -n 10 -o "/tmp" "$FILE_URL"; then
+		puts_error "Failed to download file, quitting."
+		return 1
+	fi
 }
 
 overlay_ch() {
-    local ROOT=("sudo" "overlayroot-chroot" "$@")
+	local ROOT=("sudo" "overlayroot-chroot" "$@")
 
-    if ! command -v "${ROOT[0]}" >/dev/null 2>&1; then
-        puts_error "Error: '${ROOT[0]}' command not found. Please make sure it's installed and try again, quitting."
-        return 1
-    fi
+	if ! command -v "${ROOT[0]}" >/dev/null 2>&1; then
+		puts_error "Error: '${ROOT[0]}' command not found. Please make sure it's installed and try again, quitting."
+		return 1
+	fi
 
-    "${ROOT[@]}"
+	"${ROOT[@]}"
 }
 
 unmount_directory() {
-  local DIRECTORY="$1"
+	local DIRECTORY="$1"
 
-  if mountpoint -q "$DIRECTORY"; then
-    puts_info "Unmounting: $DIRECTORY"
-    umount "$DIRECTORY"
-  else
-    puts_info "Directory is not mounted: $DIRECTORY"
-  fi
+	if mountpoint -q "$DIRECTORY"; then
+	puts_info "Unmounting: $DIRECTORY"
+	umount "$DIRECTORY"
+	else
+	puts_info "Directory is not mounted: $DIRECTORY"
+	fi
 }
 
 spinner() {
-    local pid=$!
-    local delay=0.1
-    local elapsed=0
-    local dots=0
+	local pid="$1"
+	local delay=0.1
+	local start
+	start=$(date +%s.%N)
+	local dots=0
+	local elapsed=0.0
 
-    while ps -p "$pid" > /dev/null; do
-        if [ $dots -lt 3 ]; then
-            dots=$((dots + 1))
-        else
-            dots=1
-        fi
-        printf " [%-3s] Elapsed time: %.1f seconds" "$(printf '%*s' $dots | tr ' ' '.')" "$elapsed"
-        sleep $delay
-        elapsed=$(echo "$elapsed + $delay" | bc)
-        printf "\r"
-    done
-    printf "\n"
+	while ps -p "$pid" > /dev/null 2>&1; do
+		dots=$(( (dots % 3) + 1 ))
+		local now
+		now=$(date +%s.%N)
+		elapsed=$(awk -v start="$start" -v now="$now" 'BEGIN { printf "%.1f", now - start }')
+		printf " [%-3s] Elapsed time: %s seconds" "$(printf '%*s' "$dots" '' | tr ' ' '.')" "$elapsed"
+		sleep "$delay"
+		printf "\r"
+	done
+	printf "\n"
 }
 
 get_gpu_manufacturer() {
-    nvidia-smi -L | awk -F ' ' '$3=="NVIDIA"{print $3; exit}'
+	nvidia-smi -L | awk -F ' ' '$3=="NVIDIA"{print $3; exit}'
 }
 
 
@@ -229,105 +229,105 @@ TARGET_DIST="nitrux"
 # -- Flag parsing.
 
 if [ "$(get_gpu_manufacturer)" == "NVIDIA" ]; then
-    puts_warning "NVIDIA hardware detected!. Due to how the NVIDIA proprietary driver works with the Linux kernel, OTA archives will not include updates to the proprietary driver."
+	puts_warning "NVIDIA hardware detected!. Due to how the NVIDIA proprietary driver works with the Linux kernel, OTA archives will not include updates to the proprietary driver."
 	puts_warning "NVIDIA users, please follow the alternative method described at https://nxos.org/tutorial/how-to-upgrade-nitrux/#upgrade-using-live-iso to update the distribution."
 fi
 
 
 for CMD in "$@"; do
-    case "$CMD" in
-        -h | --help )
-            print_message "$TOOL_NAME" \
-                "" \
-                "Description:" \
-                "" \
-                "    $TOOL_NAME or $TOOL_SHRT_NAME is a utility to update the Nitrux Operating System and back up the root for rollbacks." \
-                "    ⚠️ Important: $TOOL_SHRT_NAME is intended to work exclusively in Nitrux OS, and using this utility in other distributions will break them or not work at all." \
-                "" \
-                "    Report bugs at: https://github.com/Nitrux/nuts/issues." \
-                "" \
-                "Flags:" \
-                "    -h or --help                   Show this help." \
-                "    -v or --version                Show the version." \
-                "    -d or --debug                  Enable verbose output." \
-                "    --use-main-branch              Defines the main branch of the $TOOL_NAME to download its components." \
-                "    --use-development-branch       Defines the development branch of the $TOOL_NAME to download its components." \
-                "    --keep-backups-on-update       Defines whether the $TOOL_NAME deletes backups during the update process." \
-                "" \
-                "OPERATIONs:" \
-                "    update            Update the currently installed root using the archive specified in nuts-query and creates a backup of the current root directory." \
-                "    restore           Restore the backup of the root directory generated during the update." \
-                "    rescue            Restore the backup of the root partition in case of an interrupted update." \
-                "    self-update       Update the $TOOL_NAME and its configuration file using the branch set in the configuration file." \
-                "" \
-                "Usage:" \
-                "    sudo nuts <flag> (OPERATION)" \
-                "" \
-                "Examples:" \
-                "    sudo nuts update" \
-                "    sudo nuts -d restore"
-                
-            exit
+	case "$CMD" in
+		-h | --help )
+			print_message "$TOOL_NAME" \
+				"" \
+				"Description:" \
+				"" \
+				"    $TOOL_NAME or $TOOL_SHRT_NAME is a utility to update the Nitrux Operating System and back up the root for rollbacks." \
+				"    ⚠️ Important: $TOOL_SHRT_NAME is intended to work exclusively in Nitrux OS, and using this utility in other distributions will break them or not work at all." \
+				"" \
+				"    Report bugs at: https://github.com/Nitrux/nuts/issues." \
+				"" \
+				"Flags:" \
+				"    -h or --help                   Show this help." \
+				"    -v or --version                Show the version." \
+				"    -d or --debug                  Enable verbose output." \
+				"    --use-main-branch              Defines the main branch of the $TOOL_NAME to download its components." \
+				"    --use-development-branch       Defines the development branch of the $TOOL_NAME to download its components." \
+				"    --keep-backups-on-update       Defines whether the $TOOL_NAME deletes backups during the update process." \
+				"" \
+				"Operations:" \
+				"    update            Update the currently installed root using the archive specified in nuts-query and creates a backup of the current root directory." \
+				"    restore           Restore the backup of the root directory generated during the update." \
+				"    rescue            Restore the backup of the root partition in case of an interrupted update." \
+				"    self-update       Update the $TOOL_NAME and its configuration file using the branch set in the configuration file." \
+				"" \
+				"Usage:" \
+				"    sudo nuts <flag> (OPERATION)" \
+				"" \
+				"Examples:" \
+				"    sudo nuts update" \
+				"    sudo nuts -d restore"
+				
+			exit
 		;;
 
-        -v | --version )
-            print_message "$TOOL_NAME" \
-                "" \
-                "Version: $TOOL_VERSION from branch ""$NUTS_BRANCH""." \
-                "" \
-                "The license used for this file and its contents is: BSD-3-Clause." \
-                "" \
-                "Authors:" \
-                "" \
-                "    Copyright <2023-2024> <Uri Herrera <uri_herrera@nxos.org>>" \
-                "    Copyright <2023> <Luis Lavaire <luis_lavaire@nxos.org>>" \
-                "" \
-                "(c) $FECHA Some Rights Reserved. Made by $VENDOR"
-            exit
+		-v | --version )
+			print_message "$TOOL_NAME" \
+				"" \
+				"Version: $TOOL_VERSION from branch ""$NUTS_BRANCH""." \
+				"" \
+				"The license used for this file and its contents is: BSD-3-Clause." \
+				"" \
+				"Authors:" \
+				"" \
+				"    Copyright <2023-2024> <Uri Herrera <uri_herrera@nxos.org>>" \
+				"    Copyright <2023> <Luis Lavaire <luis_lavaire@nxos.org>>" \
+				"" \
+				"(c) $FECHA Some Rights Reserved. Made by $VENDOR"
+			exit
 		;;
 
-        -d | --debug )
-            set -x
-            shift
+		-d | --debug )
+			set -x
+			shift
 		;;
 
-        --use-main-branch )
-            overlay_ch sed -i 's+NUTS_BRANCH=development+NUTS_BRANCH=main+g' /etc/nuts.conf
-            puts_success "$TOOL_NAME is using the following git branch: main"
-            puts_info "Reboot to load changes into overlay. Bye."
-            exit
+		--use-main-branch )
+			overlay_ch sed -i 's+NUTS_BRANCH=development+NUTS_BRANCH=main+g' /etc/nuts.conf
+			puts_success "$TOOL_NAME is using the following git branch: main"
+			puts_info "Reboot to load changes into overlay. Bye."
+			exit
 		;;
 
-        --use-development-branch )
-            overlay_ch sed -i 's+NUTS_BRANCH=main+NUTS_BRANCH=development+g' /etc/nuts.conf
-            puts_success "$TOOL_NAME is using the following git branch: development"
-            puts_info "Reboot to load changes into overlay. Bye."
-            exit
+		--use-development-branch )
+			overlay_ch sed -i 's+NUTS_BRANCH=main+NUTS_BRANCH=development+g' /etc/nuts.conf
+			puts_success "$TOOL_NAME is using the following git branch: development"
+			puts_info "Reboot to load changes into overlay. Bye."
+			exit
 		;;
 
-        --keep-backups-on-update )
-            CURRENT_SETTING=$(grep '^UPDATE_DELETES_BACKUPS=' /etc/nuts.conf | cut -d'=' -f2)
-            if [ "$CURRENT_SETTING" = "yes" ]; then
-                overlay_ch sed -i 's+UPDATE_DELETES_BACKUPS=yes+UPDATE_DELETES_BACKUPS=no+g' /etc/nuts.conf
-                puts_success "$TOOL_NAME will not delete backups during updates."
-            else
-                overlay_ch sed -i 's+UPDATE_DELETES_BACKUPS=no+UPDATE_DELETES_BACKUPS=yes+g' /etc/nuts.conf
-                puts_success "$TOOL_NAME will delete backups during updates."
-            fi
-            puts_info "Reboot to load changes into overlay. Bye."
-            exit
+		--keep-backups-on-update )
+			CURRENT_SETTING=$(grep '^UPDATE_DELETES_BACKUPS=' /etc/nuts.conf | cut -d'=' -f2)
+			if [ "$CURRENT_SETTING" = "yes" ]; then
+				overlay_ch sed -i 's+UPDATE_DELETES_BACKUPS=yes+UPDATE_DELETES_BACKUPS=no+g' /etc/nuts.conf
+				puts_success "$TOOL_NAME will not delete backups during updates."
+			else
+				overlay_ch sed -i 's+UPDATE_DELETES_BACKUPS=no+UPDATE_DELETES_BACKUPS=yes+g' /etc/nuts.conf
+				puts_success "$TOOL_NAME will delete backups during updates."
+			fi
+			puts_info "Reboot to load changes into overlay. Bye."
+			exit
 		;;
 
-        update | restore | rescue | self-update )
-            OPERATION="$CMD"
+		update | restore | rescue | self-update )
+			OPERATION="$CMD"
 		;;
 
-        * )
-            puts_error "Unknown flag or operation: «$CMD», quitting."
-            puts_info "Use «-h or --help» to display the help."
-            exit 1
+		* )
+			puts_error "Unknown flag or operation: «$CMD», quitting."
+			puts_info "Use «-h or --help» to display the help."
+			exit 1
 		;;
-    esac
+	esac
 done
 
 
@@ -453,7 +453,7 @@ done
 			# -- Backup files are only generated when updating; the user can't ask the utility to create them on demand.
 			# -- This utility will create two backups for redundancy, first a backup of the root partition and then a backup of the root directory.
 
-			# -- Create a backup of the partition for redundancy using xfsdump to later use it during a rescue OPERATION from a Live session.
+			# -- Create a backup of the partition for redundancy using xfsdump to later use it during a rescue operation from a Live session.
 			# -- By the way, only *one* backup file is created, then compress the backup file using zstd. We must delete the original file after compression.
 			# -- This backup is created outside of the chroot because xfsdump relies on /etc/mtab, and that file is unavailable when using overlayroot-chroot.
 			# -- Since the XFS backup is a "full-backup" (level 0), it won't support incremental updates.
@@ -475,10 +475,10 @@ done
 			else
 				puts_warning "Redundant backup of $ROOT_PARTITION_LABEL not found, creating it..."
 				xfsdump -l0 -L "Nitrux_Update_Tool_System-XFS_Backup" -M "NX_BAK-Vol-1" -f "$XFS_BACKUP_FILE" "$ROOT_PARTITION" > /dev/null 2>&1 &
-				spinner
+				spinner "$!"
 				puts_info "Using $ZSTD_COMP_THREADS threads for backup compression, please wait..."
 				zstd -T"$ZSTD_COMP_THREADS" --ultra -19 "$XFS_BACKUP_FILE" -o "$COMPRESSED_XFS_BACKUP" &
-				spinner
+				spinner "$!"
 				rm -f "$XFS_BACKUP_FILE"
 				md5sum "$COMPRESSED_XFS_BACKUP" > "$NUTS_DIR_XFS/xfs-backup.md5sum"
 				sync
