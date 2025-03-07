@@ -147,7 +147,7 @@ spinner() {
 
 # -- Variables.
 
-NUTS_GIT_DIR=$(mktemp -d)
+NUTS_GIT_DIR=$(mktemp -d -p /tmp)
 
 #   ====== START ======
 
@@ -167,6 +167,8 @@ fi
 puts_info "Mounting /dev..."
 mount -t devtmpfs dev /dev
 
+puts_info "Mounting /tmp..."
+mount -t tmpfs tmp /tmp
 
 # -- Update utility.
 
