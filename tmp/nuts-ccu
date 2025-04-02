@@ -134,25 +134,32 @@ puts_info "Updating services, misc. and configuration files, continuing..."
 #######################################################################################
 
 declare -A FILES_TO_DOWNLOAD=(
-	# Replace user-setup-apply so that it shuts up about dpkg.
+	# -- Replace user-setup-apply so that it shuts up about dpkg.
 	["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/scripts/others/user-setup-apply"]="/usr/lib/user-setup/user-setup-apply"
-	# Replace update-grub with our version that doesn't break OUR stuff.
+	
+	# -- Replace update-grub with our version that doesn't break OUR stuff.
 	["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/scripts/others/update-grub"]="/usr/sbin/update-grub"
-	# Replace /usr/lib/grub/grub-sort-version with a version that doesn't use apt.pkg do it can generate a usable boot menu.
+	
+	# -- Replace /usr/lib/grub/grub-sort-version with a version that doesn't use apt.pkg do it can generate a usable boot menu.
 	["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/grub_files/grub-sort-version"]="/usr/lib/grub/grub-sort-version"
-	# Replace dnscrypt-proxy default configuration.
+	
+	# -- Replace dnscrypt-proxy default configuration.
 	["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/dnscrypt-proxy-settings/dnscrypt-proxy.toml"]="/etc/dnscrypt-proxy/dnscrypt-proxy.toml"
 	["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/dnscrypt-proxy-settings/public-resolvers.md"]="/var/cache/dnscrypt-proxy/public-resolvers.md"
 	["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/dnscrypt-proxy-settings/public-resolvers.md.minisig"]="/var/cache/dnscrypt-proxy/public-resolvers.md.minisig"
-	# Replace common-password.
-	# Increase size of hashing rounds in /etc/pam.d/common-password. See https://cisofy.com/lynis/controls/AUTH-9230/
+	
+	# -- Replace common-password.
+	# -- Increase size of hashing rounds in /etc/pam.d/common-password. See https://cisofy.com/lynis/controls/AUTH-9230/
 	["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/common-password"]="/etc/pam.d/common-password"
-	# Add pwquality.conf (which is missing for some reason!).
+	
+	# -- Add pwquality.conf (which is missing for some reason!).
 	["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/conf/pwquality.conf"]="/etc/security/pwquality.conf"
-	# Add hook scripts for initramfs.
+	
+	# -- Add hook scripts for initramfs.
 	["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/initramfs-tools/hooks/amd64_microcode"]="/usr/share/initramfs-tools/hooks/amd64_microcode"
 	["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/initramfs-tools/hooks/intel_microcode"]="/usr/share/initramfs-tools/hooks/intel_microcode"
-	# Replace elogind files.
+	
+	# -- Replace elogind files.
 	["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/elogind/logind.conf"]="/etc/elogind/logind.conf"
 	["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/elogind/sleep.conf"]="/etc/elogind/sleep.conf"
 	["https://raw.githubusercontent.com/Nitrux/iso-tool/legacy/configs/files/other/elogind/sleep.conf.d/10-elogind.conf"]="/etc/elogind/sleep.conf.d/10-elogind.conf"
@@ -283,118 +290,55 @@ puts_success "Success! services, misc. and configuration files have been updated
 
 puts_info "Applying changes introduced in the new release, continuing..."
 
-# -- Increase Git buffer size, otherwise when cloning the repositories below we get the error message "efrror: RPC failed [...]"
+# -- Create directory for elogind sleep hooks and download the files.
 
-git config --global https.postBuffer 5242888000
-
-
-# -- Create variable to make cloning these repositories easier.
-
-ORIGINAL_DIR=$(pwd)
+mkdir -p /etc/elogind/system-sleep/
 
 
-# -- Install XR Linux Driver to automatically recognize supported XR glasses.
-# -- FIXME: There are no Debian packages available, if and when they are, switch to use them instead.
+urls=(
+  "https://raw.githubusercontent.com/Nitrux/iso-tool/refs/heads/legacy/configs/files/other/elogind/system-sleep/nvidia-sleep"
+  "https://raw.githubusercontent.com/Nitrux/iso-tool/refs/heads/legacy/configs/files/other/elogind/system-sleep/restart-nm-after-sleep"
+  "https://raw.githubusercontent.com/Nitrux/iso-tool/refs/heads/legacy/configs/files/other/elogind/system-sleep/sleep-lockscreen-hook"
+)
 
-ARCH=$(uname -m)
-REPO="wheaney/XRLinuxDriver"
-API_URL="https://api.github.com/repos/${REPO}/releases/latest"
-TMP_DIR=$(mktemp -d)
-ARCHIVE_NAME="xrDriver-${ARCH}.tar.gz"
-
-response=$(curl -sL "${API_URL}")
-download_url=$(echo "${response}" | grep -oP "https://github.com/${REPO}/releases/download/.*/xrDriver-${ARCH}.tar.gz")
-
-curl -L -o "${ARCHIVE_NAME}" "${download_url}"
-tar -xzf "${ARCHIVE_NAME}" -C "${TMP_DIR}"
-
-mv "${TMP_DIR}/xr_driver/bin/"* /usr/bin/
-mv "${TMP_DIR}/xr_driver/lib/"* /usr/lib/x86_64-linux-gnu/
-mv "${TMP_DIR}/xr_driver/udev/"* /etc/udev/rules.d/
-
-rm -f "${ARCHIVE_NAME}"
+for url in "${urls[@]}"; do
+  dl_file "$url" || exit 1
+  file_name=$(basename "$url")
+  install -Dm755 "/tmp/$file_name" "/etc/elogind/system-sleep/$file_name"
+done
 
 
-# -- Install AX88179_178A Linux driver for AX88179 USB 3.0 Ethernet adapters.
-# -- FIXME: There are no Debian packages available, if and when they are, switch to use them instead.
+# -- Create symlinks for MauiKit 4 and MauiKit Frameworks 4.
 
-TEMP_DIR4=$(mktemp -d)
-git clone https://github.com/Nitrux/asix-ax88179-dkms.git "$TEMP_DIR4"
-cp -r "$TEMP_DIR4" /usr/src/asix-ax88179-dkms-3.4.0
-dkms add -m asix-ax88179-dkms -v 3.4.0
-dkms build -m asix-ax88179-dkms -v 3.4.0
-dkms install --force -m asix-ax88179-dkms -v 3.4.0
-mv /usr/src/asix-ax88179-dkms-3.4.0/asix-ax88179.conf /etc/modprobe.d/asix-ax88179.conf
-cd "$ORIGINAL_DIR"
+MAUIKIT_VERSION="4.0.1"
+MAUIKIT_SO_VERSION="4"
 
-
-
-# -- Add Hyper-V modules to load at boot time.
-
-HV_MOD_CONF="/etc/modules-load.d/hyperv-modules-boot-time.conf"
-
-rm -f "$HV_MOD_CONF"
-printf '%s\n' hv_balloon hv_netvsc hv_storvsc hv_utils hv_vmbus hv_sock >> "$HV_MOD_CONF"
+create_symlink "/usr/lib/x86_64-linux-gnu/libMauiKit$MAUIKIT_SO_VERSION.so.$MAUIKIT_VERSION" "/usr/lib/x86_64-linux-gnu/libMauiKit$MAUIKIT_SO_VERSION.so$MAUIKIT_SO_VERSION"
+create_symlink "/usr/lib/x86_64-linux-gnu/libMauiKitFileBrowsing$MAUIKIT_SO_VERSION.so.$MAUIKIT_VERSION" "/usr/lib/x86_64-linux-gnu/libMauiKitFileBrowsing$MAUIKIT_SO_VERSION.so$MAUIKIT_SO_VERSION"
+create_symlink "/usr/lib/x86_64-linux-gnu/libMauiKitTextEditor$MAUIKIT_SO_VERSION.so.$MAUIKIT_VERSION" "/usr/lib/x86_64-linux-gnu/libMauiKitTextEditor$MAUIKIT_SO_VERSION.so$MAUIKIT_SO_VERSION"
+create_symlink "/usr/lib/x86_64-linux-gnu/libMauiKitImageTools$MAUIKIT_SO_VERSION.so.$MAUIKIT_VERSION" "/usr/lib/x86_64-linux-gnu/libMauiKitImageTools$MAUIKIT_SO_VERSION.so$MAUIKIT_SO_VERSION"
+create_symlink "/usr/lib/x86_64-linux-gnu/libMauiKitAccounts$MAUIKIT_SO_VERSION.so.$MAUIKIT_VERSION" "/usr/lib/x86_64-linux-gnu/libMauiKitAccounts$MAUIKIT_SO_VERSION.so$MAUIKIT_SO_VERSION"
+create_symlink "/usr/lib/x86_64-linux-gnu/libMauiKitDocuments$MAUIKIT_SO_VERSION.so.$MAUIKIT_VERSION" "/usr/lib/x86_64-linux-gnu/libMauiKitDocuments$MAUIKIT_SO_VERSION.so$MAUIKIT_SO_VERSION"
+create_symlink "/usr/lib/x86_64-linux-gnu/libMauiKitTerminal$MAUIKIT_SO_VERSION.so.$MAUIKIT_VERSION" "/usr/lib/x86_64-linux-gnu/libMauiKitTerminal$MAUIKIT_SO_VERSION.so$MAUIKIT_SO_VERSION"
+create_symlink "/usr/lib/x86_64-linux-gnu/libMauiMan$MAUIKIT_SO_VERSION.so.$MAUIKIT_VERSION" "/usr/lib/x86_64-linux-gnu/libMauiMan$MAUIKIT_SO_VERSION.so$MAUIKIT_SO_VERSION"
 
 
-# -- Update the desktop launcher of the NX Software Center.
+# -- Fix issue with AppArmor profile for Samba that is too restrictive.
 
-DESKTOP_FILE="/usr/share/applications/org.nx.softwarecenter.desktop"
+APPARMOR_PROFILE="/etc/apparmor.d/usr.sbin.smbd"
 
-cat << EOF > "$DESKTOP_FILE"
-[Desktop Entry]
-Name=NX Software Center
-Comment=Software store for AppImages
-Exec=/Applications/nx-software-center %U
-TryExec=/Applications/nx-software-center
-Keywords=program;software;repository;package;install;remove;update;apps;applications;appimage;
-Terminal=false
-Type=Application
-GenericName=Software Center
-Categories=Qt;KDE;System;
-StartupNotify=true
-Icon=nx-software-center
-MimeType=application/vnd.appimage;application/x-executable;
-
-SingleMainWindow=true
-EOF
+sed -i '/capability setuid,/a\  capability sys_ptrace,' "$APPARMOR_PROFILE"
+sed -i 's|@{HOMEDIRS}/\*\* .*|@{HOMEDIRS}/** rwk,|' "$APPARMOR_PROFILE"
 
 
-# -- Enforce sync only for specific filesystems, like vfat.
+# -- Edit Shelf launcher.
 
-sed -i '/^\[defaults\]/a\vfat_defaults=sync' /etc/udisks2/udisks2.conf
-
-
-# -- Disable the virtualization extensions (like Intel VT-x or AMD-V) from loading automatically when the KVM module is loaded into the kernel.
-# -- INFO: This is to make VirtualBox work.
-
-sed -i "/^options kvm /a options kvm enable_virt_at_load=0" /etc/modprobe.d/kvm.conf
+sed -i '/^Categories=/ s/\bGraphics;//' /usr/share/applications/org.kde.shelf.desktop
 
 
-# -- Mitigate Bluetooth devices disconnecting randomly.
+# -- Edit Pix launcher.
 
-MAIN_CONF="/etc/bluetooth/main.conf"
-INPUT_CONF="/etc/bluetooth/input.conf"
-
-if [ -f "$MAIN_CONF" ]; then
-    sed -i \
-        -e 's/^#DiscoverableTimeout = 0/DiscoverableTimeout = 0/' \
-        -e 's/^#PairableTimeout = 0/PairableTimeout = 0/' \
-        -e 's/^#ControllerMode = dual/ControllerMode = bredr/' \
-        "$MAIN_CONF"
-fi
-
-if [ -f "$INPUT_CONF" ]; then
-    sed -i 's/^#IdleTimeout=0/IdleTimeout=0/' "$INPUT_CONF"
-fi
-
-
-# -- Fix issue with ALSA UCM, see: https://github.com/alsa-project/alsa-ucm-conf/commit/11b028a9a01e47fc9b48e4a566803752011902e2.
-
-sed -i \
-    -e "/If\.SOFVendor {/,/}/s/Type Empty/Type String/" \
-    -e "/If\.SOFVendor {/,/}/s/String \"\${var:SOFVendor}\"/Empty \"\${var:SOFVendor}\"/" \
-    /usr/share/alsa/ucm2/Intel/sof-hda-dsp/HiFi-sof.conf
+sed -i '/^MimeType=/ s/inode\/directory;//' /usr/share/applications/org.kde.pix.desktop
 
 
 puts_success "Success! new changes applied to the system, continuing..."
@@ -406,19 +350,60 @@ puts_success "Success! new changes applied to the system, continuing..."
 
 puts_info "Updating system AppImages and static binaries, continuing..."
 
-LATEST_RELEASE_URL="https://nxos.org/ftp_up/firefox-134.0.r20250120135430-x86_64.AppImage"
+# -- Function to create /Applications.
 
-dl_file "$LATEST_RELEASE_URL"
+create_appimage_directory() {
+    if [ ! -d "/Applications" ]; then
+        echo "Creating directory: /Applications"
+        mkdir /Applications
+    else
+        echo "Directory already exists: /Applications"
+    fi
+}
 
-mv /tmp/firefox-* /Applications/firefox
+create_appimage_directory
 
-chmod +x /Applications/firefox
+
+# -- Function to download an AppImage.
+
+download_appimage() {
+    local name="$1"
+    local url="$2"
+    local destination="/Applications/$name"
+    local user_agent="BrightSign/8.2.55.5 (XT1144) Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) QtWebEngine/5.12.3 Chrome/69.0.3497.128 Safari/537.36"
+
+    echo "Downloading $name..."
+    if ! axel -a -q -k -U "$user_agent" -n 8 "$url" -o "$destination"; then
+        echo "Download failed."
+        exit 1
+    fi
+
+    if ! chmod +x "$destination"; then
+        echo "Failed to make the file executable."
+        exit 1
+    fi
+}
+
+
+# -- Download VMetal AppImage.
+
+vmetal_url="https://raw.githubusercontent.com/Nitrux/old-storage/refs/heads/master/AppImages/VMetal-x86_64.AppImage"
+vmetal_filename=$(basename "$vmetal_url")
+
+download_appimage "$vmetal_filename" "$vmetal_url"
+
+if [ "$vmetal_filename" != "vmetal" ]; then
+    echo "Renaming $vmetal_filename to vmetal"
+    mv "/Applications/$vmetal_filename" "/Applications/vmetal"
+fi
+
 
 puts_success "System AppImages and static binaries have been updated, continuing..."
 
 ####################################################
 #   End of update AppImages and static binaries.   #
 ####################################################
+
 
 puts_info "Regenerating initramfs for available kernels, continuing..."
 
@@ -430,6 +415,7 @@ puts_success "Success! The initramfs was regenerated for all available kernels, 
 
 
 puts_info "Updating GRUB menu entries, continuing..."
+
 
 # -- Update GRUB.
 # -- Whenever we add new parameters, ensure that these are added to existing installations.

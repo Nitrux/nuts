@@ -158,10 +158,8 @@ spinner() {
 
 	while ps -p "$pid" > /dev/null 2>&1; do
 		dots=$(( (dots % 3) + 1 ))
-		# Get the current timestamp.
 		local now
 		now=$(date +%s.%N)
-		# Compute the difference using awk.
 		elapsed=$(awk -v start="$start" -v now="$now" 'BEGIN { printf "%.1f", now - start }')
 		printf " [%-3s] Elapsed time: %s seconds" "$(printf '%*s' "$dots" '' | tr ' ' '.')" "$elapsed"
 		sleep "$delay"

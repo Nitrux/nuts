@@ -167,8 +167,18 @@ fi
 puts_info "Mounting /dev..."
 mount -t devtmpfs dev /dev
 
+
+# -- Mount the tmp filesystem.
+# -- Apparently this is required now? ¯\_(ツ)_/¯
+
+if mountpoint -q /tmp; then
+	puts_info "/tmp is already mounted. Unmounting..."
+	umount /tmp
+fi
+
 puts_info "Mounting /tmp..."
 mount -t tmpfs tmp /tmp
+
 
 # -- Update utility.
 
@@ -201,8 +211,7 @@ fi
 
 # -- Unmount directories after update and before exiting chroot.
 
-unmount_directory "$NUTS_DIR_SQS"
-unmount_directory "/home"
+unmount_directory "/tmp"
 unmount_directory "/dev"
 
 

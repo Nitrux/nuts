@@ -295,51 +295,56 @@ sync
 puts_success "Success! Backup has been created."
 
 
-# -- Download the OTA SquashFS with axel if it doesn't exist. Use the list of mirrors from the query file, or exit if downloading the file from all mirrors fails.
+# -- Download the OTA SquashFS with axel if it doesn't exist. Use the list of mirrors from the query file.
+# -- If the OTA file exists but it doesn't match the checksum in nuts-query.info, delete it and try again. Ends cleanly if all mirrors are exhausted.
 
 OTA_FILE="$NUTS_DIR_DLS/nuts-ota.squashfs"
-
-if [[ -f "$OTA_FILE" ]]; then
-    puts_info "OTA file found, skipping..."
-else
-	puts_warning "OTA file not found! Downloading OTA file, continuing..."
-	MIRROR_LIST=$(grep 'MIRRORLIST=' /tmp/nuts-query.info | sed -e 's/[^=]*=//' -e 's/,/ /g')
-	DOWNLOAD_SUCCESS=false
-	for MIRROR_URL in $MIRROR_LIST; do
-		puts_info "Trying mirror URL: $MIRROR_URL"
-		axel -q -n 10 -o "$OTA_FILE" "$MIRROR_URL" &
-		spinner "$!"
-		wait $!
-
-		if ! wait $!; then
-			puts_warning "Download from $MIRROR_URL failed. Trying the next mirror..."
-		else
-			puts_success "Success! OTA update download completed, continuing..."
-			DOWNLOAD_SUCCESS=true
-			break
-		fi
-    done
-
-	if [ "$DOWNLOAD_SUCCESS" = false ]; then
-		puts_error "Download failed from all mirrors, quitting."
-		unmount_on_failure
-	fi
-fi
-
-
-# -- Verify the checksum of the OTA file. Use the checksum from the query file.
-# -- If the OTA file exist but it doesn't match the checksum in nuts-query.info, delete it and exit.
-
-LOCAL_OTA_SUM=$(md5sum "$NUTS_DIR_DLS"/nuts-ota.squashfs | awk '{ print $1 }')
+MIRROR_LIST=$(grep 'MIRRORLIST=' /tmp/nuts-query.info | sed -e 's/[^=]*=//' -e 's/,/ /g')
 NQ_OTA_SUM=$(grep -oP '(?<=OTASUM=)[a-f0-9]{32}' /tmp/nuts-query.info)
 
-if [[ "$LOCAL_OTA_SUM" == "$NQ_OTA_SUM" ]]; then
-	puts_info "OTA file checksum matches, continuing..."
+DOWNLOAD_SUCCESS=false
+
+if [[ -f "$OTA_FILE" ]]; then
+    puts_info "OTA file found, verifying checksum..."
+    LOCAL_OTA_SUM=$(md5sum "$OTA_FILE" | awk '{ print $1 }')
+    if [[ "$LOCAL_OTA_SUM" == "$NQ_OTA_SUM" ]]; then
+        puts_success "OTA file checksum matches, skipping download."
+        DOWNLOAD_SUCCESS=true
+    else
+        puts_warning "OTA file checksum mismatch, deleting file and re-downloading..."
+        rm -f "$OTA_FILE"
+    fi
 else
-	puts_warning "OTA file checksum does not match, deleting file..."
-	rm "$NUTS_DIR_DLS"/nuts-ota.squashfs
-	puts_error "Mismatched OTA file deleted; reboot and try to update again, quitting."
-	unmount_on_failure
+    puts_warning "OTA file not found! Attempting to download..."
+fi
+
+if [[ "$DOWNLOAD_SUCCESS" = false ]]; then
+    for MIRROR_URL in $MIRROR_LIST; do
+        puts_info "Trying mirror URL: $MIRROR_URL"
+        axel -q -n 10 -o "$OTA_FILE" "$MIRROR_URL" &
+        spinner "$!"
+        wait $!
+
+        if ! wait $!; then
+            puts_warning "Download from $MIRROR_URL failed. Trying the next mirror..."
+            continue
+        fi
+
+        LOCAL_OTA_SUM=$(md5sum "$OTA_FILE" | awk '{ print $1 }')
+        if [[ "$LOCAL_OTA_SUM" == "$NQ_OTA_SUM" ]]; then
+            puts_success "Success! OTA update downloaded and verified."
+            DOWNLOAD_SUCCESS=true
+            break
+        else
+            puts_warning "Checksum mismatch for $MIRROR_URL. Deleting file and trying next mirror..."
+            rm -f "$OTA_FILE"
+        fi
+    done
+fi
+
+if [[ "$DOWNLOAD_SUCCESS" = false ]]; then
+    puts_error "Download failed from all mirrors or checksums didn't match. Quitting."
+    unmount_on_failure
 fi
 
 
@@ -356,24 +361,35 @@ puts_info "Updating ${CURRENT_DIST^}, continuing..."
 
 APPIMAGE_URL="https://raw.githubusercontent.com/Nitrux/storage/master/Other/AppImages/dpkg-1.19.7-x86_64.AppImage"
 AIFILE_DL_PATH="/tmp/dpkg-1.19.7-x86_64.AppImage"
-AIPKG_MANAGER="/tmp/pkgman"
+EXTRACT_DIR="/tmp/pkgman-extracted"
+AIPKG_MANAGER="$EXTRACT_DIR/squashfs-root/AppRun"
 
 VAR_DATA_TARGET=$(grep 'MINTARGET=' /tmp/nuts-query.info | cut -d'=' -f2)
 VAR_DATA_URL="https://raw.githubusercontent.com/Nitrux/storage/master/Other/var-lib-dpkg-$VAR_DATA_TARGET.tar.xz"
 TARFILE_DL_PATH="/tmp/var-lib-dpkg-$VAR_DATA_TARGET.tar.xz"
 
 if [[ -f "$AIPKG_MANAGER" ]]; then
-	puts_info "AppImage already exists, skipping download, continuing..."
+	puts_info "Extracted AppImage already exists, skipping download, continuing..."
 else
-    if dl_file "$APPIMAGE_URL" > "$AIFILE_DL_PATH" && \
-		[[ $(file --mime-type -b "$AIFILE_DL_PATH") == "application/x-executable" ]] && \
-		mv "$AIFILE_DL_PATH" "$AIPKG_MANAGER" && chmod +x "$AIPKG_MANAGER"; then
-		puts_success "Success! AppImage downloaded and processed successfully, continuing..."
-    else
-		puts_error "Failed to download or process the AppImage, quitting."
-		[[ -f "$AIPKG_MANAGER" ]] && rm "$AIPKG_MANAGER"
+	puts_info "Downloading AppImage..."
+	if dl_file "$APPIMAGE_URL" > "$AIFILE_DL_PATH" && \
+		[[ $(file --mime-type -b "$AIFILE_DL_PATH") == "application/x-executable" ]]; then
+		puts_info "Extracting AppImage..."
+		mkdir -p "$EXTRACT_DIR"
+		chmod +x "$AIFILE_DL_PATH"
+		(cd "$EXTRACT_DIR" && "$AIFILE_DL_PATH" --appimage-extract > /dev/null 2>&1)
+		if [[ -x "$AIPKG_MANAGER" ]]; then
+			puts_success "Success! AppImage extracted successfully, continuing..."
+		else
+			puts_error "Extraction failed or AppRun not found, quitting."
+			rm -rf "$EXTRACT_DIR" "$AIFILE_DL_PATH"
+			unmount_on_failure
+		fi
+	else
+		puts_error "Failed to download or identify AppImage, quitting."
+		rm -f "$AIFILE_DL_PATH"
 		unmount_on_failure
-    fi
+	fi
 fi
 
 ln -svf "$AIPKG_MANAGER" /usr/bin/dpkg > /dev/null 2>&1
@@ -406,7 +422,7 @@ fi
 
 puts_success "Success! OTA update process completed successfully, continuing..."
 
-[[ -f "$AIPKG_MANAGER" ]] && rm "$AIPKG_MANAGER" /usr/bin/dpkg > /dev/null 2>&1 &
+[[ -d "$EXTRACT_DIR" ]] && rm -rf "$EXTRACT_DIR" /usr/bin/dpkg > /dev/null 2>&1 &
 
 
 # -- Clean up the updated root after updating.
