@@ -1,26 +1,7 @@
 #!/usr/bin/env bash
 
-#############################################################################################################################################################################
-#   The license used for this file and its contents is: BSD-3-Clause                                                                                                        #
-#                                                                                                                                                                           #
-#   Copyright <2023-2025> <Uri Herrera <uri_herrera@nxos.org>>                                                                                                              #
-#                                                                                                                                                                           #
-#   Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:                          #
-#                                                                                                                                                                           #
-#    1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.                                        #
-#                                                                                                                                                                           #
-#    2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer                                      #
-#       in the documentation and/or other materials provided with the distribution.                                                                                         #
-#                                                                                                                                                                           #
-#    3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software                    #
-#       without specific prior written permission.                                                                                                                          #
-#                                                                                                                                                                           #
-#    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,                      #
-#    THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS                  #
-#    BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE                 #
-#    GOODS OR SERVICES; LOSS OF USE, DATA,   OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,                      #
-#    STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   #
-#############################################################################################################################################################################
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright 2023-2026 <Nitrux Latinoamericana S.C. <hello@nxos.org>>
 
 
 # -- Exit on errors.
@@ -35,51 +16,35 @@ COMP_NAME="(Update Component)"
 CRU_VERSION="$(md5sum "$0" | cut -c -32)"
 
 
-# -- Print informative messages to stderr.
+# -- Source shared functions safely.
+# -- If the library is missing (first run on old system), define fallbacks so the script doesn't crash.
 
-puts_info() {
-	if [ -n "$1" ]; then
-		printf "%s: \e[34mInfo:\e[0m %s\n" "$TOOL_NAME" "$*" >&2
-	fi
-}
-
-
-# -- Print success messages to stderr.
-
-puts_success() {
-	if [ -n "$1" ]; then
-		printf "%s: \e[32mSuccess:\e[0m %s\n" "$TOOL_NAME" "$*" >&2
-	fi
-}
-
-
-# -- Print error messages to stderr.
-
-puts_error() {
-	if [ -n "$1" ]; then
-		printf "%s: \e[31mError:\e[0m %b\n" "$TOOL_NAME" "$*" >&2
-	fi
-}
-
-
-# -- Print messages or text using multiple lines to stderr.
-
-print_message() {
-	if [ $# -eq 0 ]; then
-		printf "\n" >&2
-	else
-		printf "%s\n" "$@" >&2
-	fi
-}
-
-
-# -- Print warning messages to stderr.
-
-puts_warning() {
-	if [ -n "$1" ]; then
-		printf "%s: \e[33mWarning:\e[0m %s\n" "$TOOL_NAME" "$*" >&2
-	fi
-}
+if [ -f "/usr/lib/nuts/functions" ]; then
+    # shellcheck source=/dev/null
+    . "/usr/lib/nuts/functions"
+else
+    puts_info()    { printf 'Info: %s\n' "$*" >&2; }
+    puts_success() { printf 'Success: %s\n' "$*" >&2; }
+    puts_warning() { printf 'Warning: %s\n' "$*" >&2; }
+    puts_error()   { printf 'Error: %s\n' "$*" >&2; }
+    
+    spinner() {
+        local pid=$1
+        while kill -0 "$pid" 2>/dev/null; do
+            printf '.'
+            sleep 0.5
+        done
+        printf '\n'
+    }
+    
+    unmount_directory() {
+        if mountpoint -q "$1"; then umount "$1"; fi
+    }
+    
+    dl_file() {
+        if ! axel -n 10 -o "/tmp" "$1"; then return 1; fi
+    }
+fi
 
 
 # -- Display version of running component.
@@ -99,208 +64,95 @@ if [[ ! -f $CONFIG_FILE ]]; then
     puts_error "$TOOL_NAME configuration file not found!, quitting." 2>&1
     exit 1
 else
-	puts_success "Success! $TOOL_NAME configuration file found, continuing..."
-	# shellcheck source=/dev/null
-	. "$CONFIG_FILE"
+    puts_success "$TOOL_NAME configuration file found, continuing..."
+    # shellcheck source=/dev/null
+    . "$CONFIG_FILE"
 fi
 
 
-# -- Functions.
+# -- Component-specific functions.
 
-dl_file() {
-	local FILE_URL="$1"
-	local FILE_NAME
-	FILE_NAME=$(basename "$FILE_URL")
-	local FILE_PATH="/tmp/$FILE_NAME"
+cleanup() {
+    local exit_code=$?
+    
+    unmount_directory "$NUTS_DIR_SQS"
+    unmount_directory "/home"
+    unmount_directory "/var/lib"
 
-	[ -f "$FILE_PATH" ] && rm "$FILE_PATH"
-
-	if ! command -v axel >/dev/null 2>&1; then
-		puts_error "axel command not found, unable to download file, quitting."
-		return 1
-	fi
-
-	if ! curl --output /dev/null --silent --head --fail "$FILE_URL"; then
-		puts_error "File URL is not accessible, unable to download file, quitting."
-		return 1
-	fi
-
-	if ! axel -q -n 10 -o "/tmp" "$FILE_URL"; then
-		puts_error "Failed to download file, quitting."
-		return 1
-	fi
+    if [ $exit_code -ne 0 ]; then
+        puts_error "Component exited unexpectedly with code $exit_code."
+    fi
 }
 
-bak_cc() {
-	UPDATE_DELETES_BACKUPS=$(grep '^UPDATE_DELETES_BACKUPS=' /etc/nuts.conf | cut -d'=' -f2)
-
-	if [ "$UPDATE_DELETES_BACKUPS" != "yes" ]; then
-		return 0
-	fi
-
-	if [ ! -d "$NUTS_DIR_BAK" ]; then
-		return 1
-	fi
-
-	if ! [[ "$BACKUPS_TO_KEEP" =~ ^[0-9]+$ ]]; then
-		return 1
-	fi
-
-	find "$NUTS_DIR_BAK" -maxdepth 1 -type f -exec rm {} +
-	find "$NUTS_DIR_BAK" -maxdepth 1 -type f | sort -r | tail -n +$((BACKUPS_TO_KEEP + 1)) | xargs --no-run-if-empty rm
-}
-
-unmount_directory() {
-	local DIRECTORY="$1"
-
-	if mountpoint -q "$DIRECTORY"; then
-		puts_info "Unmounting: $DIRECTORY"
-		umount "$DIRECTORY"
-	else
-		puts_info "Directory is not mounted: $DIRECTORY"
-	fi
-}
-
-unmount_on_failure() {
-	unmount_directory "/home" || { puts_error "Failed to unmount /home, quitting."; }
-	unmount_directory "/dev" || { puts_error "Failed to unmount /dev, quitting."; }
-	exit 1
-}
-
-spinner() {
-	local pid="$1"
-	local delay=0.1
-	local start
-	start=$(date +%s.%N)
-	local dots=0
-	local elapsed=0.0
-
-	while ps -p "$pid" > /dev/null 2>&1; do
-		dots=$(( (dots % 3) + 1 ))
-		local now
-		now=$(date +%s.%N)
-		elapsed=$(awk -v start="$start" -v now="$now" 'BEGIN { printf "%.1f", now - start }')
-		printf " [%-3s] Elapsed time: %s seconds" "$(printf '%*s' "$dots" '' | tr ' ' '.')" "$elapsed"
-		sleep "$delay"
-		printf "\r"
-	done
-	printf "\n"
-}
-
-
-# -- Variables.
-
-CURRENT_DIST=$(awk -F'=' '/VERSION_CODENAME/{print $NF}' /etc/os-release)
+trap cleanup EXIT
 
 #   ====== START ======
 
-# -- Mount the devices filesystem.
-# -- Check if /dev is already mounted.
-
-if mountpoint -q /dev; then
-	puts_info "/dev is already mounted. Unmounting..."
-	umount /dev
-fi
-
-puts_info "Mounting /dev..."
-mount -t devtmpfs dev /dev
-
-
 # -- Mount NX_HOME partition.
-# -- When entering the chroot, only the root partition is mounted, but that's likely to not have enough storage.
-# -- So, let's use the /home partition. We're discovering NX_HOME by the LABEL of the partition.
+# -- When entering the chroot, only the root partition is mounted, but that's likely not to have enough storage.
+# -- So, let's use the /home partition. We're discovering NX_HOME from the partition's LABEL.
 
 HOME_PARTITION=$(findfs LABEL=NX_HOME)
 
-if mountpoint -q /home; then
-	puts_info "/home is already mounted. Unmounting..."
-	umount /home
+if ! mountpoint -q /home; then
+    puts_info "Mounting: $HOME_PARTITION to /home"
+    mount -t auto "$HOME_PARTITION" /home
+else
+    puts_info "/home is already mounted."
 fi
-
-puts_info "Mounting $HOME_PARTITION to /home..."
-mount -t auto "$HOME_PARTITION" /home
 
 
 # -- Mount NX_VAR_LIB partition.
 # -- We need to mount this partition so that when nuts-ccu runs update-grub, the GRUB menu is correctly updated.
 
-VAR_LIB_PARTITION=$(findfs LABEL=NX_VAR_LIB)
-
-if mountpoint -q /var/lib; then
-	puts_info "/var/lib is already mounted. Unmounting..."
-	umount /var/lib
+if ! VAR_LIB_PARTITION=$(findfs LABEL=NX_VAR_LIB 2>/dev/null); then
+    puts_error "Cannot find partition with label NX_VAR_LIB. This partition is required for GRUB updates, quitting."
+    exit 1
 fi
 
-puts_info "Mounting $VAR_LIB_PARTITION to /var/lib..."
-mount -t auto "$VAR_LIB_PARTITION" /var/lib
+if mountpoint -q /var/lib; then
+    current_src=$(findmnt -n -o SOURCE --target /var/lib)
+    if [ "$current_src" = "$VAR_LIB_PARTITION" ]; then
+        puts_info "/var/lib is already mounted."
+    else
+        puts_warning "/var/lib is mounted from $current_src, expected $VAR_LIB_PARTITION. Remounting..."
+        umount /var/lib
+        mount -t auto "$VAR_LIB_PARTITION" /var/lib
+    fi
+else
+    puts_info "Mounting: $VAR_LIB_PARTITION to /var/lib"
+    mount -t auto "$VAR_LIB_PARTITION" /var/lib
+fi
 
 
-# -- Create the directories for nuts.
-# -- Create working directories in /home since this partition will likely have more space than the root partition.
+# -- Create working directories in /home since this partition will likely have more space.
 
-DIRECTORIES=("$NUTS_DIR_BAK" "$NUTS_DIR_XFS" "$NUTS_DIR_DLS" "$NUTS_DIR_SQS")
+DIRECTORIES=("$NUTS_DIR_XFS" "$NUTS_DIR_DLS" "$NUTS_DIR_SQS")
+CREATED_COUNT=0
 
 for DIR in "${DIRECTORIES[@]}"; do
-	if [[ ! -d "$DIR" ]]; then
-	puts_warning "Directory '$DIR' does not exist. Creating the directory..."
-		if ! mkdir -p "$DIR"; then
-			puts_error "Failed to create directory '$DIR', quitting."
-			unmount_on_failure
-		fi
-	puts_info "Directory '$DIR' created successfully."
-	fi
+    if [[ ! -d "$DIR" ]]; then
+        if ! mkdir -p "$DIR"; then
+            puts_error "Failed to create directory '$DIR', quitting."
+            exit 1
+        fi
+        CREATED_COUNT=$((CREATED_COUNT+1))
+    fi
 done
 
-puts_success "Success! All required directories exist, continuing..."
+if [ "$CREATED_COUNT" -gt 0 ]; then
+    puts_info "Initialized $CREATED_COUNT missing working directories."
+fi
 
-
-# -- Run the backup cleaner.
-# -- Only keep the amount of backups defined in nuts.conf.
-
-puts_info "Cleaning older backups, continuing..."
-bak_cc
-
-
-# -- Create the backup using SquashFS.
-# -- We assume that the /home partition is on an internal storage device (SATA or NVME), but one can never know, so run sync to flush the write cache.
-# -- To exclude a file specifiy the full path, i.e., /etc/shadow
-# -- To exclude a directory and its contents specify the path of the directory, i.e., /home/
-# -- To include a directory but exclude its contents specify the path of the directory and use an asterisk, i.e., /home/*
-# -- To include a directory and its contents or a file, don't add either to the list.
-
-puts_info "Creating backup of ${CURRENT_DIST^}, continuing..."
-
-BACKUP_FILE="$NUTS_DIR_BAK/nuts-backup-$DATE_BACKUP_FILE.squashfs"
-
-mksquashfs / "$BACKUP_FILE" \
-	-quiet \
-	-not-reproducible \
-	-e /boot/* \
-	-e /dev/* \
-	-ef /etc/shadow \
-	-e /home/ \
-	-e /proc/ \
-	-e /run/* \
-	-e /sys/* \
-	-e /tmp/* \
-	-e /var/{cache,lib,local,lock,log,mail,opt,run,spool,tmp}/ \
-	-comp zstd \
-	-Xcompression-level 22 \
-	-b 1048576
-
-md5sum "$BACKUP_FILE" > "$NUTS_DIR_BAK/nuts-backup.md5sum"
-
-sync
-
-puts_success "Success! Backup has been created."
+puts_success "All required directories exist, continuing..."
 
 
 # -- Download the OTA SquashFS with axel if it doesn't exist. Use the list of mirrors from the query file.
 # -- If the OTA file exists but it doesn't match the checksum in nuts-query.info, delete it and try again. Ends cleanly if all mirrors are exhausted.
 
 OTA_FILE="$NUTS_DIR_DLS/nuts-ota.squashfs"
-MIRROR_LIST=$(grep 'MIRRORLIST=' /tmp/nuts-query.info | sed -e 's/[^=]*=//' -e 's/,/ /g')
-NQ_OTA_SUM=$(grep -oP '(?<=OTASUM=)[a-f0-9]{32}' /tmp/nuts-query.info)
+MIRROR_LIST=$(grep '^MIRRORLIST=' /tmp/nuts-query.info | sed -e 's/[^=]*=//' -e 's/,/ /g')
+NQ_OTA_SUM=$(grep -oP '(?<=^OTASUM=)[a-f0-9]{32}' /tmp/nuts-query.info)
 
 DOWNLOAD_SUCCESS=false
 
@@ -322,17 +174,25 @@ if [[ "$DOWNLOAD_SUCCESS" = false ]]; then
     for MIRROR_URL in $MIRROR_LIST; do
         puts_info "Trying mirror URL: $MIRROR_URL"
         axel -q -n 10 -o "$OTA_FILE" "$MIRROR_URL" &
-        spinner "$!"
-        wait $!
+        axel_pid=$!
 
-        if ! wait $!; then
+        while kill -0 "$axel_pid" 2>/dev/null; do
+            if [ -f "$OTA_FILE" ]; then
+                current_size=$(du -h "$OTA_FILE" | awk '{print $1}')
+                printf "\033[34mInfo:\033[0m Downloaded: %-10s\r" "$current_size" > /dev/tty
+            fi
+            sleep 1
+        done
+        printf "\n" > /dev/tty
+
+        if ! wait "$axel_pid"; then
             puts_warning "Download from $MIRROR_URL failed. Trying the next mirror..."
             continue
         fi
 
         LOCAL_OTA_SUM=$(md5sum "$OTA_FILE" | awk '{ print $1 }')
         if [[ "$LOCAL_OTA_SUM" == "$NQ_OTA_SUM" ]]; then
-            puts_success "Success! OTA update downloaded and verified."
+            puts_success "OTA file downloaded and verified, continuing..."
             DOWNLOAD_SUCCESS=true
             break
         else
@@ -344,7 +204,7 @@ fi
 
 if [[ "$DOWNLOAD_SUCCESS" = false ]]; then
     puts_error "Download failed from all mirrors or checksums didn't match. Quitting."
-    unmount_on_failure
+    exit 1
 fi
 
 
@@ -353,14 +213,15 @@ fi
 mount "$NUTS_DIR_DLS"/nuts-ota.squashfs "$NUTS_DIR_SQS"
 
 
-# -- Now comes the good part; update the current installation.
-# -- Specify data archive when upgrading using the same version set as the minimum target in nuts-query.
+# -- Specify the data archive when upgrading using the same version set as the minimum target in nuts-query.
 # -- We assume that VAR_DATA_TARGET will match MINTARGET in nuts-query.conf since we've already done a test in the main component.
+
+CURRENT_DIST=$(awk -F'=' '/VERSION_CODENAME/{print $NF}' /usr/lib/os-release)
 
 puts_info "Updating ${CURRENT_DIST^}, continuing..."
 
-APPIMAGE_URL="https://raw.githubusercontent.com/Nitrux/storage/master/Other/AppImages/dpkg-1.19.7-x86_64.AppImage"
-AIFILE_DL_PATH="/tmp/dpkg-1.19.7-x86_64.AppImage"
+APPIMAGE_URL="https://raw.githubusercontent.com/Nitrux/storage/master/Other/AppImages/dpkg-1.22.21-x86_64.AppImage"
+AIFILE_DL_PATH="/tmp/dpkg-1.22.21-x86_64.AppImage"
 EXTRACT_DIR="/tmp/pkgman-extracted"
 AIPKG_MANAGER="$EXTRACT_DIR/squashfs-root/AppRun"
 
@@ -369,60 +230,155 @@ VAR_DATA_URL="https://raw.githubusercontent.com/Nitrux/storage/master/Other/var-
 TARFILE_DL_PATH="/tmp/var-lib-dpkg-$VAR_DATA_TARGET.tar.xz"
 
 if [[ -f "$AIPKG_MANAGER" ]]; then
-	puts_info "Extracted AppImage already exists, skipping download, continuing..."
+    puts_info "Extracted OTA tooling already exists, skipping download, continuing..."
 else
-	puts_info "Downloading AppImage..."
-	if dl_file "$APPIMAGE_URL" > "$AIFILE_DL_PATH" && \
-		[[ $(file --mime-type -b "$AIFILE_DL_PATH") == "application/x-executable" ]]; then
-		puts_info "Extracting AppImage..."
-		mkdir -p "$EXTRACT_DIR"
-		chmod +x "$AIFILE_DL_PATH"
-		(cd "$EXTRACT_DIR" && "$AIFILE_DL_PATH" --appimage-extract > /dev/null 2>&1)
-		if [[ -x "$AIPKG_MANAGER" ]]; then
-			puts_success "Success! AppImage extracted successfully, continuing..."
-		else
-			puts_error "Extraction failed or AppRun not found, quitting."
-			rm -rf "$EXTRACT_DIR" "$AIFILE_DL_PATH"
-			unmount_on_failure
-		fi
-	else
-		puts_error "Failed to download or identify AppImage, quitting."
-		rm -f "$AIFILE_DL_PATH"
-		unmount_on_failure
-	fi
+    puts_info "Downloading OTA tooling..."
+    
+    if dl_file "$APPIMAGE_URL"; then
+        if [[ $(file --mime-type -b "$AIFILE_DL_PATH") == "application/x-pie-executable" ]]; then
+            puts_info "Extracting OTA tooling..."
+            mkdir -p "$EXTRACT_DIR"
+            chmod +x "$AIFILE_DL_PATH"
+            (cd "$EXTRACT_DIR" && "$AIFILE_DL_PATH" --appimage-extract > /dev/null 2>&1)
+            if [[ -x "$AIPKG_MANAGER" ]]; then
+                puts_success "OTA tooling extracted successfully, continuing..."
+            else
+                puts_error "Extraction failed or AppRun not found, quitting."
+                rm -rf "$EXTRACT_DIR" "$AIFILE_DL_PATH"
+                exit 1
+            fi
+        else
+            puts_error "Downloaded file is not a valid file, quitting."
+            rm -f "$AIFILE_DL_PATH"
+            exit 1
+        fi
+    else
+        puts_error "Failed to download OTA tooling, quitting."
+        rm -f "$AIFILE_DL_PATH"
+        exit 1
+    fi
 fi
 
 ln -svf "$AIPKG_MANAGER" /usr/bin/dpkg > /dev/null 2>&1
+
+DPKG_TOOLS=(
+    "dpkg-deb"
+    "dpkg-divert"
+    "dpkg-query"
+    "dpkg-realpath"
+    "dpkg-split"
+    "dpkg-statoverride"
+    "dpkg-trigger"
+    "dpkg-maintscript-helper"
+    "update-alternatives"
+)
+
+for tool in "${DPKG_TOOLS[@]}"; do
+    tool_path="$EXTRACT_DIR/squashfs-root/usr/bin/$tool"
+    if [[ -f "$tool_path" ]]; then
+        ln -svf "$tool_path" "/usr/bin/$tool" > /dev/null 2>&1
+    fi
+done
+
+if [ -d "$EXTRACT_DIR/squashfs-root/usr/share/dpkg" ]; then
+    mkdir -p /usr/share
+    ln -svf "$EXTRACT_DIR/squashfs-root/usr/share/dpkg" /usr/share/dpkg > /dev/null 2>&1
+fi
+
+
+# -- Download var archive.
 
 puts_info "Fetching system data archive, continuing..."
 
 [[ -f "$TARFILE_DL_PATH" ]] && rm "$TARFILE_DL_PATH"
 
-if dl_file "$VAR_DATA_URL" > "$TARFILE_DL_PATH" && \
-	mkdir -p /var/lib/dpkg && \
-	(cd / && tar -xf "$TARFILE_DL_PATH") && \
-	[ -f /var/lib/dpkg/status ]; then
-	puts_success "Success! Data archive downloaded and extracted successfully, continuing..."
+if dl_file "$VAR_DATA_URL" && \
+   mkdir -p /var/lib/dpkg && \
+   (cd / && tar -xf "$TARFILE_DL_PATH" >/dev/null 2>&1) && \
+   [ -f /var/lib/dpkg/status ]; then
+    puts_success "Data archive downloaded and extracted successfully, continuing..."
 else
-	puts_error "Failed to download or extract the data archive, quitting."
-	[[ -f "$TARFILE_DL_PATH" ]] && rm "$TARFILE_DL_PATH"
-	unmount_on_failure
+    puts_error "Failed to download or extract the data archive, quitting."
+    [[ -f "$TARFILE_DL_PATH" ]] && rm "$TARFILE_DL_PATH"
+    exit 1
 fi
+
+
+# -- Apply OTA update.
 
 puts_info "Proceed to apply OTA update, continuing..."
 
-find "${NUTS_DIR_SQS}/ota/updates/" -name '*.deb' -exec sh -c "DEBIAN_FRONTEND=noninteractive $AIPKG_MANAGER --force-all -i \"\$0\"" {} \; > /dev/null 2>&1 &
-spinner "$!"
-wait $!
+if (
+    export DEBIAN_FRONTEND=noninteractive
 
-if ! wait $!; then
-	puts_error "Failed to apply OTA update, quitting."
-	unmount_on_failure
+    export TMPDIR=/tmp
+    mkdir -p /tmp
+    chmod 1777 /tmp
+
+    puts_info "Phase 1: Unpacking OTA content, please wait..."
+
+    SEARCH_PATHS=("${NUTS_DIR_SQS}/ota/updates/")
+
+    if [ "$(get_gpu_manufacturer)" == "NVIDIA" ] && [ -d "${NUTS_DIR_SQS}/ota/nvidia/" ]; then
+        puts_info "NVIDIA hardware detected. Enabling NVIDIA-specific updates, please wait..."
+        SEARCH_PATHS+=("${NUTS_DIR_SQS}/ota/nvidia/")
+    fi
+
+    if ! find "${SEARCH_PATHS[@]}" -name '*.deb' -print0 | \
+        xargs -0 -n 120 "$AIPKG_MANAGER" --force-all --unpack >/dev/null 2>&1; then
+        puts_error "Failed to unpack OTA content, quitting."
+        exit 1
+    fi
+
+    puts_info "Phase 2: Configuring OTA content (repeat until clean), please wait..."
+
+    max_passes=15
+    pass=1
+    last_audit=""
+
+    while :; do
+        puts_info "Configuration pass ${pass}/${max_passes}..."
+        "$AIPKG_MANAGER" --force-all --configure -a >/dev/null 2>&1 || true
+
+        audit_out=$("$AIPKG_MANAGER" --audit 2>/dev/null || true)
+
+        if [ -z "$audit_out" ]; then
+            puts_success "OTA content configuration completed, continuing..."
+            exit 0
+        fi
+
+        if [ "$audit_out" = "$last_audit" ]; then
+            puts_error "$TOOL_NAME $COMP_NAME backend did not converge (no progress detected)."
+            puts_error "dpkg --audit output:"
+            printf '%s\n' "$audit_out"
+            exit 1
+        fi
+
+        if [ "$pass" -ge "$max_passes" ]; then
+            puts_error "$TOOL_NAME $COMP_NAME backend did not converge after ${max_passes} passes."
+            puts_error "dpkg --audit output:"
+            printf '%s\n' "$audit_out"
+            exit 1
+        fi
+
+        last_audit="$audit_out"
+        pass=$((pass + 1))
+        sleep 1
+    done
+); then
+    puts_success "OTA update process completed successfully, continuing..."
+else
+    puts_error "Failed to apply OTA update, quitting."
+    exit 1
 fi
 
-puts_success "Success! OTA update process completed successfully, continuing..."
+[[ -d "$EXTRACT_DIR" ]] && rm -rf "$EXTRACT_DIR" > /dev/null 2>&1
 
-[[ -d "$EXTRACT_DIR" ]] && rm -rf "$EXTRACT_DIR" /usr/bin/dpkg > /dev/null 2>&1 &
+rm -f /usr/bin/dpkg \
+      /usr/bin/dpkg-{deb,divert,query,realpath,split,statoverride,trigger,maintscript-helper} \
+      /usr/bin/update-alternatives > /dev/null 2>&1
+
+unmount_directory "$NUTS_DIR_SQS"
 
 
 # -- Clean up the updated root after updating.
@@ -431,40 +387,36 @@ puts_info "Calling the $TOOL_NAME $COMP_NAME Cleanup Crew, continuing..."
 
 CLEANUP_SCRIPT_URL="https://raw.githubusercontent.com/Nitrux/nuts/$NUTS_BRANCH/tmp/nuts-ccu"
 
-dl_file "$CLEANUP_SCRIPT_URL" >/tmp/nuts-ccu || { puts_error "Failed to download the cleanup script, quitting." ; exit 1; }
-
-if chmod +x /tmp/nuts-ccu && bash /tmp/nuts-ccu ; then
-	puts_success "Success! Cleanup script executed without problems, continuing..."
+if dl_file "$CLEANUP_SCRIPT_URL"; then
+    if chmod +x /tmp/nuts-ccu && bash /tmp/nuts-ccu >/dev/null 2>&1; then
+        puts_success "Cleanup script executed without problems, continuing..."
+    else
+        puts_error "Something failed in the cleanup script; reboot and try to update again, quitting."
+        exit 1
+    fi
 else
-	puts_error "Something failed in the cleanup script; reboot and try to update again, quitting."
-	unmount_on_failure
+    puts_error "Failed to download the cleanup script, quitting."
+    exit 1
 fi
 
 rm -f /tmp/nuts-ccu
-
-
-# -- Unmount directories after update and before exiting chroot.
-
-unmount_directory "$NUTS_DIR_SQS"
-unmount_directory "/home"
-unmount_directory "/var/lib"
-# unmount_directory "/dev"
 
 
 # -- **DO NOT PERFORM ANY FILE OPERATION AFTER THIS POINT**
 
 sync
 
+puts_success "${CURRENT_DIST^} has been updated."
 
-# -- Finalizing.
-# -- Leave the Matri... I mean, the overlay.
 
-REBOOT_SECONDS=5
+# -- Display message to the user.
 
-puts_info "Rebooting to load changes into overlay in $REBOOT_SECONDS seconds. Bye."
+puts_warning "⚠️ Important: Do not continue using the system in this state. Reboot to load the changes into the overlay and finalize the update."
 
-sleep $REBOOT_SECONDS
 
-reboot
+# -- Try to exit the chroot cleanly.
+
+unmount_directory "/home" > /dev/null 2>&1
+unmount_directory "/var/lib" > /dev/null 2>&1
 
 #   ====== END ======

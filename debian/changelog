@@ -1,3 +1,40 @@
+nuts (2.2.7) nitrux; urgency=medium
+
+  * Pre-scan arguments to allow help and version flags without root.
+  * Make version check for upgrades more robust.
+
+ -- Uri Herrera <uri_herrera@nxos.org>  Sun, 04 Jan 2026 12:03:00 -0500
+
+nuts (2.2.6) nitrux; urgency=medium
+
+  * Ensure backup always follows the active root and indicate potentially confusing environments.
+
+ -- Uri Herrera <uri_herrera@nxos.org>  Sun, 04 Jan 2026 11:37:00 -0500
+
+nuts (2.2.5) nitrux; urgency=medium
+
+  * Deprecate the restore command and removed related code.
+  * Cleanup messages and inline documentation.
+  * Move common functions to a shared library.
+  * Force immediate flush of dirty buffers to mitigate possible post-update scenarios.
+  * Handle NVIDIA driver updates in OTA.
+  * Clean up target mount when using rescue to avoid mixed states.
+  * Add duplicate protection to prevent data corruption in rescue.
+
+ -- Uri Herrera <uri_herrera@nxos.org>  Sun, 28 Dec 2025 12:17:00 -0500
+
+nuts (2.2.4) nitrux; urgency=medium
+
+  * Fix critical race conditions in nuts-cru download and update loops.
+  * Fix destructive backup cleanup logic in nuts-cru.
+  * Implement lock file mechanism in nuts to prevent concurrent execution.
+  * Improve robustness in nuts-cru, nuts-ccu, and nuts-sup using trap handlers.
+  * Refactor nuts-ccu to use git clone for fetching configuration files.
+  * Fix memory leak and silent failures in nuts-sup self-update process.
+  * Implement logic to prune old components before applying the OTA update.
+
+ -- Uri Herrera <uri_herrera@nxos.org>  Sun, 21 Dec 2025 20:00:00 -0500
+
 nuts (2.2.3) nitrux; urgency=medium
 
   * Cleanup nuts-ccu, remove the download of the Firefox AppImage, include fixes for latest release.

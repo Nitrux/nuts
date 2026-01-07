@@ -1,0 +1,151 @@
+#!/usr/bin/env bash
+
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright 2025 <Nitrux Latinoamericana S.C. <hello@nxos.org>>
+
+
+# -- Shared functions for the Nitrux Update Tool System.
+
+_puts() {
+    [ -n "${1-}" ] || return 0
+    level=$1
+    shift || true
+    [ $# -gt 0 ] || return 0
+    case "$level" in
+        info)    color='34'; label='Info' ;;
+        success) color='32'; label='Success' ;;
+        warning) color='33'; label='Warning' ;;
+        error)   color='31'; label='Error' ;;
+        *)       color='0';  label="$level" ;;
+    esac
+
+    if [ "$level" = "error" ]; then
+        printf '\033[%sm%s:\033[0m %b\n' "$color" "$label" "$*" >&2
+    else
+        printf '\033[%sm%s:\033[0m %s\n' "$color" "$label" "$*" >&2
+    fi
+}
+
+puts_info()    { _puts info "$@"; }
+puts_success() { _puts success "$@"; }
+puts_warning() { _puts warning "$@"; }
+puts_error()   { _puts error "$@"; }
+
+print_message() {
+    if [ $# -eq 0 ]; then
+        printf '\n' >&2
+    else
+        printf '%s\n' "$@" >&2
+    fi
+}
+
+spinner() {
+    local pid="$1"
+    local delay=0.1
+    local start
+    local now
+
+    if [ -f /proc/uptime ]; then
+        read -r start _ < /proc/uptime
+    else
+        start=$(date +%s.%N)
+    fi
+
+    local dots=0
+    local elapsed=0.0
+
+    while kill -0 "$pid" 2>/dev/null; do
+        dots=$(( (dots % 3) + 1 ))
+        
+        if [ -f /proc/uptime ]; then
+            read -r now _ < /proc/uptime
+        else
+            now=$(date +%s.%N)
+        fi
+
+        if [[ -n "$start" && -n "$now" ]]; then
+            elapsed=$(awk -v s="$start" -v n="$now" 'BEGIN { printf "%.1f", n - s }')
+        fi
+        
+        printf " [%-3s] Elapsed time: %s seconds" "$(printf '%*s' "$dots" '' | tr ' ' '.')" "$elapsed"
+        sleep "$delay"
+        printf "\r"
+    done
+    printf "\n"
+}
+
+unmount_directory() {
+    local DIRECTORY="$1"
+    if mountpoint -q "$DIRECTORY"; then
+        puts_info "Unmounting: $DIRECTORY"
+        umount "$DIRECTORY"
+    else
+        puts_info "Directory is not mounted: $DIRECTORY"
+    fi
+}
+
+dl_file() {
+    local FILE_URL="$1"
+    local FILE_NAME
+    FILE_NAME=$(basename "$FILE_URL")
+    local FILE_PATH="/tmp/$FILE_NAME"
+
+    [ -f "$FILE_PATH" ] && rm "$FILE_PATH"
+
+    if ! command -v axel >/dev/null 2>&1; then
+        puts_error "axel command not found, unable to download file, quitting."
+        return 1
+    fi
+
+    if ! curl --output /dev/null --silent --head --fail "$FILE_URL"; then
+        puts_error "File URL is not accessible, unable to download file, quitting."
+        return 1
+    fi
+
+    if ! axel -q -n 10 -o "/tmp" "$FILE_URL"; then
+        puts_error "Failed to download file, quitting."
+        return 1
+    fi
+}
+
+overlay_ch() {
+    if ! command -v overlayroot-chroot >/dev/null 2>&1; then
+        puts_error "Error: 'overlayroot-chroot' command not found. Please make sure it's installed and try again, quitting."
+        return 1
+    fi
+
+    overlayroot-chroot "$@"
+}
+
+get_gpu_manufacturer() {
+    if lspci -d 10de: -n -k 2>/dev/null | grep -qE "0300|0302"; then
+        echo "NVIDIA"
+        return 0
+    fi
+    return 1
+}
+
+check_connectivity() {
+    if wget -q --spider http://1.1.1.1; then
+        puts_success "This computer can reach the Internet, continuing..."
+    else
+        puts_error "This computer cannot reach the Internet, quitting."
+        exit 1
+    fi
+
+    local CHECK_URL="https://raw.githubusercontent.com/Nitrux/storage/refs/heads/master/Other/sample1.txt"
+
+    if wget -q --spider "$CHECK_URL"; then
+        if overlay_ch wget -q --spider "$CHECK_URL"; then
+             puts_success "This computer can reach GitHub (raw.githubusercontent.com), continuing..."
+        else
+             puts_error "Cannot reach GitHub (raw.githubusercontent.com) from within the overlay."
+             puts_warning "Please check your DNS settings (e.g., try using 1.1.1.1 or 8.8.8.8)."
+             exit 1
+        fi
+    else
+        puts_error "This computer cannot reach GitHub (raw.githubusercontent.com), quitting."
+        puts_warning "This utility requires downloading content from GitHub (raw.githubusercontent.com) to work."
+        exit 1
+    fi
+}

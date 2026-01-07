@@ -1,26 +1,7 @@
 #!/usr/bin/env bash
 
-#############################################################################################################################################################################
-#   The license used for this file and its contents is: BSD-3-Clause                                                                                                        #
-#                                                                                                                                                                           #
-#   Copyright <2023-2025> <Uri Herrera <uri_herrera@nxos.org>>                                                                                                              #
-#                                                                                                                                                                           #
-#   Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:                          #
-#                                                                                                                                                                           #
-#    1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.                                        #
-#                                                                                                                                                                           #
-#    2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer                                      #
-#       in the documentation and/or other materials provided with the distribution.                                                                                         #
-#                                                                                                                                                                           #
-#    3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software                    #
-#       without specific prior written permission.                                                                                                                          #
-#                                                                                                                                                                           #
-#    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,                      #
-#    THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS                  #
-#    BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE                 #
-#    GOODS OR SERVICES; LOSS OF USE, DATA,   OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,                      #
-#    STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   #
-#############################################################################################################################################################################
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright 2023-2026 <Nitrux Latinoamericana S.C. <hello@nxos.org>>
 
 
 # -- Exit on errors.
@@ -35,51 +16,39 @@ COMP_NAME="(Self-Update Component)"
 SUP_VERSION="$(md5sum "$0" | cut -c -32)"
 
 
-# -- Print informative messages to stderr.
+# -- Source shared functions safely.
+# -- If the library is missing (first run on old system), define fallbacks so the script doesn't crash.
 
-puts_info() {
-	if [ -n "$1" ]; then
-		printf "%s: \e[34mInfo:\e[0m %s\n" "$TOOL_NAME" "$*" >&2
-	fi
-}
+if [ -f "/usr/lib/nuts/functions" ]; then
+    # shellcheck source=/dev/null
+    . "/usr/lib/nuts/functions"
+else
+    puts_info()    { printf 'Info: %s\n' "$*" >&2; }
+    puts_success() { printf 'Success: %s\n' "$*" >&2; }
+    puts_warning() { printf 'Warning: %s\n' "$*" >&2; }
+    puts_error()   { printf 'Error: %s\n' "$*" >&2; }
+    
+    spinner() {
+        local pid=$1
+        while kill -0 "$pid" 2>/dev/null; do
+            printf '.'
+            sleep 0.5
+        done
+        printf '\n'
+    }
+    
+    unmount_directory() {
+        if mountpoint -q "$1"; then umount "$1"; fi
+    }
 
-
-# -- Print success messages to stderr.
-
-puts_success() {
-	if [ -n "$1" ]; then
-		printf "%s: \e[32mSuccess:\e[0m %s\n" "$TOOL_NAME" "$*" >&2
-	fi
-}
-
-
-# -- Print error messages to stderr.
-
-puts_error() {
-	if [ -n "$1" ]; then
-		printf "%s: \e[31mError:\e[0m %b\n" "$TOOL_NAME" "$*" >&2
-	fi
-}
-
-
-# -- Print messages or text using multiple lines to stderr.
-
-print_message() {
-	if [ $# -eq 0 ]; then
-		printf "\n" >&2
-	else
-		printf "%s\n" "$@" >&2
-	fi
-}
-
-
-# -- Print warning messages to stderr.
-
-puts_warning() {
-	if [ -n "$1" ]; then
-		printf "%s: \e[33mWarning:\e[0m %s\n" "$TOOL_NAME" "$*" >&2
-	fi
-}
+    overlay_ch() {
+        if ! command -v overlayroot-chroot >/dev/null 2>&1; then
+            puts_error "Error: 'overlayroot-chroot' command not found."
+            return 1
+        fi
+        overlayroot-chroot "$@"
+    }
+fi
 
 
 # -- Display version of running component.
@@ -87,7 +56,7 @@ puts_warning() {
 puts_info "$TOOL_NAME $COMP_NAME version $SUP_VERSION."
 
 
-# -- Define the path of the nuts configuration file.
+# -- Define the path of the configuration file.
 
 CONFIG_FILE="/etc/nuts.conf"
 
@@ -96,58 +65,31 @@ CONFIG_FILE="/etc/nuts.conf"
 # -- Include fix for SC1090 – ShellCheck.
 
 if [[ ! -f $CONFIG_FILE ]]; then
-	puts_error "$TOOL_NAME configuration file not found!, quitting." 2>&1
-	exit 1
+    puts_error "$TOOL_NAME configuration file not found!, quitting." 2>&1
+    exit 1
 else
-	puts_success "Success! $TOOL_NAME configuration file found, continuing..."
-	# shellcheck source=/dev/null
-	. "$CONFIG_FILE"
+    puts_success "$TOOL_NAME configuration file found, continuing..."
+    # shellcheck source=/dev/null
+    . "$CONFIG_FILE"
 fi
 
 
-# -- Functions.
+# -- Component-specific functions.
 
-unmount_directory() {
-	local DIRECTORY="$1"
-
-	if mountpoint -q "$DIRECTORY"; then
-		puts_info "Unmounting: $DIRECTORY"
-		umount "$DIRECTORY"
-	else
-		puts_info "Directory is not mounted: $DIRECTORY"
-	fi
+cleanup() {
+    local exit_code=$?
+    
+    [ -d "$NUTS_GIT_DIR" ] && rm -rf "$NUTS_GIT_DIR"
+    
+    unmount_directory "/tmp"
+    unmount_directory "/dev"
+    
+    if [ $exit_code -ne 0 ]; then
+        puts_error "Component exited unexpectedly with code $exit_code."
+    fi
 }
 
-unmount_on_failure() {
-	unmount_directory "/home" || { puts_error "Failed to unmount /home, quitting."; }
-	unmount_directory "/dev" || { puts_error "Failed to unmount /dev, quitting."; }
-	exit 1
-}
-
-spinner() {
-	local pid="$1"
-	local delay=0.1
-	local start
-	start=$(date +%s.%N)
-	local dots=0
-	local elapsed=0.0
-
-	while ps -p "$pid" > /dev/null 2>&1; do
-		dots=$(( (dots % 3) + 1 ))
-		local now
-		now=$(date +%s.%N)
-		elapsed=$(awk -v start="$start" -v now="$now" 'BEGIN { printf "%.1f", now - start }')
-		printf " [%-3s] Elapsed time: %s seconds" "$(printf '%*s' "$dots" '' | tr ' ' '.')" "$elapsed"
-		sleep "$delay"
-		printf "\r"
-	done
-	printf "\n"
-}
-
-
-# -- Variables.
-
-NUTS_GIT_DIR=$(mktemp -d -p /tmp)
+trap cleanup EXIT
 
 #   ====== START ======
 
@@ -156,81 +98,98 @@ NUTS_GIT_DIR=$(mktemp -d -p /tmp)
 CURRENT_NUTS_BRANCH=$(grep -oP '^NUTS_BRANCH=\K.*' "$CONFIG_FILE")
 
 
-# -- Mount the devices filesystem.
-# -- Check if /dev is already mounted.
-
-if mountpoint -q /dev; then
-	puts_info "/dev is already mounted. Unmounting..."
-	umount /dev
-fi
-
-puts_info "Mounting /dev..."
-mount -t devtmpfs dev /dev
-
-
 # -- Mount the tmp filesystem.
 # -- Apparently this is required now? ¯\_(ツ)_/¯
 
 if mountpoint -q /tmp; then
-	puts_info "/tmp is already mounted. Unmounting..."
-	umount /tmp
+    tmp_type=$(findmnt -n -o FSTYPE --target /tmp)
+    if [ "$tmp_type" = "tmpfs" ]; then
+        puts_info "/tmp is already mounted as tmpfs."
+    else
+        puts_warning "/tmp is mounted as $tmp_type, expected tmpfs. Remounting..."
+        umount /tmp
+        mount -t tmpfs tmp /tmp
+    fi
+else
+    puts_info "Mounting: /tmp"
+    mount -t tmpfs tmp /tmp
 fi
-
-puts_info "Mounting /tmp..."
-mount -t tmpfs tmp /tmp
 
 
 # -- Update utility.
+# -- Use the GitHub archive URL to download only the specific branch as a tarball.
 
 puts_info "Updating $TOOL_NAME to the latest version, continuing..."
 
-git clone --depth=1 --branch "$NUTS_BRANCH" https://github.com/Nitrux/nuts.git "$NUTS_GIT_DIR" > /dev/null 2>&1
-if [ ! -f /usr/bin/nuts ] || [ "$(md5sum "$NUTS_GIT_DIR/usr/bin/nuts" | cut -d " " -f 1)" != "$(md5sum /usr/bin/nuts | cut -d " " -f 1)" ]; then
-	puts_info "$TOOL_NAME is being updated, continuing..."
-	(
-	cp "$NUTS_GIT_DIR/usr/bin/nuts" /usr/bin
-	cp "$NUTS_GIT_DIR/etc/nuts.conf" /etc
-	) &
-	spinner "$!"
+NUTS_GIT_DIR=$(mktemp -d -p /tmp)
+ARCHIVE_URL="https://github.com/Nitrux/nuts/archive/refs/heads/$NUTS_BRANCH.tar.gz"
+
+if ! curl -Ls "$ARCHIVE_URL" | tar -xz -m -C "$NUTS_GIT_DIR" --strip-components=1; then
+    puts_error "Failed to download update repository."
+    exit 1
+fi
+
+
+# -- Define paths for clarity.
+
+INSTALLED_BIN="/usr/bin/nuts"
+INSTALLED_LIB="/usr/lib/nuts/functions"
+NEW_BIN="$NUTS_GIT_DIR/usr/bin/nuts"
+NEW_LIB="$NUTS_GIT_DIR/usr/lib/nuts/functions"
+
+
+# -- Check if:
+#   -- 1. The installed binary or library is missing.
+#   -- 2. The checksum of the binary has changed.
+#   -- 3. The checksum of the shared library has changed.
+
+if [ ! -f "$INSTALLED_BIN" ] || \
+   [ ! -f "$INSTALLED_LIB" ] || \
+   [ "$(md5sum "$NEW_BIN" | awk '{print $1}')" != "$(md5sum "$INSTALLED_BIN" | awk '{print $1}')" ] || \
+   [ "$(md5sum "$NEW_LIB" | awk '{print $1}')" != "$(md5sum "$INSTALLED_LIB" | awk '{print $1}')" ]; then
+   
+    puts_info "$TOOL_NAME is being updated, continuing..."
+    
+    mkdir -p /usr/lib/nuts
+
+    if cp "$NEW_BIN" /usr/bin && \
+       cp "$NEW_LIB" /usr/lib/nuts && \
+       cp "$NUTS_GIT_DIR/etc/nuts.conf" /etc; then
+        :
+    else
+        puts_error "Failed to copy update files."
+        exit 1
+    fi
 else
-	unmount_directory "/dev"
-	puts_info "$TOOL_NAME is already at the latest version. Bye."
-	exit 0
+    puts_info "$TOOL_NAME is already at the latest version. Bye."
+    exit 0
 fi
 
 
 # -- Restore the value of NUTS_BRANCH in /etc/nuts.conf.
 
 if [[ -n $CURRENT_NUTS_BRANCH ]]; then
-	sed -i "s/^NUTS_BRANCH=.*$/NUTS_BRANCH=$CURRENT_NUTS_BRANCH/" "$CONFIG_FILE"
+    sed -i "s/^NUTS_BRANCH=.*$/NUTS_BRANCH=$CURRENT_NUTS_BRANCH/" "$CONFIG_FILE"
 else
-	puts_error "Failed to restore $TOOL_NAME branch, quitting." 
-	unmount_on_failure
+    puts_error "Failed to restore $TOOL_NAME branch, quitting." 
+    exit 1
 fi
-
-
-# -- Unmount directories after update and before exiting chroot.
-
-unmount_directory "/tmp"
-unmount_directory "/dev"
 
 
 # -- **DO NOT PERFORM ANY FILE OPERATION AFTER THIS POINT**
 
 sync
 
-puts_success "Success! $TOOL_NAME has been updated."
+puts_success "$TOOL_NAME has been updated."
 
 
-# -- Finalizing.
-# -- Leave the Matri... I mean, the overlay.
+# -- Display message to the user.
 
-REBOOT_SECONDS=5
+puts_warning "⚠️ Important: Do not continue using the system in this state. Reboot to load the changes into the overlay and finalize the update."
 
-puts_info "Rebooting to load changes into overlay in $REBOOT_SECONDS seconds. Bye."
 
-sleep $REBOOT_SECONDS
+# -- Unmount directories after update and before exiting chroot.
 
-reboot
+unmount_directory "/tmp" > /dev/null 2>&1
 
 #   ====== END ======
