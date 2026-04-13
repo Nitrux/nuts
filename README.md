@@ -4,8 +4,8 @@
   <img width="128" height="128" src="https://raw.githubusercontent.com/Nitrux/luv-icon-theme/master/Luv/apps/64/nx-software-updater.svg">
 </p>
 
-> [!WARNING]
-> The Shell implementation of the Nitrux Update Tool System, i.e., the contents of this repository, is now deprecated in favor of a rewrite: nuts-cpp (https://github.com/Nitrux/nuts-cpp). We've archived this repository on Sun 12 Apr 2026 23:01
+> [!IMPORTANT]
+> The Shell implementation of the Nitrux Update Tool System, i.e., the contents of this repository, is now deprecated in favor of a rewrite: nuts-cpp (https://github.com/Nitrux/nuts-cpp). We've archived this repository on Sun 12 Apr 2026
 
 # Introduction
 
