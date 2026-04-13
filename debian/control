@@ -8,7 +8,7 @@ Homepage: https://nxos.org
 
 
 Package: nuts
-Architecture: any
+Architecture: all
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description:  A simple utility to update Nitrux.
  The point of this utility is twofold:

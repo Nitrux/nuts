@@ -225,8 +225,8 @@ AIFILE_DL_PATH="/tmp/dpkg-1.22.21-x86_64.AppImage"
 EXTRACT_DIR="/tmp/pkgman-extracted"
 AIPKG_MANAGER="$EXTRACT_DIR/squashfs-root/AppRun"
 
-VAR_DATA_TARGET=$(grep 'MINTARGET=' /tmp/nuts-query.info | cut -d'=' -f2)
-VAR_DATA_URL="https://raw.githubusercontent.com/Nitrux/storage/master/Other/var-lib-dpkg-$VAR_DATA_TARGET.tar.xz"
+VAR_DATA_TARGET=$(grep 'MINTARGET=' /tmp/nuts-query.info | cut -d'=' -f2 | tr -d '"')
+VAR_DATA_URL="https://raw.githubusercontent.com/Nitrux/storage/master/Other/var-lib-dpkg-${VAR_DATA_TARGET// /%20}.tar.xz"
 TARFILE_DL_PATH="/tmp/var-lib-dpkg-$VAR_DATA_TARGET.tar.xz"
 
 if [[ -f "$AIPKG_MANAGER" ]]; then
@@ -324,11 +324,12 @@ if (
         SEARCH_PATHS+=("${NUTS_DIR_SQS}/ota/nvidia/")
     fi
 
-    if ! find "${SEARCH_PATHS[@]}" -name '*.deb' -print0 | \
-        xargs -0 -n 120 "$AIPKG_MANAGER" --force-all --unpack >/dev/null 2>&1; then
+    if ! find "${SEARCH_PATHS[@]}" -name '*.deb' | grep -q .; then
         puts_error "Failed to unpack OTA content, quitting."
         exit 1
     fi
+    find "${SEARCH_PATHS[@]}" -name '*.deb' -print0 | \
+        xargs -0 -n 120 "$AIPKG_MANAGER" --force-all --unpack || true
 
     puts_info "Phase 2: Configuring OTA content (repeat until clean), please wait..."
 
@@ -338,9 +339,9 @@ if (
 
     while :; do
         puts_info "Configuration pass ${pass}/${max_passes}..."
-        "$AIPKG_MANAGER" --force-all --configure -a >/dev/null 2>&1 || true
+        "$AIPKG_MANAGER" --force-all --configure -a || true
 
-        audit_out=$("$AIPKG_MANAGER" --audit 2>/dev/null || true)
+        audit_out=$("$AIPKG_MANAGER" --audit || true)
 
         if [ -z "$audit_out" ]; then
             puts_success "OTA content configuration completed, continuing..."
@@ -400,6 +401,25 @@ else
 fi
 
 rm -f /tmp/nuts-ccu
+
+
+# -- Display dialog to notify users of software management policy.
+
+for n in apt apt-cache apt-cdrom apt-config apt-get apt-mark; do
+    ln -sf /usr/bin/nx-pkgmgr-policy "/usr/bin/$n"
+done
+
+for n in \
+    dpkg dpkg-deb dpkg-divert dpkg-maintscript-helper dpkg-query dpkg-realpath \
+    dpkg-split dpkg-statoverride dpkg-trigger \
+    dpkg-architecture dpkg-buildapi dpkg-buildflags dpkg-buildpackage \
+    dpkg-buildtree dpkg-checkbuilddeps dpkg-distaddfile \
+    dpkg-genbuildinfo dpkg-genchanges dpkg-gencontrol dpkg-gensymbols \
+    dpkg-mergechangelogs dpkg-name dpkg-parsechangelog \
+    dpkg-scanpackages dpkg-scansources dpkg-shlibdeps dpkg-source dpkg-vendor
+do
+    ln -sf /usr/bin/nx-pkgmgr-policy "/usr/bin/$n"
+done
 
 
 # -- **DO NOT PERFORM ANY FILE OPERATION AFTER THIS POINT**

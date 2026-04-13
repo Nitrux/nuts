@@ -226,17 +226,13 @@ done
             # -- if the check doesn't match, it means there's no update.
             
             if [ -f /etc/lsb-release ]; then
-                # shellcheck source=/dev/null
-                . /etc/lsb-release
+                DISTRIB_RELEASE=$(grep '^DISTRIB_RELEASE=' /etc/lsb-release | cut -d'=' -f2)
             else
                 puts_error "/etc/lsb-release not found. Cannot determine system version."
                 exit 1
             fi
 
-            MINTARGET=$(grep '^MINTARGET=' /tmp/nuts-query.info | cut -d'=' -f2)
-            
-            MINTARGET="${MINTARGET%\"}"
-            MINTARGET="${MINTARGET#\"}"
+            MINTARGET=$(grep '^MINTARGET=' /tmp/nuts-query.info | cut -d'=' -f2 | tr -d '"')
 
             TARGET_DIST="nitrux"
 
@@ -401,7 +397,7 @@ done
 
                 sync
                 
-                reboot 
+                reboot
             ) &
 
 

@@ -136,8 +136,6 @@ declare -A FILES_TO_COPY=(
     ["configs/files/elogind_files/sleep.conf"]="/etc/elogind/sleep.conf"
     ["configs/files/elogind_files/10-elogind.conf"]="/etc/elogind/sleep.conf.d/10-elogind.conf"
 
-    ["configs/files/elogind_files/system-sleep/restart-nm-after-sleep"]="/etc/elogind/system-sleep/restart-nm-after-sleep"
-
     # -- Scripts.
 
     ["configs/files/other/user-setup-apply"]="/usr/lib/user-setup/user-setup-apply"
@@ -253,6 +251,7 @@ DELETE_UNUSED_KCMS_LIBEXEC=(
     kcm_virtualkeyboard.so
     kcm_wallpaper.so
     kcm_webshortcuts.so
+    kcm_nighttime.so
 )
 
 
@@ -420,6 +419,7 @@ rc-update add rsyslog-openrc boot
 rc-update add swap boot
 rc-update add swclock boot
 rc-update add urandom boot
+rc-update add amd-x3d-vcache-optimizer boot
 
 
 # -------------------------------------------------------------------------------------------------------------#
@@ -673,6 +673,7 @@ REQUIRED_PARAMS=(
     "nohz=on"
     "nosgx"
     "nvidia_drm.modeset=1"
+    "nvme_core.default_ps_max_latency_us=0"
     "nvme_core.multipath=Y"
     "overlayroot=tmpfs:swap=1,recurse=0"
     "page_alloc.shuffle=1"
